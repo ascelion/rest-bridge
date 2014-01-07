@@ -93,4 +93,22 @@
 				</dependency> -->
 		</dependencies>
 	</dependencyManagement>
+
+
+	<distributionManagement>
+		<!-- <site>
+			<id>ascelion-sites</id>
+			<url>dav:${project.url}</url>
+			</site> -->
+		<!-- <repository>
+			<id>ascelion-releases</id>
+			<url>${ascelion-releases-url}</url>
+		</repository> -->
+		<snapshotRepository>
+			<id>ascelion-snapshots</id>
+			<url>${ascelion-snapshots-url}</url>
+			<uniqueVersion>false</uniqueVersion>
+		</snapshotRepository>
+	</distributionManagement>
+
 </project>
