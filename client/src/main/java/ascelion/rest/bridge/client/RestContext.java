@@ -27,7 +27,7 @@ class RestContext
 
 	Object value;
 
-	Collection<String> accepts = new LinkedList<>();
+	String[] accepts;
 
 	RestContext( WebTarget target, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
 	{

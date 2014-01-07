@@ -9,7 +9,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.DefaultValue;
@@ -26,7 +28,12 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.googlecode.gentyref.GenericTypeReflector;
 
@@ -101,20 +108,28 @@ class RestMethod
 			return builder.toString();
 		}
 
-		Collection toCollection( RestContext cx )
+		Collection collection( RestContext cx, Consumer action )
 		{
+			final Collection c;
+
 			if( cx.value instanceof Collection ) {
-				return (Collection) cx.value;
+				c = (Collection) cx.value;
 			}
 			else if( cx.value instanceof Object[] ) {
-				return Arrays.asList( (Object[]) cx.value );
+				c = Arrays.asList( (Object[]) cx.value );
 			}
 			else if( cx.value != null ) {
-				return Arrays.asList( cx.value );
+				c = Arrays.asList( cx.value );
 			}
 			else {
-				return Collections.EMPTY_LIST;
+				c = Collections.EMPTY_LIST;
 			}
+
+			if( action != null ) {
+				c.forEach( action );
+			}
+
+			return c;
 		}
 	}
 
@@ -130,6 +145,9 @@ class RestMethod
 		@Override
 		public void prepare( RestContext cx, Object[] unused )
 		{
+			if( this.annotation.value().length > 0 ) {
+				cx.contentType = this.annotation.value()[0];
+			}
 		}
 	}
 
@@ -145,7 +163,7 @@ class RestMethod
 		@Override
 		public void prepare( RestContext cx, Object[] unused )
 		{
-			toCollection( cx ).forEach( v -> {
+			collection( cx, v -> {
 				if( v instanceof Cookie ) {
 					final Cookie c = (Cookie) v;
 
@@ -183,23 +201,20 @@ class RestMethod
 	extends AnnotationAction<Annotation>
 	{
 
-		private final Type entityType;
-
-		private final int ix;
+		final Type entityType;
 
 		EntityAction( Type entityType, int ix )
 		{
-			super( null, Integer.MAX_VALUE );
+			super( null, ix );
 
 			this.entityType = entityType;
-			this.ix = ix;
 		}
 
 		@Override
 		public void prepare( RestContext cx, Object[] unused )
 		{
+			cx.entity = cx.value;
 		}
-
 	}
 
 	static class FormParamAction
@@ -214,7 +229,7 @@ class RestMethod
 		@Override
 		public void prepare( RestContext cx, Object[] unused )
 		{
-			toCollection( cx ).forEach( v -> cx.form.param( this.annotation.value(), v.toString() ) );
+			collection( cx, v -> cx.form.param( this.annotation.value(), v.toString() ) );
 		}
 
 	}
@@ -231,7 +246,7 @@ class RestMethod
 		@Override
 		public void prepare( RestContext cx, Object[] unused )
 		{
-			toCollection( cx ).forEach( v -> cx.headers.add( this.annotation.value(), v ) );
+			collection( cx, v -> cx.headers.add( this.annotation.value(), v ) );
 		}
 
 	}
@@ -264,7 +279,7 @@ class RestMethod
 		@Override
 		public void prepare( RestContext cx, Object[] unused )
 		{
-			cx.target = cx.target.resolveTemplate( this.annotation.value(), toCollection( cx ) );
+			cx.target = cx.target.resolveTemplate( this.annotation.value(), cx.value );
 		}
 
 	}
@@ -289,6 +304,7 @@ class RestMethod
 		@Override
 		public void prepare( RestContext cx, Object[] unused )
 		{
+			cx.accepts = this.annotation.value();
 		}
 
 	}
@@ -305,7 +321,7 @@ class RestMethod
 		@Override
 		public void prepare( RestContext cx, Object[] unused )
 		{
-			cx.target = cx.target.queryParam( this.annotation.value(), toCollection( cx ) );
+			cx.target = cx.target.queryParam( this.annotation.value(), collection( cx, null ).toArray() );
 		}
 	}
 
@@ -364,22 +380,11 @@ class RestMethod
 		return null;
 	}
 
-	static private Class getReturnType( Class cls, Method method )
-	{
-		final Type returnType = GenericTypeReflector.getExactReturnType( method, cls );
-
-		if( returnType instanceof Class ) {
-			return (Class) returnType;
-		}
-
-		throw new UnsupportedOperationException( "Return type is not a class: " + returnType );
-	}
+	static private final Logger L = LoggerFactory.getLogger( RestMethod.class );
 
 	private final Class cls;
 
 	private final Method method;
-
-	private int entityIndex;
 
 	private final Class returnType;
 
@@ -389,13 +394,11 @@ class RestMethod
 
 	private final Collection<Action> actions = new TreeSet<>();
 
-	private final int parametersCount;
-
 	RestMethod( Class cls, Method method, WebTarget target )
 	{
 		this.cls = cls;
 		this.method = method;
-		this.returnType = getReturnType( cls, method );
+		this.returnType = method.getReturnType();
 		this.httpMethod = getHttpMethod( method );
 		this.target = addPathFromAnnotation( method, target );
 
@@ -409,25 +412,25 @@ class RestMethod
 		}
 
 		final Class<?>[] types = method.getParameterTypes();
-		final int entIndex = -1;
-
-		this.parametersCount = types.length;
 
 		for( int k = 0, z = types.length; k < z; k++ ) {
 			this.actions.add( new SetValueAction( k ) );
 
 			final Annotation[] pas = method.getParameterAnnotations()[k];
+			boolean entityCandidate = true;
 
 			for( final Annotation a : pas ) {
 				final Action action = findAction( a, k );
 
 				if( action != null ) {
 					this.actions.add( action );
+
+					entityCandidate = false;
 				}
 			}
 
-			if( pas.length == 0 ) {
-				final Type entityType = GenericTypeReflector.getExactParameterTypes( method, cls )[entIndex];
+			if( entityCandidate ) {
+				final Type entityType = GenericTypeReflector.getExactParameterTypes( method, cls )[k];
 
 				this.actions.add( new EntityAction( entityType, k ) );
 			}
@@ -447,10 +450,13 @@ class RestMethod
 
 	Object call( Object[] arguments, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
 	{
-		if( this.httpMethod == null ) {
-			final RestClientIH ih = new RestClientIH( this.returnType, this.target, headers, cookies, form );
+		final Type exactReturnType = GenericTypeReflector.getExactReturnType( this.method, this.cls );
 
-			return RestClientIH.newProxy( this.returnType, ih );
+		if( this.httpMethod == null ) {
+			final Class exactClass = (Class) exactReturnType;
+			final RestClientIH ih = new RestClientIH( exactClass, this.target, headers, cookies, form );
+
+			return RestClientIH.newProxy( exactClass, ih );
 		}
 
 		final RestContext cx = new RestContext( this.target, headers, cookies, form );
@@ -459,15 +465,45 @@ class RestMethod
 			a.prepare( cx, arguments );
 		} );
 
-		final Invocation.Builder b = cx.target.request( cx.accepts.toArray( new String[0] ) ).headers( cx.headers );
+		final Invocation.Builder b;
+
+		if( cx.accepts != null ) {
+			b = cx.target.request( cx.accepts );
+		}
+		else {
+			b = cx.target.request();
+		}
+
+		b.headers( cx.headers );
 
 		cx.cookies.forEach( c -> b.cookie( c ) );
 
-		if( cx.entity != null ) {
-			return b.method( this.httpMethod, Entity.entity( cx.entity, cx.contentType ), this.returnType );
+		if( cx.entity == null && !cx.form.asMap().isEmpty() ) {
+			cx.entity = form;
+			cx.contentType = MediaType.APPLICATION_FORM_URLENCODED;
 		}
 		else {
-			return b.method( this.httpMethod, this.returnType );
+			if( cx.contentType == null ) {
+				cx.contentType = MediaType.APPLICATION_OCTET_STREAM;
+			}
+			if( !cx.form.asMap().isEmpty() ) {
+				if( cx.entity instanceof Form ) {
+					( (Form) cx.entity ).asMap().putAll( form.asMap() );
+				}
+				else {
+					// TODO
+					throw new BadRequestException();
+				}
+			}
+		}
+
+		final GenericType genericReturnType = new GenericType( exactReturnType );
+
+		if( cx.entity != null ) {
+			return b.method( this.httpMethod, Entity.entity( cx.entity, cx.contentType ), genericReturnType );
+		}
+		else {
+			return b.method( this.httpMethod, genericReturnType );
 		}
 	}
 
@@ -523,10 +559,5 @@ class RestMethod
 		}
 
 		return getAnnotation( this.cls, annCls );
-	}
-
-	private Object getEntity( Object[] arguments )
-	{
-		return this.entityIndex < 0 ? null : arguments[this.entityIndex];
 	}
 }

@@ -1,11 +1,9 @@
 
 package ascelion.rest.bridge.client;
 
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.URI;
 
 import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -13,9 +11,7 @@ import javax.ws.rs.core.Application;
 public class RestClient
 {
 
-	private final String base;
-
-	public RestClient( Class<? extends Application> cls )
+	static private String getBase( Class<? extends Application> cls )
 	{
 		String path = null;
 
@@ -27,28 +23,39 @@ public class RestClient
 			}
 		}
 
-		if( path == null ) {
-			throw new IllegalArgumentException();
-		}
-
-		this.base = path;
+		return path;
 	}
 
-	public RestClient( String base )
+	private final URI target;
+
+	private final String base;
+
+	public RestClient( URI target )
 	{
+		this( target, (String) null );
+	}
+
+	public RestClient( URI target, Class<? extends Application> cls )
+	{
+		this( target, getBase( cls ) );
+	}
+
+	public RestClient( URI target, String base )
+	{
+		this.target = target;
 		this.base = base;
 	}
 
-	public <X> X getInterface( Class<X> cls, URL target )
+	public <X> X getInterface( Class<X> cls )
 	{
-		try {
-			final WebTarget wt = ClientBuilder.newClient().target( target.toURI() ).path( this.base );
-			final RestClientIH ih = new RestClientIH( cls, wt );
+		WebTarget wt = ClientBuilder.newClient().target( this.target );
 
-			return RestClientIH.newProxy( cls, ih );
+		if( this.base != null ) {
+			wt = wt.path( this.base );
 		}
-		catch( final URISyntaxException e ) {
-			throw new WebApplicationException( e );
-		}
+
+		final RestClientIH ih = new RestClientIH( cls, wt );
+
+		return RestClientIH.newProxy( cls, ih );
 	}
 }

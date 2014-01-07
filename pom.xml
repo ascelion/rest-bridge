@@ -15,8 +15,9 @@
 	<modules>
 		<module>client</module>
 
-		<module>application</module>
-		<module>deployment</module>
+		<module>tests</module>
+		<module>tests/application</module>
+		<module>tests/deployment</module>
 	</modules>
 
 	<prerequisites>
@@ -24,6 +25,7 @@
 	</prerequisites>
 
 	<build>
+		<defaultGoal>install</defaultGoal>
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -33,9 +35,27 @@
 					<configuration>
 						<source>1.8</source>
 						<target>1.8</target>
+						<encoding>UTF-8</encoding>
 					</configuration>
 				</plugin>
-				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>2.4</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-resources-plugin</artifactId>
+					<version>2.7</version>
+					<configuration>
+						<encoding>UTF-8</encoding>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-failsafe-plugin</artifactId>
+					<version>2.17</version>
+				</plugin>
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
@@ -62,6 +82,22 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 
 	<dependencyManagement>
@@ -69,7 +105,31 @@
 			<dependency>
 				<groupId>javax.ws.rs</groupId>
 				<artifactId>javax.ws.rs-api</artifactId>
-				<version>2.0</version>
+				<version>2.0.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>2.4.3</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
+				<version>2.4.3</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-annotations</artifactId>
+				<version>2.4.3</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.glassfish.jersey</groupId>
+				<artifactId>jersey-bom</artifactId>
+				<version>2.13</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 
 			<dependency>
@@ -87,14 +147,6 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-
-			<!-- <dependency>
-				<groupId>org.glassfish.jersey</groupId>
-				<artifactId>jersey-bom</artifactId>
-				<version>2.0.1</version>
-				<type>pom</type>
-				<scope>import</scope>
-				</dependency> -->
 		</dependencies>
 	</dependencyManagement>
 
@@ -107,7 +159,7 @@
 		<!-- <repository>
 			<id>ascelion-releases</id>
 			<url>${ascelion-releases-url}</url>
-		</repository> -->
+			</repository> -->
 		<snapshotRepository>
 			<id>ascelion-snapshots</id>
 			<url>${ascelion-snapshots-url}</url>
