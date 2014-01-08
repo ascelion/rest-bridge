@@ -2,12 +2,13 @@
 package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
@@ -18,9 +19,7 @@ import javax.ws.rs.CookieParam;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.HeaderParam;
-import javax.ws.rs.HttpMethod;
 import javax.ws.rs.MatrixParam;
-import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -44,7 +43,9 @@ class RestMethod
 	interface Action
 	{
 
-		void prepare( RestContext cx, Object[] arguments );
+		void evaluate( RestContext cx );
+
+		void prepare( Object[] arguments );
 	}
 
 	static abstract class AnnotationAction<A extends Annotation>
@@ -90,6 +91,11 @@ class RestMethod
 			}
 
 			return this.annotation.getClass().getName().compareTo( o.annotation.getClass().getSimpleName() );
+		}
+
+		@Override
+		public void prepare( Object[] unused )
+		{
 		}
 
 		@Override
@@ -144,10 +150,38 @@ class RestMethod
 		}
 
 		@Override
-		public void prepare( RestContext cx, Object[] arguments )
+		public void evaluate( RestContext cx )
 		{
+			if( cx.value != null ) {
+				final Object bean = cx.value;
+
+				Util.getDeclaredFields( cx.value.getClass() ).forEach( f -> addAction( cx, f, bean ) );
+			}
 		}
 
+		private void addAction( RestContext cx, Field field, Object bean )
+		{
+			final Collection<Action> actions = new LinkedList<>();
+
+			for( final Annotation a : field.getAnnotations() ) {
+				final Action action = findAction( a, 0 );
+
+				if( action != null ) {
+					actions.add( action );
+				}
+			}
+
+			if( actions.size() > 0 ) {
+				try {
+					cx.value = field.get( bean );
+				}
+				catch( final IllegalAccessException e ) {
+					throw new RuntimeException( e );
+				}
+
+				actions.forEach( a -> a.evaluate( cx ) );
+			}
+		}
 	}
 
 	static class ConsumesAction
@@ -160,7 +194,7 @@ class RestMethod
 		}
 
 		@Override
-		public void prepare( RestContext cx, Object[] unused )
+		public void evaluate( RestContext cx )
 		{
 			if( this.annotation.value().length > 0 ) {
 				cx.contentType = this.annotation.value()[0];
@@ -178,7 +212,7 @@ class RestMethod
 		}
 
 		@Override
-		public void prepare( RestContext cx, Object[] unused )
+		public void evaluate( RestContext cx )
 		{
 			collection( cx, v -> {
 				if( v instanceof Cookie ) {
@@ -195,7 +229,7 @@ class RestMethod
 
 	}
 
-	class DefaultValueAction
+	static class DefaultValueAction
 	extends AnnotationAction<DefaultValue>
 	{
 
@@ -205,7 +239,7 @@ class RestMethod
 		}
 
 		@Override
-		public void prepare( RestContext cx, Object[] unused )
+		public void evaluate( RestContext cx )
 		{
 			if( cx.value == null ) {
 				cx.value = this.annotation.value();
@@ -228,7 +262,7 @@ class RestMethod
 		}
 
 		@Override
-		public void prepare( RestContext cx, Object[] unused )
+		public void evaluate( RestContext cx )
 		{
 			cx.entity = cx.value;
 		}
@@ -244,7 +278,7 @@ class RestMethod
 		}
 
 		@Override
-		public void prepare( RestContext cx, Object[] unused )
+		public void evaluate( RestContext cx )
 		{
 			collection( cx, v -> cx.form.param( this.annotation.value(), v.toString() ) );
 		}
@@ -261,7 +295,7 @@ class RestMethod
 		}
 
 		@Override
-		public void prepare( RestContext cx, Object[] unused )
+		public void evaluate( RestContext cx )
 		{
 			collection( cx, v -> cx.headers.add( this.annotation.value(), v ) );
 		}
@@ -278,7 +312,7 @@ class RestMethod
 		}
 
 		@Override
-		public void prepare( RestContext cx, Object[] unused )
+		public void evaluate( RestContext cx )
 		{
 		}
 
@@ -294,7 +328,7 @@ class RestMethod
 		}
 
 		@Override
-		public void prepare( RestContext cx, Object[] unused )
+		public void evaluate( RestContext cx )
 		{
 			cx.target = cx.target.resolveTemplate( this.annotation.value(), cx.value );
 		}
@@ -319,7 +353,7 @@ class RestMethod
 		}
 
 		@Override
-		public void prepare( RestContext cx, Object[] unused )
+		public void evaluate( RestContext cx )
 		{
 			cx.accepts = this.annotation.value();
 		}
@@ -336,7 +370,7 @@ class RestMethod
 		}
 
 		@Override
-		public void prepare( RestContext cx, Object[] unused )
+		public void evaluate( RestContext cx )
 		{
 			cx.target = cx.target.queryParam( this.annotation.value(), collection( cx, null ).toArray() );
 		}
@@ -346,52 +380,51 @@ class RestMethod
 	extends AnnotationAction<Annotation>
 	{
 
+		private Object value;
+
 		SetValueAction( int ix )
 		{
 			super( null, ix, Priority.HIGHEST );
 		}
 
 		@Override
-		public void prepare( RestContext cx, Object[] arguments )
+		public void evaluate( RestContext cx )
 		{
-			cx.value = arguments[this.ix];
+			cx.value = this.value;
+		}
+
+		@Override
+		public void prepare( Object[] arguments )
+		{
+			this.value = arguments[this.ix];
 		}
 	}
 
-	static WebTarget addPathFromAnnotation( final AnnotatedElement ae, WebTarget target )
+	static Action findAction( Annotation a, int ix )
 	{
-		final Path p = ae.getAnnotation( Path.class );
-		if( p != null ) {
-			target = target.path( p.value() );
+		if( CookieParam.class.isInstance( a ) ) {
+			return new CookieParamAction( (CookieParam) a, ix );
 		}
-		return target;
-	}
-
-	static String getHttpMethod( Method method )
-	{
-		String httpMethod = getHttpMethodName( method );
-
-		if( httpMethod != null ) {
-			return httpMethod;
+		if( DefaultValue.class.isInstance( a ) ) {
+			return new DefaultValueAction( (DefaultValue) a, ix );
 		}
-
-		for( final Annotation ann : method.getAnnotations() ) {
-			httpMethod = getHttpMethodName( ann.annotationType() );
-
-			if( httpMethod != null ) {
-				return httpMethod;
-			}
+		if( FormParam.class.isInstance( a ) ) {
+			return new FormParamAction( (FormParam) a, ix );
 		}
-
-		return null;
-	}
-
-	static String getHttpMethodName( AnnotatedElement element )
-	{
-		final HttpMethod annotation = element.getAnnotation( HttpMethod.class );
-
-		if( annotation != null ) {
-			return annotation.value();
+		if( MatrixParam.class.isInstance( a ) ) {
+			return new MatrixParamAction( (MatrixParam) a, ix );
+		}
+		if( PathParam.class.isInstance( a ) ) {
+			return new PathParamAction( (PathParam) a, ix );
+		}
+		if( QueryParam.class.isInstance( a ) ) {
+			return new QueryParamAction( (QueryParam) a, ix );
+		}
+		if( HeaderParam.class.isInstance( a ) ) {
+			return new HeaderParamAction( (HeaderParam) a, ix );
+		}
+		if( BeanParam.class.isInstance( a ) ) {
+			return new BeanParamAction( (BeanParam) a, ix );
 		}
 
 		return null;
@@ -416,8 +449,8 @@ class RestMethod
 		this.cls = cls;
 		this.method = method;
 		this.returnType = method.getReturnType();
-		this.httpMethod = getHttpMethod( method );
-		this.target = addPathFromAnnotation( method, target );
+		this.httpMethod = Util.getHttpMethod( method );
+		this.target = Util.addPathFromAnnotation( method, target );
 
 		if( this.httpMethod == null ) {
 			if( this.target == target ) {
@@ -479,7 +512,8 @@ class RestMethod
 		final RestContext cx = new RestContext( this.target, headers, cookies, form );
 
 		this.actions.forEach( a -> {
-			a.prepare( cx, arguments );
+			a.prepare( arguments );
+			a.evaluate( cx );
 		} );
 
 		final Invocation.Builder b;
@@ -538,36 +572,6 @@ class RestMethod
 			if( a != null ) {
 				return a;
 			}
-		}
-
-		return null;
-	}
-
-	private Action findAction( Annotation a, int ix )
-	{
-		if( CookieParam.class.isInstance( a ) ) {
-			return new CookieParamAction( (CookieParam) a, ix );
-		}
-		if( DefaultValue.class.isInstance( a ) ) {
-			return new DefaultValueAction( (DefaultValue) a, ix );
-		}
-		if( FormParam.class.isInstance( a ) ) {
-			return new FormParamAction( (FormParam) a, ix );
-		}
-		if( MatrixParam.class.isInstance( a ) ) {
-			return new MatrixParamAction( (MatrixParam) a, ix );
-		}
-		if( PathParam.class.isInstance( a ) ) {
-			return new PathParamAction( (PathParam) a, ix );
-		}
-		if( QueryParam.class.isInstance( a ) ) {
-			return new QueryParamAction( (QueryParam) a, ix );
-		}
-		if( HeaderParam.class.isInstance( a ) ) {
-			return new HeaderParamAction( (HeaderParam) a, ix );
-		}
-		if( BeanParam.class.isInstance( a ) ) {
-			return new BeanParamAction( (BeanParam) a, ix );
 		}
 
 		return null;

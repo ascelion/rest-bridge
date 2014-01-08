@@ -2,7 +2,7 @@
 package bridge;
 
 public class BeanResourceBridgeTest
-extends BeanResourceTestBase<ProxyProvider>
+extends BeanResourceTestBase<BridgeProvider>
 {
 
 }

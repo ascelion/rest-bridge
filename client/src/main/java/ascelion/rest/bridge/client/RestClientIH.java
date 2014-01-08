@@ -60,7 +60,7 @@ implements InvocationHandler
 	{
 		this.cls = cls;
 		this.methods = methodsOf( cls );
-		this.target = RestMethod.addPathFromAnnotation( cls, target );
+		this.target = Util.addPathFromAnnotation( cls, target );
 	}
 
 	RestClientIH( Class cls, WebTarget target, Map<String, List<Object>> headers, Collection<Cookie> cookies, Form form )
