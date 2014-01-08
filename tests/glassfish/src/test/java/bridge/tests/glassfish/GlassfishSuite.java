@@ -6,5 +6,4 @@ import bridge.WholeSuite;
 public class GlassfishSuite
 extends WholeSuite
 {
-
 }

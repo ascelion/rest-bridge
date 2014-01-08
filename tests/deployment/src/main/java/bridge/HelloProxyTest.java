@@ -1,6 +1,6 @@
 package bridge;
 
-public class HelloTestProxy
+public class HelloProxyTest
 extends HelloTestBase<ProxyProvider>
 {
 }

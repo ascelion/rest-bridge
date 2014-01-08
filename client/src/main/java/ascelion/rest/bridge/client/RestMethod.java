@@ -12,6 +12,7 @@ import java.util.TreeSet;
 import java.util.function.Consumer;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.DefaultValue;
@@ -131,6 +132,22 @@ class RestMethod
 
 			return c;
 		}
+	}
+
+	static class BeanParamAction
+	extends AnnotationAction<BeanParam>
+	{
+
+		BeanParamAction( BeanParam a, int ix )
+		{
+			super( a, ix );
+		}
+
+		@Override
+		public void prepare( RestContext cx, Object[] arguments )
+		{
+		}
+
 	}
 
 	static class ConsumesAction
@@ -545,6 +562,12 @@ class RestMethod
 		}
 		if( QueryParam.class.isInstance( a ) ) {
 			return new QueryParamAction( (QueryParam) a, ix );
+		}
+		if( HeaderParam.class.isInstance( a ) ) {
+			return new HeaderParamAction( (HeaderParam) a, ix );
+		}
+		if( BeanParam.class.isInstance( a ) ) {
+			return new BeanParamAction( (BeanParam) a, ix );
 		}
 
 		return null;

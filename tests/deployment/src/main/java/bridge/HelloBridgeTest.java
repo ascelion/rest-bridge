@@ -1,7 +1,7 @@
 
 package bridge;
 
-public class HelloTestBridge
+public class HelloBridgeTest
 extends HelloTestBase<BridgeProvider>
 {
 }
