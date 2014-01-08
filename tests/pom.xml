@@ -86,6 +86,12 @@
 			<classifier>classes</classifier>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>arquillian</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
@@ -117,12 +123,6 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>rest-bridge-client</artifactId>
-			<version>${project.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>deployment</artifactId>
 			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>

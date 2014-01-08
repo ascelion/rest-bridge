@@ -1,5 +1,5 @@
 
-package bridge;
+package bridge.tests;
 
 import org.junit.Test;
 

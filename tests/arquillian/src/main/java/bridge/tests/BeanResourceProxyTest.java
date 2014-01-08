@@ -1,5 +1,5 @@
 
-package bridge;
+package bridge.tests;
 
 import org.junit.Ignore;
 import org.junit.Test;

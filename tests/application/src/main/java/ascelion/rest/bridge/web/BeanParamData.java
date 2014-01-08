@@ -17,7 +17,7 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 @XmlRootElement
 @XmlAccessorType( XmlAccessType.FIELD )
 @JsonAutoDetect( fieldVisibility = ANY, creatorVisibility = NONE, getterVisibility = NONE, isGetterVisibility = NONE, setterVisibility = NONE )
-public class BeanInfo
+public class BeanParamData
 {
 
 	@PathParam( "path1" )
@@ -39,11 +39,11 @@ public class BeanInfo
 	@QueryParam( "query2" )
 	private String queryParam2;
 
-	public BeanInfo()
+	public BeanParamData()
 	{
 	}
 
-	public BeanInfo( String pathParam2, String headerParam2, String queryParam2 )
+	public BeanParamData( String pathParam2, String headerParam2, String queryParam2 )
 	{
 		this.pathParam2 = pathParam2;
 		this.headerParam2 = headerParam2;

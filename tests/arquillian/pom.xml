@@ -9,7 +9,7 @@
 		<relativePath>../..</relativePath>
 	</parent>
 
-	<artifactId>deployment</artifactId>
+	<artifactId>arquillian</artifactId>
 
 	<dependencies>
 		<dependency>

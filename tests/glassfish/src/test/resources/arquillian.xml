@@ -6,13 +6,10 @@
 
 	<defaultProtocol type="Servlet 3.0" />
 
-	<container qualifier="local" default="true">
+	<container qualifier="default" default="true">
 		<configuration>
 			<property name="glassFishHome">target/glassfish4</property>
 		</configuration>
-	</container>
-
-	<container qualifier="remote">
 	</container>
 
 </arquillian>

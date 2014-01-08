@@ -1,5 +1,5 @@
 
-package bridge;
+package bridge.tests;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation.Builder;
@@ -9,7 +9,7 @@ import javax.ws.rs.core.Response;
 
 import org.junit.Test;
 
-import ascelion.rest.bridge.web.BeanInfo;
+import ascelion.rest.bridge.web.BeanParamData;
 import ascelion.rest.bridge.web.BeanResource;
 import ascelion.rest.bridge.web.RestApplication;
 
@@ -20,7 +20,7 @@ public abstract class BeanResourceTestBase<P extends ClientProvider>
 extends AbstractTestCase<BeanResource, P>
 {
 
-	static private void assertValid( final BeanInfo ent )
+	static private void assertValid( final BeanParamData ent )
 	{
 		assertNotNull( ent );
 
@@ -32,9 +32,9 @@ extends AbstractTestCase<BeanResource, P>
 		assertEquals( "header2", ent.getHeaderParam2() );
 	}
 
-	static private BeanInfo createBean()
+	static private BeanParamData createBean()
 	{
-		final BeanInfo request = new BeanInfo( "path2", "header2", "query2" );
+		final BeanParamData request = new BeanParamData( "path2", "header2", "query2" );
 
 		request.setPathParam1( "path1" );
 		request.setHeaderParam1( "header1" );
@@ -75,6 +75,6 @@ extends AbstractTestCase<BeanResource, P>
 
 		assertEquals( Response.Status.OK.getStatusCode(), resp.getStatus() );
 
-		assertValid( resp.readEntity( BeanInfo.class ) );
+		assertValid( resp.readEntity( BeanParamData.class ) );
 	}
 }

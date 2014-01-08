@@ -1,7 +1,7 @@
 
 package bridge.tests.glassfish;
 
-import bridge.WholeSuite;
+import bridge.tests.WholeSuite;
 
 public class GlassfishSuite
 extends WholeSuite

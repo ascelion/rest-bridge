@@ -6,7 +6,7 @@ implements BeanResource
 {
 
 	@Override
-	public BeanInfo get( BeanInfo request )
+	public BeanParamData get( BeanParamData request )
 	{
 		return request;
 	}

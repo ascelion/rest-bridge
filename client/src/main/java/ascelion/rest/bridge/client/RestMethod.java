@@ -52,6 +52,14 @@ class RestMethod
 	implements Action, Comparable<AnnotationAction<Annotation>>
 	{
 
+		enum Priority
+		{
+			SET_VALUE,
+			DEFAULT_VALUE,
+			VALID_VALUE,
+			ANY,
+		}
+
 		final A annotation;
 
 		final int ix;
@@ -60,7 +68,7 @@ class RestMethod
 
 		AnnotationAction( A annotation, int ix )
 		{
-			this( annotation, ix, Priority.NORMAL );
+			this( annotation, ix, Priority.ANY );
 		}
 
 		AnnotationAction( A annotation, int ix, Priority px )
@@ -77,7 +85,7 @@ class RestMethod
 				return this.ix - o.ix;
 			}
 
-			final int cp = -this.px.compareTo( o.px );
+			final int cp = this.px.compareTo( o.px );
 
 			if( cp != 0 ) {
 				return cp;
@@ -235,7 +243,7 @@ class RestMethod
 
 		public DefaultValueAction( DefaultValue annotation, int ix )
 		{
-			super( annotation, ix, Priority.HIGH );
+			super( annotation, ix, Priority.DEFAULT_VALUE );
 		}
 
 		@Override
@@ -335,14 +343,6 @@ class RestMethod
 
 	}
 
-	enum Priority
-	{
-		LOW,
-		NORMAL,
-		HIGH,
-		HIGHEST,
-	}
-
 	static class ProducesAction
 	extends AnnotationAction<Produces>
 	{
@@ -384,7 +384,7 @@ class RestMethod
 
 		SetValueAction( int ix )
 		{
-			super( null, ix, Priority.HIGHEST );
+			super( null, ix, Priority.SET_VALUE );
 		}
 
 		@Override
@@ -397,6 +397,21 @@ class RestMethod
 		public void prepare( Object[] arguments )
 		{
 			this.value = arguments[this.ix];
+		}
+	}
+
+	static class ValidationAction
+	extends AnnotationAction<Annotation>
+	{
+
+		ValidationAction( Annotation annotation, int ix )
+		{
+			super( annotation, ix );
+		}
+
+		@Override
+		public void evaluate( RestContext cx )
+		{
 		}
 	}
 

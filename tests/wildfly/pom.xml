@@ -74,16 +74,35 @@
 		</profile>
 		<profile>
 			<id>remote</id>
+			<properties>
+				<wildflyRemoteHome>${basedir}/target/wildfly-8.1.0.Final</wildflyRemoteHome>
+			</properties>
 			<build>
 				<plugins>
 					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-failsafe-plugin</artifactId>
+						<groupId>org.wildfly.plugins</groupId>
+						<artifactId>wildfly-maven-plugin</artifactId>
+						<version>1.0.2.Final</version>
 						<configuration>
-							<systemPropertyVariables>
-								<arquillian.launch>remote</arquillian.launch>
-							</systemPropertyVariables>
+							<jbossHome>${wildflyRemoteHome}</jbossHome>
+							<force>true</force>
 						</configuration>
+						<executions>
+							<execution>
+								<id>start</id>
+								<phase>pre-integration-test</phase>
+								<goals>
+									<goal>start</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>stop</id>
+								<phase>post-integration-test</phase>
+								<goals>
+									<goal>shutdown</goal>
+								</goals>
+							</execution>
+						</executions>
 					</plugin>
 				</plugins>
 			</build>

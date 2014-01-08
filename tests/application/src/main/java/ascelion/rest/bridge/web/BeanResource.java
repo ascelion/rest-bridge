@@ -11,5 +11,5 @@ public interface BeanResource
 
 	@GET
 	@Path( "{path1}/{path2}" )
-	public BeanInfo get( @BeanParam BeanInfo request );
+	public BeanParamData get( @BeanParam BeanParamData request );
 }
