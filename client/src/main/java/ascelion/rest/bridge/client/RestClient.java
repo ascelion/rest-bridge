@@ -2,8 +2,10 @@
 package ascelion.rest.bridge.client;
 
 import java.net.URI;
+import java.util.function.UnaryOperator;
 
 import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -30,6 +32,8 @@ public class RestClient
 
 	private final String base;
 
+	private UnaryOperator<Client> onNewClient = t -> t;
+
 	public RestClient( URI target )
 	{
 		this( target, (String) null );
@@ -48,7 +52,9 @@ public class RestClient
 
 	public <X> X getInterface( Class<X> cls )
 	{
-		WebTarget wt = ClientBuilder.newClient().target( this.target );
+		final Client ct = this.onNewClient.apply( ClientBuilder.newClient() );
+
+		WebTarget wt = ct.target( this.target );
 
 		if( this.base != null ) {
 			wt = wt.path( this.base );
@@ -57,5 +63,12 @@ public class RestClient
 		final RestClientIH ih = new RestClientIH( cls, wt );
 
 		return RestClientIH.newProxy( cls, ih );
+	}
+
+	public RestClient onNewClient( UnaryOperator<Client> onNewClient )
+	{
+		this.onNewClient = onNewClient;
+
+		return this;
 	}
 }

@@ -52,6 +52,6 @@ public interface Validated
 	String notNullQueryParam( @QueryParam( "value" ) @NotNull String value );
 
 	@POST
-	@Path( "notNull" )
+	@Path( "notNullWithBean" )
 	BeanValidData notNullWithBean( @FormParam( "value" ) @NotNull String value, @Valid @NotNull BeanValidData bean );
 }

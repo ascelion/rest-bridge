@@ -30,7 +30,7 @@
 									<version>8.1.0.Final</version>
 									<type>zip</type>
 									<overWrite>false</overWrite>
-									<outputDirectory>target</outputDirectory>
+									<outputDirectory>${unpackTarget}</outputDirectory>
 								</artifactItem>
 							</artifactItems>
 						</configuration>
@@ -42,28 +42,6 @@
 
 	<profiles>
 		<profile>
-			<id>embedded</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-failsafe-plugin</artifactId>
-						<configuration>
-							<systemPropertyVariables>
-								<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-							</systemPropertyVariables>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-			<dependencies>
-				<dependency>
-					<groupId>org.wildfly</groupId>
-					<artifactId>wildfly-arquillian-container-embedded</artifactId>
-				</dependency>
-			</dependencies>
-		</profile>
-		<profile>
 			<id>managed</id>
 			<dependencies>
 				<dependency>
@@ -74,9 +52,6 @@
 		</profile>
 		<profile>
 			<id>remote</id>
-			<properties>
-				<wildflyRemoteHome>${basedir}/target/wildfly-8.1.0.Final</wildflyRemoteHome>
-			</properties>
 			<build>
 				<plugins>
 					<plugin>

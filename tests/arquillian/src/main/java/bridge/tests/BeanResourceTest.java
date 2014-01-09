@@ -9,6 +9,9 @@ import javax.ws.rs.core.Response;
 
 import org.junit.Test;
 
+import bridge.tests.providers.IgnoreWith;
+import bridge.tests.providers.JerseyProxyProvider;
+
 import ascelion.rest.bridge.web.BeanParamData;
 import ascelion.rest.bridge.web.BeanResource;
 import ascelion.rest.bridge.web.RestApplication;
@@ -16,8 +19,9 @@ import ascelion.rest.bridge.web.RestApplication;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public abstract class BeanResourceTestBase<P extends ClientProvider>
-extends AbstractTestCase<BeanResource, P>
+@IgnoreWith( JerseyProxyProvider.class )
+public class BeanResourceTest
+extends AbstractTestCase<BeanResource>
 {
 
 	static private void assertValid( final BeanParamData ent )

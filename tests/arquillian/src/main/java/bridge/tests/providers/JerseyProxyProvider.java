@@ -1,23 +1,27 @@
 
-package bridge.tests;
+package bridge.tests.providers;
 
 import java.net.URI;
 
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 
 import org.glassfish.jersey.client.proxy.WebResourceFactory;
 
+import bridge.tests.ClientProvider;
+
 import ascelion.rest.bridge.web.RestApplication;
 
-public class ProxyProvider
+public class JerseyProxyProvider
 implements ClientProvider
 {
 
 	@Override
 	public <T> T createClient( URI target, Class<T> cls )
 	{
-		final WebTarget wt = ClientBuilder.newClient().target( target ).path( RestApplication.BASE );
+		final Client ct = onNewClient( ClientBuilder.newClient() );
+		final WebTarget wt = ct.target( target ).path( RestApplication.BASE );
 
 		return WebResourceFactory.newResource( cls, wt );
 	}

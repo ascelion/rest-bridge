@@ -7,10 +7,11 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith( Suite.class )
 @SuiteClasses( {
-	BeanResourceSuite.class,
-	HelloSuite.class,
-	MethodsSuite.class,
-	ValidatedSuite.class,
+	BeanResourceTest.class,
+	HelloTest.class,
+	MethodsTest.class,
+	ValidatedRestTest.class,
+	ValidatedTest.class,
 } )
 public class WholeSuite
 {

@@ -1,4 +1,4 @@
-activeProfiles=embedded
+activeProfiles=managed,RestBridgeWithResteasy
 eclipse.preferences.version=1
 resolveWorkspaceProjects=true
 version=1

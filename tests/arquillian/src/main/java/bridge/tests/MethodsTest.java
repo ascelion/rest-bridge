@@ -5,8 +5,8 @@ import org.junit.Test;
 
 import ascelion.rest.bridge.web.Methods;
 
-public class MethodsTestBase<P extends ClientProvider>
-extends AbstractTestCase<Methods, P>
+public class MethodsTest
+extends AbstractTestCase<Methods>
 {
 
 	@Test

@@ -8,7 +8,7 @@
 
 	<container qualifier="default" default="true">
 		<configuration>
-			<property name="glassFishHome">target/glassfish4</property>
+			<property name="glassFishHome">${unpackTarget}/glassfish4</property>
 		</configuration>
 	</container>
 

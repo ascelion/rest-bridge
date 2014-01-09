@@ -11,8 +11,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public abstract class HelloTestBase<P extends ClientProvider>
-extends AbstractTestCase<Hello, P>
+public class HelloTest
+extends AbstractTestCase<Hello>
 {
 
 	@Test

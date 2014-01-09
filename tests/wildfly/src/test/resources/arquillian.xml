@@ -8,8 +8,8 @@
 
 	<container qualifier="default" default="true">
 		<configuration>
-			<property name="jbossHome">target/wildfly-8.1.0.Final</property>
-			<property name="modulePath">target/wildfly-8.1.0.Final/modules</property>
+			<property name="jbossHome">${unpackTarget}/wildfly-8.1.0.Final</property>
+			<property name="modulePath">${unpackTarget}/wildfly-8.1.0.Final/modules</property>
 			<property name="allowConnectingToRunningServer">true</property>
 		</configuration>
 	</container>

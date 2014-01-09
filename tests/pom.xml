@@ -18,15 +18,116 @@
 
 	<properties>
 		<skipTests>true</skipTests>
+		<unpackTarget>target</unpackTarget>
 	</properties>
 
 	<profiles>
 		<profile>
-			<id>embedded</id>
+			<id>RestBridgeWithJersey</id>
 			<properties>
-				<skipTests>false</skipTests>
+				<bridge.tests.ClientProvider>bridge.tests.providers.RestBridgeProvider</bridge.tests.ClientProvider>
 			</properties>
+			<dependencies>
+				<dependency>
+					<groupId>org.glassfish.jersey.core</groupId>
+					<artifactId>jersey-client</artifactId>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.glassfish.jersey.media</groupId>
+					<artifactId>jersey-media-json-jackson</artifactId>
+					<scope>test</scope>
+				</dependency>
+				<!-- <dependency>
+					<groupId>org.glassfish.jersey.containers.glassfish</groupId>
+					<artifactId>jersey-gf-cdi</artifactId>
+					<scope>test</scope>
+					</dependency> -->
+			</dependencies>
 		</profile>
+		<profile>
+			<id>RestBridgeWithResteasy</id>
+			<properties>
+				<bridge.tests.ClientProvider>bridge.tests.providers.RestBridgeProvider</bridge.tests.ClientProvider>
+			</properties>
+			<dependencies>
+				<dependency>
+					<groupId>org.jboss.resteasy</groupId>
+					<artifactId>resteasy-client</artifactId>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.jboss.resteasy</groupId>
+					<artifactId>resteasy-jackson2-provider</artifactId>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.jboss.resteasy</groupId>
+					<artifactId>resteasy-jaxb-provider</artifactId>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>JerseyProxyProvider</id>
+			<properties>
+				<bridge.tests.ClientProvider>bridge.tests.providers.JerseyProxyProvider</bridge.tests.ClientProvider>
+			</properties>
+			<build>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-failsafe-plugin</artifactId>
+					<configuration>
+						<excludes>
+							<exclude>bridge.tests.BeanResourceTest.get</exclude>
+						</excludes>
+					</configuration>
+				</plugin>
+			</plugins>
+			</build>
+			<dependencies>
+				<dependency>
+					<groupId>org.glassfish.jersey.core</groupId>
+					<artifactId>jersey-client</artifactId>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.glassfish.jersey.ext</groupId>
+					<artifactId>jersey-proxy-client</artifactId>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.glassfish.jersey.media</groupId>
+					<artifactId>jersey-media-json-jackson</artifactId>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>ResteasyProvider</id>
+			<properties>
+				<bridge.tests.ClientProvider>bridge.tests.providers.ResteasyProvider</bridge.tests.ClientProvider>
+			</properties>
+			<dependencies>
+				<dependency>
+					<groupId>org.jboss.resteasy</groupId>
+					<artifactId>resteasy-client</artifactId>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.jboss.resteasy</groupId>
+					<artifactId>resteasy-jackson2-provider</artifactId>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.jboss.resteasy</groupId>
+					<artifactId>resteasy-jaxb-provider</artifactId>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
 		<profile>
 			<id>managed</id>
 			<properties>
@@ -58,6 +159,13 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
+				<configuration>
+					<forkCount>1</forkCount>
+					<reuseForks>false</reuseForks>
+					<systemPropertyVariables>
+						<bridge.tests.ClientProvider>${bridge.tests.ClientProvider}</bridge.tests.ClientProvider>
+					</systemPropertyVariables>
+				</configuration>
 				<executions>
 					<execution>
 						<phase>integration-test</phase>
@@ -71,10 +179,6 @@
 						</configuration>
 					</execution>
 				</executions>
-				<configuration>
-					<forkCount>1</forkCount>
-					<reuseForks>false</reuseForks>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>
@@ -93,21 +197,21 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
+		<!--<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
-			<artifactId>jersey-server</artifactId>
+			<artifactId>jersey-client</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
+			</dependency>
+			<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-jackson</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<!-- <dependency>
+			</dependency>
+			<dependency>
 			<groupId>org.glassfish.jersey.containers.glassfish</groupId>
 			<artifactId>jersey-gf-cdi</artifactId>
 			<scope>test</scope>
-		</dependency> -->
+			</dependency> -->
 
 		<dependency>
 			<groupId>org.jboss.arquillian.junit</groupId>

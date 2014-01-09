@@ -32,9 +32,6 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.googlecode.gentyref.GenericTypeReflector;
 
 class RestMethod
@@ -172,7 +169,7 @@ class RestMethod
 			final Collection<Action> actions = new LinkedList<>();
 
 			for( final Annotation a : field.getAnnotations() ) {
-				final Action action = findAction( a, 0 );
+				final Action action = createAction( a, 0 );
 
 				if( action != null ) {
 					actions.add( action );
@@ -415,7 +412,7 @@ class RestMethod
 		}
 	}
 
-	static Action findAction( Annotation a, int ix )
+	static Action createAction( Annotation a, int ix )
 	{
 		if( CookieParam.class.isInstance( a ) ) {
 			return new CookieParamAction( (CookieParam) a, ix );
@@ -445,7 +442,26 @@ class RestMethod
 		return null;
 	}
 
-	static private final Logger L = LoggerFactory.getLogger( RestMethod.class );
+	static <T extends Annotation> T getAnnotation( Class cls, Class<T> annCls )
+	{
+		T a = (T) cls.getAnnotation( annCls );
+
+		if( a != null ) {
+			return a;
+		}
+
+		for( final Class c : cls.getInterfaces() ) {
+			a = getAnnotation( c, annCls );
+
+			if( a != null ) {
+				return a;
+			}
+		}
+
+		return null;
+	}
+
+	//	static private final Logger L = LoggerFactory.getLogger( RestMethod.class );
 
 	private final Class cls;
 
@@ -485,7 +501,7 @@ class RestMethod
 			boolean entityCandidate = true;
 
 			for( final Annotation a : pas ) {
-				final Action action = findAction( a, k );
+				final Action action = createAction( a, k );
 
 				if( action != null ) {
 					this.actions.add( action );
@@ -571,25 +587,6 @@ class RestMethod
 		else {
 			return b.method( this.httpMethod, genericReturnType );
 		}
-	}
-
-	<T extends Annotation> T getAnnotation( Class cls, Class<T> annCls )
-	{
-		T a = (T) cls.getAnnotation( annCls );
-
-		if( a != null ) {
-			return a;
-		}
-
-		for( final Class c : cls.getInterfaces() ) {
-			a = getAnnotation( c, annCls );
-
-			if( a != null ) {
-				return a;
-			}
-		}
-
-		return null;
 	}
 
 	private <T extends Annotation> T getAnnotation( Class<T> annCls )
