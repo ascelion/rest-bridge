@@ -1,4 +1,4 @@
-activeProfiles=remote,RestBridgeWithJersey
+activeProfiles=remote,RestBridgeWithJersey,Validation
 eclipse.preferences.version=1
 resolveWorkspaceProjects=true
 version=1

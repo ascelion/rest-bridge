@@ -12,7 +12,6 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>glassfish</module>
 		<module>wildfly</module>
 	</modules>
 
@@ -22,6 +21,19 @@
 	</properties>
 
 	<profiles>
+		<profile>
+			<id>glassfish</id>
+			<modules>
+				<module>glassfish</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>wildfly</id>
+			<modules>
+				<module>wildfly</module>
+			</modules>
+		</profile>
+
 		<profile>
 			<id>RestBridgeWithJersey</id>
 			<dependencies>
