@@ -13,6 +13,6 @@ import org.junit.runners.Suite.SuiteClasses;
 	ValidatedRestTest.class,
 	ValidatedTest.class,
 } )
-public class WholeSuite
+public abstract class AllTests
 {
 }

@@ -1,3 +1,4 @@
+
 package ascelion.rest.bridge.client;
 
 import java.lang.reflect.Type;
@@ -27,6 +28,8 @@ extends Action
 	@Override
 	void execute( RestContext cx )
 	{
+		ValidationAction.validate( cx );
+
 		final Invocation.Builder b;
 
 		if( cx.accepts != null ) {
@@ -67,4 +70,3 @@ extends Action
 		}
 	}
 }
-

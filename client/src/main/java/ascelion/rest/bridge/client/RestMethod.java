@@ -80,6 +80,9 @@ class RestMethod
 		if( BeanParam.class.isInstance( a ) ) {
 			return new BeanParamAction( (BeanParam) a, ix );
 		}
+		if( isValidation( a ) ) {
+			return new ValidationAction( ix );
+		}
 
 		return null;
 	}
@@ -101,6 +104,11 @@ class RestMethod
 		}
 
 		return null;
+	}
+
+	private static boolean isValidation( Annotation a )
+	{
+		return "javax.validation.Valid".equals( a.annotationType().getName() );
 	}
 
 	//	static private final Logger L = LoggerFactory.getLogger( RestMethod.class );

@@ -118,6 +118,29 @@
 		</profile>
 
 		<profile>
+			<id>Validation</id>
+			<dependencies>
+				<dependency>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-jdk14</artifactId>
+					<version>1.7.7</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-validator</artifactId>
+					<version>5.1.3.Final</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.glassfish</groupId>
+					<artifactId>javax.el</artifactId>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<profile>
 			<id>managed</id>
 			<properties>
 				<skipTests>false</skipTests>

@@ -1,9 +1,9 @@
 
 package bridge.tests.wildfly;
 
-import bridge.tests.WholeSuite;
+import bridge.tests.AllTests;
 
 public class WildflySuite
-extends WholeSuite
+extends AllTests
 {
 }
