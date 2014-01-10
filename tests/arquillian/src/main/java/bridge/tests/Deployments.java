@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.exporter.ExplodedExporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -16,7 +15,9 @@ import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
 import org.jboss.shrinkwrap.resolver.api.maven.ScopeType;
 import org.junit.runner.RunWith;
 
-@RunWith( Arquillian.class )
+import bridge.tests.arquillian.ArquillianUnit;
+
+@RunWith( ArquillianUnit.class )
 public abstract class Deployments
 {
 

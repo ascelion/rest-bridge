@@ -7,12 +7,12 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 
-import bridge.tests.ClientProvider;
+import bridge.tests.TestClientProvider;
 
 import ascelion.rest.bridge.web.RestApplication;
 
 public class ResteasyProvider
-implements ClientProvider
+implements TestClientProvider
 {
 
 	@Override

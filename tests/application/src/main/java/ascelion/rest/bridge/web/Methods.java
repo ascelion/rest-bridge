@@ -13,8 +13,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 @Path( "methods" )
-@Produces( MediaType.APPLICATION_JSON )
-@Consumes( MediaType.APPLICATION_JSON )
+@Consumes( MediaType.WILDCARD )
+@Produces( MediaType.TEXT_PLAIN )
 public interface Methods
 {
 
@@ -22,13 +22,13 @@ public interface Methods
 	void delete();
 
 	@GET
-	void get();
+	String get();
 
 	@HEAD
 	void head();
 
 	@OPTIONS
-	void options();
+	String options();
 
 	@POST
 	void post();

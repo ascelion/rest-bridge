@@ -5,7 +5,7 @@ import java.net.URI;
 
 import javax.ws.rs.client.Client;
 
-public interface ClientProvider
+public interface TestClientProvider
 {
 
 	<T> T createClient( URI target, Class<T> cls );

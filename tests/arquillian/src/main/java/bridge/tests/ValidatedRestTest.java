@@ -36,73 +36,74 @@ extends Deployments
 	@Test
 	public void bean_WithInvalid()
 	{
-		bean( new BeanValidData(), OK );
+		beanCall( "bean", new BeanValidData(), OK );
 	}
 
 	@Test
+	//	@IgnoreWith( ResteasyProvider.class )
 	public void bean_WithNull()
 	{
-		bean( null, NO_CONTENT );
+		beanCall( "bean", null, NO_CONTENT );
 	}
 
 	@Test
 	public void bean_WithValid()
 	{
-		bean( new BeanValidData( "gigel" ), OK );
+		beanCall( "bean", new BeanValidData( "gigel" ), OK );
 	}
 
 	@Test
 	public void beanNotNull_WithInvalid()
 	{
-		beanNotNull( new BeanValidData(), OK );
+		beanCall( "beanNotNull", new BeanValidData(), OK );
 	}
 
 	@Test
 	public void beanNotNull_WithNull()
 	{
-		beanNotNull( null, BAD_REQUEST );
+		beanCall( "beanNotNull", null, BAD_REQUEST );
 	}
 
 	@Test
 	public void beanNotNull_WithValid()
 	{
-		beanNotNull( new BeanValidData( "gigiel" ), OK );
+		beanCall( "beanNotNull", new BeanValidData( "gigiel" ), OK );
 	}
 
 	@Test
 	public void beanValid_WithInvalid()
 	{
-		beanValid( new BeanValidData(), BAD_REQUEST );
+		beanCall( "beanValid", new BeanValidData(), BAD_REQUEST );
 	}
 
 	@Test
 	public void beanValid_WithNull()
 	{
-		beanValid( null, NO_CONTENT );
+		beanCall( "beanValid", null, NO_CONTENT );
 	}
 
 	@Test
 	public void beanValid_WithValid()
 	{
-		beanValid( new BeanValidData( "gigel" ), OK );
+		beanCall( "beanValid", new BeanValidData( "gigel" ), OK );
 	}
 
 	@Test
 	public void beanValidNotNull_WithInvalid()
 	{
-		beanValidNotNull( new BeanValidData(), BAD_REQUEST );
+		beanCall( "beanValidNotNull", new BeanValidData(), BAD_REQUEST );
 	}
 
 	@Test
 	public void beanValidNotNull_WithNull()
 	{
-		beanValidNotNull( null, BAD_REQUEST );
+		beanCall( "beanValidNotNull", null, BAD_REQUEST );
 	}
 
 	@Test
 	public void beanValidNotNull_WithValid()
 	{
-		beanValidNotNull( new BeanValidData( "gigel" ), OK );
+		beanCall( "beanValidNotNull", new BeanValidData( "gigel" ), OK );
 	}
 
 	@Test
@@ -141,81 +142,12 @@ extends Deployments
 		notNullQueryParam( "gigel", OK );
 	}
 
-	private void bean( final BeanValidData v, Status status )
+	private void beanCall( String path, final BeanValidData v, Status status )
 	{
-		final WebTarget w = getTarget( "bean" );
+		final WebTarget w = getTarget( path );
 		final Builder b = w.request( MediaType.APPLICATION_JSON );
-		final Response r;
-
-		//		if( v != null ) {
-		r = b.method( "POST", Entity.entity( v, MediaType.APPLICATION_JSON ) );
-		//		}
-		//		else {
-		//			r = b.method( "POST" );
-		//		}
-
-		assertNotNull( r );
-		assertEquals( status.getStatusCode(), r.getStatus() );
-
-		if( status == OK ) {
-			assertEquals( v, r.readEntity( BeanValidData.class ) );
-		}
-	}
-
-	private void beanNotNull( final BeanValidData v, Status status )
-	{
-		final WebTarget w = getTarget( "beanNotNull" );
-		final Builder b = w.request( MediaType.APPLICATION_JSON );
-		final Response r;
-
-		//		if( v != null ) {
-		r = b.method( "POST", Entity.entity( v, MediaType.APPLICATION_JSON ) );
-		//		}
-		//		else {
-		//			r = b.method( "POST" );
-		//		}
-
-		assertNotNull( r );
-		assertEquals( status.getStatusCode(), r.getStatus() );
-
-		if( status == OK ) {
-			assertEquals( v, r.readEntity( BeanValidData.class ) );
-		}
-	}
-
-	private void beanValid( final BeanValidData v, Status status )
-	{
-		final WebTarget w = getTarget( "beanValid" );
-		final Builder b = w.request( MediaType.APPLICATION_JSON );
-		final Response r;
-
-		//		if( v != null ) {
-		r = b.method( "POST", Entity.entity( v, MediaType.APPLICATION_JSON ) );
-		//		}
-		//		else {
-		//			r = b.method( "POST" );
-		//		}
-
-		assertNotNull( r );
-		assertEquals( status.getStatusCode(), r.getStatus() );
-
-		if( status == OK ) {
-			assertEquals( v, r.readEntity( BeanValidData.class ) );
-		}
-	}
-
-	private void beanValidNotNull( final BeanValidData v, Status status )
-	{
-		final WebTarget w = getTarget( "beanValidNotNull" );
-		final Builder b = w.request( MediaType.APPLICATION_JSON );
-		final Response r;
-
-		//		if( v != null ) {
-		r = b.method( "POST", Entity.entity( v, MediaType.APPLICATION_JSON ) );
-		//		}
-		//		else {
-		//			r = b.method( "POST" );
-		//		}
+		final Entity e = v != null ? Entity.entity( v, MediaType.APPLICATION_JSON ) : null;
+		final Response r = b.method( "POST", e );
 
 		assertNotNull( r );
 		assertEquals( status.getStatusCode(), r.getStatus() );

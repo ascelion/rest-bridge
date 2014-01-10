@@ -11,8 +11,9 @@ implements Methods
 	}
 
 	@Override
-	public void get()
+	public String get()
 	{
+		return "GET";
 	}
 
 	@Override
@@ -21,8 +22,9 @@ implements Methods
 	}
 
 	@Override
-	public void options()
+	public String options()
 	{
+		return "OPTIONS";
 	}
 
 	@Override

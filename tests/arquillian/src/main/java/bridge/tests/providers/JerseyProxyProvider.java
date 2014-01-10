@@ -9,12 +9,12 @@ import javax.ws.rs.client.WebTarget;
 
 import org.glassfish.jersey.client.proxy.WebResourceFactory;
 
-import bridge.tests.ClientProvider;
+import bridge.tests.TestClientProvider;
 
 import ascelion.rest.bridge.web.RestApplication;
 
 public class JerseyProxyProvider
-implements ClientProvider
+implements TestClientProvider
 {
 
 	@Override

@@ -3,13 +3,13 @@ package bridge.tests;
 
 import java.lang.reflect.TypeVariable;
 import java.net.URI;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.MethodRule;
 
-import bridge.tests.providers.IgnoreWithRule;
+import bridge.tests.providers.RestBridgeProvider;
 
 import com.googlecode.gentyref.GenericTypeReflector;
 
@@ -17,19 +17,20 @@ public abstract class AbstractTestCase<T>
 extends Deployments
 {
 
-	static public Class providerClass()
-	throws ClassNotFoundException
+	static private TestClientProvider initClientProvider()
 	{
-		final String clientProviderName = System.getProperty( ClientProvider.class.getName(),
-			"bridge.tests.providers.RestBridgeProvider" );
+		final Iterator<TestClientProvider> providers = ServiceLoader.load( TestClientProvider.class ).iterator();
 
-		return Thread.currentThread().getContextClassLoader().loadClass( clientProviderName );
+		if( providers.hasNext() ) {
+			return providers.next();
+		}
+
+		return new RestBridgeProvider();
 	}
 
-	static private final TypeVariable INTEFACE_TYPE = AbstractTestCase.class.getTypeParameters()[0];
+	static public final TestClientProvider CLIENT_PROVIDER = initClientProvider();
 
-	@Rule
-	public MethodRule ignoreRule = new IgnoreWithRule();
+	static private final TypeVariable INTEFACE_TYPE = AbstractTestCase.class.getTypeParameters()[0];
 
 	@ArquillianResource
 	protected URI target;
@@ -41,8 +42,7 @@ extends Deployments
 	throws Exception
 	{
 		final Class<T> clientClass = (Class) GenericTypeReflector.getTypeParameter( getClass(), INTEFACE_TYPE );
-		final Class<? extends ClientProvider> providerClass = providerClass();
 
-		this.client = providerClass.newInstance().createClient( this.target, clientClass );
+		this.client = CLIENT_PROVIDER.createClient( this.target, clientClass );
 	}
 }

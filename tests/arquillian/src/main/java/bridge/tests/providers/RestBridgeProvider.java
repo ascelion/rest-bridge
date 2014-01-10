@@ -3,13 +3,13 @@ package bridge.tests.providers;
 
 import java.net.URI;
 
-import bridge.tests.ClientProvider;
+import bridge.tests.TestClientProvider;
 
 import ascelion.rest.bridge.client.RestClient;
 import ascelion.rest.bridge.web.RestApplication;
 
 public class RestBridgeProvider
-implements ClientProvider
+implements TestClientProvider
 {
 
 	@Override

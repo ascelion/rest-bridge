@@ -24,9 +24,6 @@
 	<profiles>
 		<profile>
 			<id>RestBridgeWithJersey</id>
-			<properties>
-				<bridge.tests.ClientProvider>bridge.tests.providers.RestBridgeProvider</bridge.tests.ClientProvider>
-			</properties>
 			<dependencies>
 				<dependency>
 					<groupId>org.glassfish.jersey.core</groupId>
@@ -47,9 +44,6 @@
 		</profile>
 		<profile>
 			<id>RestBridgeWithResteasy</id>
-			<properties>
-				<bridge.tests.ClientProvider>bridge.tests.providers.RestBridgeProvider</bridge.tests.ClientProvider>
-			</properties>
 			<dependencies>
 				<dependency>
 					<groupId>org.jboss.resteasy</groupId>
@@ -70,23 +64,14 @@
 		</profile>
 		<profile>
 			<id>JerseyProxyProvider</id>
-			<properties>
-				<bridge.tests.ClientProvider>bridge.tests.providers.JerseyProxyProvider</bridge.tests.ClientProvider>
-			</properties>
-			<build>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-failsafe-plugin</artifactId>
-					<configuration>
-						<excludes>
-							<exclude>bridge.tests.BeanResourceTest.get</exclude>
-						</excludes>
-					</configuration>
-				</plugin>
-			</plugins>
-			</build>
 			<dependencies>
+				<dependency>
+					<groupId>${project.groupId}</groupId>
+					<artifactId>test-client-providers</artifactId>
+					<version>${project.version}</version>
+					<classifier>JerseyProxy</classifier>
+					<scope>test</scope>
+				</dependency>
 				<dependency>
 					<groupId>org.glassfish.jersey.core</groupId>
 					<artifactId>jersey-client</artifactId>
@@ -106,10 +91,14 @@
 		</profile>
 		<profile>
 			<id>ResteasyProvider</id>
-			<properties>
-				<bridge.tests.ClientProvider>bridge.tests.providers.ResteasyProvider</bridge.tests.ClientProvider>
-			</properties>
 			<dependencies>
+				<dependency>
+					<groupId>${project.groupId}</groupId>
+					<artifactId>test-client-providers</artifactId>
+					<version>${project.version}</version>
+					<classifier>Resteasy</classifier>
+					<scope>test</scope>
+				</dependency>
 				<dependency>
 					<groupId>org.jboss.resteasy</groupId>
 					<artifactId>resteasy-client</artifactId>
@@ -162,9 +151,6 @@
 				<configuration>
 					<forkCount>1</forkCount>
 					<reuseForks>false</reuseForks>
-					<systemPropertyVariables>
-						<bridge.tests.ClientProvider>${bridge.tests.ClientProvider}</bridge.tests.ClientProvider>
-					</systemPropertyVariables>
 				</configuration>
 				<executions>
 					<execution>

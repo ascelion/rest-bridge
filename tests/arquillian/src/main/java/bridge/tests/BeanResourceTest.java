@@ -9,7 +9,7 @@ import javax.ws.rs.core.Response;
 
 import org.junit.Test;
 
-import bridge.tests.providers.IgnoreWith;
+import bridge.tests.arquillian.IgnoreWith;
 import bridge.tests.providers.JerseyProxyProvider;
 
 import ascelion.rest.bridge.web.BeanParamData;
@@ -19,7 +19,6 @@ import ascelion.rest.bridge.web.RestApplication;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-@IgnoreWith( JerseyProxyProvider.class )
 public class BeanResourceTest
 extends AbstractTestCase<BeanResource>
 {
@@ -48,6 +47,7 @@ extends AbstractTestCase<BeanResource>
 	}
 
 	@Test
+	@IgnoreWith( JerseyProxyProvider.class )
 	public void get()
 	{
 		assertValid( this.client.get( createBean() ) );
