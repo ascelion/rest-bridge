@@ -4,9 +4,9 @@ package ascelion.rest.bridge.client;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -18,8 +18,6 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
-
-import com.googlecode.gentyref.GenericTypeReflector;
 
 public class RestClientIH
 implements InvocationHandler
@@ -46,9 +44,9 @@ implements InvocationHandler
 
 	private final Class cls;
 
-	private final Set<Method> methods;
-
 	private final WebTarget target;
+
+	private final Map<Method, RestMethod> methods = new HashMap<>();
 
 	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
 
@@ -59,15 +57,17 @@ implements InvocationHandler
 	RestClientIH( Class cls, WebTarget target )
 	{
 		this.cls = cls;
-		this.methods = methodsOf( cls );
 		this.target = Util.addPathFromAnnotation( cls, target );
+
+		initMethods();
 	}
 
 	RestClientIH( Class cls, WebTarget target, Map<String, List<Object>> headers, Collection<Cookie> cookies, Form form )
 	{
 		this.cls = cls;
-		this.methods = methodsOf( cls );
 		this.target = target;
+
+		initMethods();
 
 		this.headers.putAll( headers );
 		this.cookies.addAll( cookies );
@@ -75,36 +75,26 @@ implements InvocationHandler
 	}
 
 	@Override
-	public Object invoke( Object proxy, Method method, Object[] args )
+	public Object invoke( Object proxy, Method method, Object[] arguments )
 	throws Throwable
 	{
 		if( O_METHODS.contains( method ) ) {
-			return method.invoke( this, args );
+			return method.invoke( this, arguments );
 		}
 
-		if( this.methods.contains( method ) ) {
-			return invokeInterfaceMethod( method, args );
+		final RestMethod rest = this.methods.get( method );
+
+		if( rest != null ) {
+			return rest.call( arguments, this.headers, this.cookies, this.form );
 		}
 
 		throw new UnsupportedOperationException( "Could not handle method " + method );
 	}
 
-	private Class getReturnType( Method method )
+	private void initMethods()
 	{
-		final Type returnType = GenericTypeReflector.getExactReturnType( method, this.cls );
-
-		if( returnType instanceof Class ) {
-			return (Class) returnType;
-		}
-
-		throw new UnsupportedOperationException( "Return type is not a class: " + returnType );
-	}
-
-	private Object invokeInterfaceMethod( Method method, Object[] args )
-	{
-		final RestMethod request = new RestMethod( this.cls, method, this.target );
-
-		return request.call( args, this.headers, this.cookies, this.form );
+		Arrays.asList( this.cls.getMethods() ).stream()
+			.forEach( m -> this.methods.put( m, new RestMethod( this.cls, m, this.target ) ) );
 	}
 
 }

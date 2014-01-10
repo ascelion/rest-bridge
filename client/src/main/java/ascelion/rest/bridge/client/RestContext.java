@@ -13,21 +13,25 @@ import javax.ws.rs.core.MultivaluedMap;
 class RestContext
 {
 
-	WebTarget target;
-
 	final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
 
 	final Collection<Cookie> cookies = new LinkedList<>();
 
 	final Form form = new Form();
 
+	String[] accepts;
+
 	String contentType;
 
 	Object entity;
 
-	Object value;
+	boolean entityPresent;
 
-	String[] accepts;
+	Object parameterValue;
+
+	Object result;
+
+	WebTarget target;
 
 	RestContext( WebTarget target, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
 	{
