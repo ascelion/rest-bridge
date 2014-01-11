@@ -157,7 +157,10 @@ class RestMethod
 					if( action != null ) {
 						this.actions.add( action );
 
-						entityCandidate = false;
+						// TODO: fix this dirty hack
+						if( !"ValidationAction".equals( action.getClass().getSimpleName() ) ) {
+							entityCandidate = false;
+						}
 					}
 				}
 

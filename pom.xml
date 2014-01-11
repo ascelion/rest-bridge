@@ -16,6 +16,7 @@
 
 	<modules>
 		<module>client</module>
+		<module>cdi</module>
 
 		<module>tests</module>
 		<module>tests/application</module>

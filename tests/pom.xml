@@ -13,6 +13,7 @@
 
 	<modules>
 		<module>wildfly</module>
+		<module>glassfish</module>
 	</modules>
 
 	<properties>
@@ -21,19 +22,6 @@
 	</properties>
 
 	<profiles>
-		<profile>
-			<id>glassfish</id>
-			<modules>
-				<module>glassfish</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>wildfly</id>
-			<modules>
-				<module>wildfly</module>
-			</modules>
-		</profile>
-
 		<profile>
 			<id>RestBridgeWithJersey</id>
 			<dependencies>

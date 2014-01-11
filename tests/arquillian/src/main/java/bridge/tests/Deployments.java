@@ -45,6 +45,7 @@ public abstract class Deployments
 			.resolve().withTransitivity().asFile();
 
 		web.addAsLibraries( deps );
+		web.addAsWebInfResource( Deployments.class.getResource( "/META-INF/beans.xml" ), "beans.xml" );
 
 		final File output = new File( new File( "target" ), "exploded" );
 

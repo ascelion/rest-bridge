@@ -7,6 +7,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith( Suite.class )
 @SuiteClasses( {
+	APITest.class,
 	BeanResourceTest.class,
 	HelloTest.class,
 	MethodsTest.class,
