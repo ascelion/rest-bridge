@@ -32,16 +32,13 @@ extends Action
 			ValidationAction.validate( cx );
 		}
 
-		final Invocation.Builder b;
-
-		if( cx.accepts != null ) {
-			b = cx.target.request( cx.accepts );
-		}
-		else {
-			b = cx.target.request();
-		}
+		final Invocation.Builder b = cx.target.request();
 
 		b.headers( cx.headers );
+
+		if( cx.accepts != null ) {
+			b.accept( cx.accepts );
+		}
 
 		cx.cookies.forEach( c -> b.cookie( c ) );
 
