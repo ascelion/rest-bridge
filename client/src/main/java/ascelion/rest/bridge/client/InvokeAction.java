@@ -28,7 +28,9 @@ extends Action
 	@Override
 	void execute( RestContext cx )
 	{
-		ValidationAction.validate( cx );
+		if( cx.validate.size() > 0 ) {
+			ValidationAction.validate( cx );
+		}
 
 		final Invocation.Builder b;
 
