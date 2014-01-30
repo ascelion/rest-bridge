@@ -1,13 +1,11 @@
 
 package ascelion.rest.bridge.client;
 
-import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
+import javax.enterprise.inject.spi.CDI;
 import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
 import javax.validation.Validation;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
@@ -17,19 +15,6 @@ class ValidationAction
 extends Action
 {
 
-	static class Bean
-	implements Serializable
-	{
-
-		@Valid
-		final List<Object> parameters;
-
-		Bean( List<Object> parameters )
-		{
-			this.parameters = parameters;
-		}
-	}
-
 	static void validate( RestContext cx )
 	{
 		final ValidatorFactory vf = getValidator();
@@ -38,7 +23,7 @@ extends Action
 			final Validator val = vf.getValidator();
 			final Set vio = new LinkedHashSet<>();
 
-			vio.addAll( val.validate( new Bean( cx.validate ) ) );
+			cx.validate.forEach( o -> vio.addAll( val.validate( o ) ) );
 
 			if( vio.size() > 0 ) {
 				throw new ConstraintViolationException( vio );
@@ -46,8 +31,17 @@ extends Action
 		}
 	}
 
+	private static ValidatorFactory cdiValidator()
+	{
+		return CDI.current().select( ValidatorFactory.class ).get();
+	}
+
 	private static ValidatorFactory getValidator()
 	{
+		if( isCDI ) {
+			return cdiValidator();
+		}
+
 		try {
 			return Validation.buildDefaultValidatorFactory();
 		}
@@ -55,6 +49,21 @@ extends Action
 			return null;
 		}
 	}
+
+	private static boolean isCDI()
+	{
+		try {
+			Class.forName( "javax.enterprise.inject.spi.CDI", false, Thread.currentThread().getContextClassLoader() );
+
+			return true;
+		}
+		catch( final ClassNotFoundException e ) {
+			return false;
+		}
+
+	}
+
+	static final boolean isCDI = isCDI();
 
 	ValidationAction( int ix )
 	{
