@@ -16,6 +16,10 @@ public class ArquillianUnit
 extends Arquillian
 {
 
+	static {
+		Arrays.asList( System.getProperty( "java.class.path", "" ).split( ":" ) ).forEach( System.out::println );
+	}
+
 	public ArquillianUnit( Class<?> klass )
 	throws InitializationError
 	{

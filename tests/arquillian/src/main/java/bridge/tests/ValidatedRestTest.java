@@ -15,7 +15,7 @@ import javax.ws.rs.core.Response.Status;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.junit.Test;
 
-import ascelion.rest.bridge.web.BeanValidData;
+import ascelion.rest.bridge.web.BeanData;
 import ascelion.rest.bridge.web.RestApplication;
 import ascelion.rest.bridge.web.Validated;
 
@@ -36,11 +36,10 @@ extends Deployments
 	@Test
 	public void bean_WithInvalid()
 	{
-		beanCall( "bean", new BeanValidData(), OK );
+		beanCall( "bean", new BeanData(), OK );
 	}
 
 	@Test
-	//	@IgnoreWith( ResteasyProvider.class )
 	public void bean_WithNull()
 	{
 		beanCall( "bean", null, NO_CONTENT );
@@ -49,13 +48,13 @@ extends Deployments
 	@Test
 	public void bean_WithValid()
 	{
-		beanCall( "bean", new BeanValidData( "gigel" ), OK );
+		beanCall( "bean", new BeanData( "gigel" ), OK );
 	}
 
 	@Test
 	public void beanNotNull_WithInvalid()
 	{
-		beanCall( "beanNotNull", new BeanValidData(), OK );
+		beanCall( "beanNotNull", new BeanData(), OK );
 	}
 
 	@Test
@@ -67,13 +66,13 @@ extends Deployments
 	@Test
 	public void beanNotNull_WithValid()
 	{
-		beanCall( "beanNotNull", new BeanValidData( "gigiel" ), OK );
+		beanCall( "beanNotNull", new BeanData( "gigiel" ), OK );
 	}
 
 	@Test
 	public void beanValid_WithInvalid()
 	{
-		beanCall( "beanValid", new BeanValidData(), BAD_REQUEST );
+		beanCall( "beanValid", new BeanData(), BAD_REQUEST );
 	}
 
 	@Test
@@ -85,13 +84,13 @@ extends Deployments
 	@Test
 	public void beanValid_WithValid()
 	{
-		beanCall( "beanValid", new BeanValidData( "gigel" ), OK );
+		beanCall( "beanValid", new BeanData( "gigel" ), OK );
 	}
 
 	@Test
 	public void beanValidNotNull_WithInvalid()
 	{
-		beanCall( "beanValidNotNull", new BeanValidData(), BAD_REQUEST );
+		beanCall( "beanValidNotNull", new BeanData(), BAD_REQUEST );
 	}
 
 	@Test
@@ -103,31 +102,31 @@ extends Deployments
 	@Test
 	public void beanValidNotNull_WithValid()
 	{
-		beanCall( "beanValidNotNull", new BeanValidData( "gigel" ), OK );
+		beanCall( "beanValidNotNull", new BeanData( "gigel" ), OK );
 	}
 
 	@Test
-	public void notNullFormParam_BAD()
-	{
-		notNullFormParam( null, BAD_REQUEST );
-	}
-
-	@Test
-	public void notNullFormParam_OK()
+	public void notNullFormParam_WithNotNull()
 	{
 		notNullFormParam( "gigel", OK );
 	}
 
 	@Test
-	public void notNullHeaderParam_BAD()
+	public void notNullFormParam_WithNull()
 	{
-		notNullHeaderParam( null, BAD_REQUEST );
+		notNullFormParam( null, BAD_REQUEST );
 	}
 
 	@Test
-	public void notNullHeaderParam_OK()
+	public void notNullHeaderParam_WithNotNull()
 	{
 		notNullHeaderParam( "gigel", OK );
+	}
+
+	@Test
+	public void notNullHeaderParam_WithNull()
+	{
+		notNullHeaderParam( null, BAD_REQUEST );
 	}
 
 	@Test
@@ -142,7 +141,7 @@ extends Deployments
 		notNullQueryParam( "gigel", OK );
 	}
 
-	private void beanCall( String path, final BeanValidData v, Status status )
+	private void beanCall( String path, final BeanData v, Status status )
 	{
 		final WebTarget w = getTarget( path );
 		final Builder b = w.request( MediaType.APPLICATION_JSON );
@@ -153,7 +152,7 @@ extends Deployments
 		assertEquals( status.getStatusCode(), r.getStatus() );
 
 		if( status == OK ) {
-			assertEquals( v, r.readEntity( BeanValidData.class ) );
+			assertEquals( v, r.readEntity( BeanData.class ) );
 		}
 	}
 

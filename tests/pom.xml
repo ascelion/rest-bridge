@@ -12,8 +12,9 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>wildfly</module>
 		<module>glassfish</module>
+		<module>jetty</module>
+		<module>wildfly</module>
 	</modules>
 
 	<properties>
@@ -210,22 +211,6 @@
 			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
-
-		<!--<dependency>
-			<groupId>org.glassfish.jersey.core</groupId>
-			<artifactId>jersey-client</artifactId>
-			<scope>test</scope>
-			</dependency>
-			<dependency>
-			<groupId>org.glassfish.jersey.media</groupId>
-			<artifactId>jersey-media-json-jackson</artifactId>
-			<scope>test</scope>
-			</dependency>
-			<dependency>
-			<groupId>org.glassfish.jersey.containers.glassfish</groupId>
-			<artifactId>jersey-gf-cdi</artifactId>
-			<scope>test</scope>
-			</dependency> -->
 
 		<dependency>
 			<groupId>org.jboss.arquillian.junit</groupId>

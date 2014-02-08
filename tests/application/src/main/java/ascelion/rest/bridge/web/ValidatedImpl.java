@@ -6,25 +6,25 @@ implements Validated
 {
 
 	@Override
-	public BeanValidData bean( BeanValidData value )
+	public BeanData bean( BeanData value )
 	{
 		return value;
 	}
 
 	@Override
-	public BeanValidData beanNotNull( BeanValidData value )
+	public BeanData beanNotNull( BeanData value )
 	{
 		return value;
 	}
 
 	@Override
-	public BeanValidData beanValid( BeanValidData value )
+	public BeanData beanValid( BeanData value )
 	{
 		return value;
 	}
 
 	@Override
-	public BeanValidData beanValidNotNull( BeanValidData value )
+	public BeanData beanValidNotNull( BeanData value )
 	{
 		return value;
 	}
@@ -48,7 +48,7 @@ implements Validated
 	}
 
 	@Override
-	public BeanValidData notNullWithBean( String value, BeanValidData bean )
+	public BeanData notNullWithBean( String value, BeanData bean )
 	{
 		bean.setNotNull( value );
 

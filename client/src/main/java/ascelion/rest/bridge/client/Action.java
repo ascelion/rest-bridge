@@ -82,7 +82,7 @@ implements Comparable<Action>
 	@Override
 	public String toString()
 	{
-		return String.format( "%s=%d", getClass().getSimpleName(), this.ix );
+		return String.format( "%s[ix=%d]", getClass().getSimpleName(), this.ix );
 	}
 
 	void evaluate( Object[] arguments )

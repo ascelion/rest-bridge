@@ -38,7 +38,14 @@ public abstract class Deployments
 			stage = mvn.configureViaPlugin();
 		}
 		catch( final Exception e ) {
-			stage = mvn.loadPomFromFile( "pom.xml" );
+			final String profiles = System.getProperty( "profiles", "" );
+
+			if( profiles.isEmpty() ) {
+				stage = mvn.loadPomFromFile( "pom.xml" );
+			}
+			else {
+				stage = mvn.loadPomFromFile( "pom.xml", profiles.split( "," ) );
+			}
 		}
 
 		final File[] deps = stage.importDependencies( ScopeType.COMPILE, ScopeType.RUNTIME )

@@ -17,7 +17,7 @@ import bridge.tests.arquillian.IgnoreWith;
 import bridge.tests.providers.RestBridgeProvider;
 import bridge.tests.providers.ResteasyProvider;
 
-import ascelion.rest.bridge.web.BeanValidData;
+import ascelion.rest.bridge.web.BeanData;
 import ascelion.rest.bridge.web.Validated;
 
 public class ValidatedTest
@@ -29,39 +29,41 @@ extends AbstractTestCase<Validated>
 
 	public void bean_WithInvalid()
 	{
-		runTest( new BeanValidData(), this.client::bean );
+		runTest( this.client::bean, new BeanData() );
 	}
 
 	@Test
 	@IgnoreWith( ResteasyProvider.class )
 	public void bean_WithNull()
 	{
-		runTest( null, this.client::bean );
+		runTest( this.client::bean, null );
 	}
 
 	@Test
 	public void bean_WithValid()
 	{
-		runTest( new BeanValidData( "value" ), this.client::bean );
+		runTest( this.client::bean, new BeanData( "value" ) );
 	}
 
 	@Test
 	public void beanNotNull_WithInvalid()
 	{
-		runTest( new BeanValidData(), this.client::beanNotNull );
+		runTest( this.client::beanNotNull, new BeanData() );
 	}
 
 	@Test
 	@IgnoreWith( ResteasyProvider.class )
 	public void beanNotNull_WithNull()
 	{
-		runTest( null, this.client::beanNotNull );
+		setUpValidationException();
+
+		runTest( this.client::beanNotNull, null );
 	}
 
 	@Test
 	public void beanNotNull_WithValid()
 	{
-		runTest( new BeanValidData( "value" ), this.client::beanNotNull );
+		runTest( this.client::beanNotNull, new BeanData( "value" ) );
 	}
 
 	@Test
@@ -69,20 +71,20 @@ extends AbstractTestCase<Validated>
 	{
 		setUpValidationException();
 
-		runTest( new BeanValidData(), this.client::beanValid );
+		runTest( this.client::beanValid, new BeanData() );
 	}
 
 	@Test
 	@IgnoreWith( ResteasyProvider.class )
 	public void beanValid_WithNull()
 	{
-		runTest( null, this.client::beanValid );
+		runTest( this.client::beanValid, null );
 	}
 
 	@Test
 	public void beanValid_WithValid()
 	{
-		runTest( new BeanValidData( "value" ), this.client::beanValid );
+		runTest( this.client::beanValid, new BeanData( "value" ) );
 	}
 
 	@Test
@@ -90,26 +92,28 @@ extends AbstractTestCase<Validated>
 	{
 		setUpValidationException();
 
-		runTest( new BeanValidData(), this.client::beanValidNotNull );
+		runTest( this.client::beanValidNotNull, new BeanData() );
 	}
 
 	@Test
 	@IgnoreWith( ResteasyProvider.class )
 	public void beanValidNotNull_WithNull()
 	{
-		runTest( null, this.client::beanValidNotNull );
+		setUpValidationException();
+
+		runTest( this.client::beanValidNotNull, null );
 	}
 
 	@Test
 	public void beanValidNotNull_WithValid()
 	{
-		runTest( new BeanValidData( "value" ), this.client::beanValidNotNull );
+		runTest( this.client::beanValidNotNull, new BeanData( "value" ) );
 	}
 
 	@Test
 	public void notNullFormParam_WithNotNull()
 	{
-		runTest( "value", this.client::notNullFormParam );
+		runTest( this.client::notNullFormParam, "value" );
 	}
 
 	@Test
@@ -118,13 +122,13 @@ extends AbstractTestCase<Validated>
 	{
 		setUpValidationException();
 
-		runTest( null, this.client::notNullFormParam );
+		runTest( this.client::notNullFormParam, null );
 	}
 
 	@Test
 	public void notNullHeaderParam_WithNotNull()
 	{
-		runTest( "value", this.client::notNullHeaderParam );
+		runTest( this.client::notNullHeaderParam, "value" );
 	}
 
 	@Test
@@ -132,13 +136,13 @@ extends AbstractTestCase<Validated>
 	{
 		setUpValidationException();
 
-		runTest( null, this.client::notNullHeaderParam );
+		runTest( this.client::notNullHeaderParam, null );
 	}
 
 	@Test
 	public void notNullQueryParam_WithNotNull()
 	{
-		runTest( "value", this.client::notNullQueryParam );
+		runTest( this.client::notNullQueryParam, "value" );
 	}
 
 	@Test
@@ -146,10 +150,10 @@ extends AbstractTestCase<Validated>
 	{
 		setUpValidationException();
 
-		runTest( null, this.client::notNullQueryParam );
+		runTest( this.client::notNullQueryParam, null );
 	}
 
-	private <T> void runTest( T data, Function<T, T> func )
+	private <T> void runTest( Function<T, T> func, T data )
 	{
 		Assert.assertEquals( data, func.apply( data ) );
 	}

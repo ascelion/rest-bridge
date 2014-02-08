@@ -1,6 +1,7 @@
 
 package ascelion.rest.bridge.client;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -19,6 +20,10 @@ class RestContext
 
 	final Form form = new Form();
 
+	final Object proxy;
+
+	final Method method;
+
 	final Object[] arguments;
 
 	String[] accepts;
@@ -35,16 +40,21 @@ class RestContext
 
 	WebTarget target;
 
-	final Object proxy;
-
-	RestContext( WebTarget target, Object proxy, Object[] arguments, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
+	RestContext( Object proxy, Method method, Object[] arguments, WebTarget target, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
 	{
 		this.target = target;
 		this.proxy = proxy;
+		this.method = method;
 		this.arguments = arguments == null ? new Object[0] : arguments;
 
-		this.headers.putAll( headers );
-		this.cookies.addAll( cookies );
-		this.form.asMap().putAll( form.asMap() );
+		if( headers != null ) {
+			this.headers.putAll( headers );
+		}
+		if( cookies != null ) {
+			this.cookies.addAll( cookies );
+		}
+		if( form != null ) {
+			this.form.asMap().putAll( form.asMap() );
+		}
 	}
 }

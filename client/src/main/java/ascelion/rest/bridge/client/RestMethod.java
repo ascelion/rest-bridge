@@ -104,8 +104,6 @@ class RestMethod
 		else {
 			final Class<?>[] types = method.getParameterTypes();
 
-			this.actions.add( new ValidationAction( method ) );
-
 			for( int k = 0, z = types.length; k < z; k++ ) {
 				this.actions.add( new SetValueAction( k ) );
 
@@ -132,6 +130,8 @@ class RestMethod
 				}
 			}
 
+			this.actions.add( new ValidationAction( this.actions.size() ) );
+
 			final Produces produces = getAnnotation( Produces.class );
 
 			if( produces != null ) {
@@ -139,6 +139,7 @@ class RestMethod
 			}
 
 			final Consumes consumes = getAnnotation( Consumes.class );
+
 			if( consumes != null ) {
 				this.actions.add( new ConsumesAction( consumes, this.actions.size() ) );
 			}
@@ -149,7 +150,7 @@ class RestMethod
 
 	Object call( Object proxy, Object[] arguments, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
 	{
-		final RestContext cx = new RestContext( this.target, proxy, arguments, headers, cookies, form );
+		final RestContext cx = new RestContext( proxy, this.method, arguments, this.target, headers, cookies, form );
 
 		this.actions.forEach( a -> {
 			a.evaluate( arguments );

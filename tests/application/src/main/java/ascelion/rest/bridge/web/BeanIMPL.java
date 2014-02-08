@@ -4,7 +4,7 @@ package ascelion.rest.bridge.web;
 import javax.inject.Inject;
 
 public class BeanIMPL
-extends IMPL<BeanValidData>
+extends IMPL<BeanData>
 implements BeanAPI
 {
 
@@ -12,12 +12,12 @@ implements BeanAPI
 	private Hello hello;
 
 	@Override
-	public BeanValidData get()
+	public BeanData get()
 	{
 		if( this.hello == null ) {
 			throw new IllegalStateException();
 		}
 
-		return new BeanValidData( "value" );
+		return new BeanData( "value" );
 	}
 }

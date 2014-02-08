@@ -1,33 +1,18 @@
 
 package ascelion.rest.bridge.client;
 
-import java.lang.reflect.Method;
+import java.util.Set;
 
 import javax.enterprise.inject.spi.CDI;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;
-import javax.validation.ValidationException;
 import javax.validation.ValidatorFactory;
 import javax.validation.executable.ExecutableValidator;
 
 class ValidationAction
 extends Action
 {
-
-	//	static void validate( RestContext cx )
-	//	{
-	//		final ValidatorFactory vf = getValidator();
-	//
-	//		if( vf != null ) {
-	//			final Validator val = vf.getValidator();
-	//			final Set vio = new LinkedHashSet<>();
-	//
-	//			cx.validate.forEach( o -> vio.addAll( val.validate( o ) ) );
-	//
-	//			if( vio.size() > 0 ) {
-	//				throw new ConstraintViolationException( vio );
-	//			}
-	//		}
-	//	}
 
 	private static ValidatorFactory cdiValidator()
 	{
@@ -48,7 +33,7 @@ extends Action
 		try {
 			return Validation.buildDefaultValidatorFactory();
 		}
-		catch( final ValidationException e ) {
+		catch( final Exception e ) {
 			return null;
 		}
 	}
@@ -68,13 +53,9 @@ extends Action
 
 	static private final boolean isCDI = isCDI();
 
-	private final Method method;
-
-	ValidationAction( Method method )
+	ValidationAction( int ix )
 	{
-		super( -1 );
-
-		this.method = method;
+		super( ix );
 	}
 
 	@Override
@@ -84,8 +65,11 @@ extends Action
 
 		if( vf != null ) {
 			final ExecutableValidator val = vf.getValidator().forExecutables();
+			final Set<ConstraintViolation<Object>> vio = val.validateParameters( cx.proxy, cx.method, cx.arguments );
 
-			val.validateParameters( cx.proxy, this.method, cx.arguments );
+			if( vio.size() > 0 ) {
+				throw new ConstraintViolationException( vio );
+			}
 		}
 	}
 }

@@ -23,19 +23,19 @@ public interface Validated
 
 	@POST
 	@Path( "bean" )
-	BeanValidData bean( BeanValidData value );
+	BeanData bean( BeanData value );
 
 	@POST
 	@Path( "beanNotNull" )
-	BeanValidData beanNotNull( @NotNull BeanValidData value );
+	BeanData beanNotNull( @NotNull BeanData value );
 
 	@POST
 	@Path( "beanValid" )
-	BeanValidData beanValid( @Valid BeanValidData value );
+	BeanData beanValid( @Valid BeanData value );
 
 	@POST
 	@Path( "beanValidNotNull" )
-	BeanValidData beanValidNotNull( @Valid @NotNull BeanValidData value );
+	BeanData beanValidNotNull( @Valid @NotNull BeanData value );
 
 	@POST
 	@Path( "notNullFormParam" )
@@ -53,5 +53,5 @@ public interface Validated
 
 	@POST
 	@Path( "notNullWithBean" )
-	BeanValidData notNullWithBean( @FormParam( "value" ) @NotNull String value, @Valid @NotNull BeanValidData bean );
+	BeanData notNullWithBean( @FormParam( "value" ) @NotNull String value, @Valid @NotNull BeanData bean );
 }

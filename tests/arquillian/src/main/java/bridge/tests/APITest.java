@@ -5,7 +5,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import ascelion.rest.bridge.web.BeanAPI;
-import ascelion.rest.bridge.web.BeanValidData;
+import ascelion.rest.bridge.web.BeanData;
 
 public class APITest
 extends AbstractTestCase<BeanAPI>
@@ -14,7 +14,7 @@ extends AbstractTestCase<BeanAPI>
 	@Test
 	public void create()
 	{
-		final BeanValidData b = new BeanValidData( "cici" );
+		final BeanData b = new BeanData( "cici" );
 
 		Assert.assertEquals( b, this.client.create( b ) );
 	}

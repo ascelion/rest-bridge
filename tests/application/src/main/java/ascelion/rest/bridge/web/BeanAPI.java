@@ -5,6 +5,6 @@ import javax.ws.rs.Path;
 
 @Path( "BeanAPI" )
 public interface BeanAPI
-extends API<BeanValidData>
+extends API<BeanData>
 {
 }

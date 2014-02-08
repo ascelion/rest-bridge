@@ -5,17 +5,17 @@ import java.util.Objects;
 
 import javax.validation.constraints.NotNull;
 
-public class BeanValidData
+public class BeanData
 {
 
 	@NotNull
 	private String value;
 
-	public BeanValidData()
+	public BeanData()
 	{
 	}
 
-	public BeanValidData( String value )
+	public BeanData( String value )
 	{
 		this.value = value;
 	}
@@ -33,7 +33,7 @@ public class BeanValidData
 			return false;
 		}
 
-		final BeanValidData that = (BeanValidData) obj;
+		final BeanData that = (BeanData) obj;
 
 		return Objects.equals( this.value, that.value );
 	}
