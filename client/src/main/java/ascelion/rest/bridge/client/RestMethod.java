@@ -10,16 +10,8 @@ import java.util.Collections;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
-import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.MatrixParam;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
@@ -54,39 +46,6 @@ class RestMethod
 		return c;
 	}
 
-	static Action createAction( Annotation a, int ix )
-	{
-		if( CookieParam.class.isInstance( a ) ) {
-			return new CookieParamAction( (CookieParam) a, ix );
-		}
-		if( DefaultValue.class.isInstance( a ) ) {
-			return new DefaultValueAction( (DefaultValue) a, ix );
-		}
-		if( FormParam.class.isInstance( a ) ) {
-			return new FormParamAction( (FormParam) a, ix );
-		}
-		if( MatrixParam.class.isInstance( a ) ) {
-			return new MatrixParamAction( (MatrixParam) a, ix );
-		}
-		if( PathParam.class.isInstance( a ) ) {
-			return new PathParamAction( (PathParam) a, ix );
-		}
-		if( QueryParam.class.isInstance( a ) ) {
-			return new QueryParamAction( (QueryParam) a, ix );
-		}
-		if( HeaderParam.class.isInstance( a ) ) {
-			return new HeaderParamAction( (HeaderParam) a, ix );
-		}
-		if( BeanParam.class.isInstance( a ) ) {
-			return new BeanParamAction( (BeanParam) a, ix );
-		}
-		if( isValidation( a ) ) {
-			return new ValidationAction( ix );
-		}
-
-		return null;
-	}
-
 	static <T extends Annotation> T getAnnotation( Class cls, Class<T> annCls )
 	{
 		T a = (T) cls.getAnnotation( annCls );
@@ -106,7 +65,7 @@ class RestMethod
 		return null;
 	}
 
-	private static boolean isValidation( Annotation a )
+	static boolean isValidation( Annotation a )
 	{
 		return "javax.validation.Valid".equals( a.annotationType().getName() );
 	}
@@ -145,6 +104,8 @@ class RestMethod
 		else {
 			final Class<?>[] types = method.getParameterTypes();
 
+			this.actions.add( new ValidationAction( method ) );
+
 			for( int k = 0, z = types.length; k < z; k++ ) {
 				this.actions.add( new SetValueAction( k ) );
 
@@ -152,7 +113,7 @@ class RestMethod
 				boolean entityCandidate = true;
 
 				for( final Annotation a : pas ) {
-					final Action action = createAction( a, k );
+					final Action action = Action.createAction( a, k );
 
 					if( action != null ) {
 						this.actions.add( action );
@@ -186,9 +147,9 @@ class RestMethod
 		}
 	}
 
-	Object call( Object[] arguments, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
+	Object call( Object proxy, Object[] arguments, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
 	{
-		final RestContext cx = new RestContext( this.target, headers, cookies, form );
+		final RestContext cx = new RestContext( this.target, proxy, arguments, headers, cookies, form );
 
 		this.actions.forEach( a -> {
 			a.evaluate( arguments );

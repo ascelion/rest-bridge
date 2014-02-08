@@ -35,11 +35,11 @@
 					<artifactId>jersey-media-json-jackson</artifactId>
 					<scope>test</scope>
 				</dependency>
-				<!-- <dependency>
-					<groupId>org.glassfish.jersey.containers.glassfish</groupId>
-					<artifactId>jersey-gf-cdi</artifactId>
+				<dependency>
+					<groupId>org.glassfish.jersey.ext</groupId>
+					<artifactId>jersey-bean-validation</artifactId>
 					<scope>test</scope>
-					</dependency> -->
+				</dependency>
 			</dependencies>
 		</profile>
 		<profile>
@@ -78,13 +78,18 @@
 					<scope>test</scope>
 				</dependency>
 				<dependency>
-					<groupId>org.glassfish.jersey.ext</groupId>
-					<artifactId>jersey-proxy-client</artifactId>
+					<groupId>org.glassfish.jersey.media</groupId>
+					<artifactId>jersey-media-json-jackson</artifactId>
 					<scope>test</scope>
 				</dependency>
 				<dependency>
-					<groupId>org.glassfish.jersey.media</groupId>
-					<artifactId>jersey-media-json-jackson</artifactId>
+					<groupId>org.glassfish.jersey.ext</groupId>
+					<artifactId>jersey-bean-validation</artifactId>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.glassfish.jersey.ext</groupId>
+					<artifactId>jersey-proxy-client</artifactId>
 					<scope>test</scope>
 				</dependency>
 			</dependencies>

@@ -85,7 +85,7 @@ implements InvocationHandler
 		final RestMethod rest = this.methods.get( method );
 
 		if( rest != null ) {
-			return rest.call( arguments, this.headers, this.cookies, this.form );
+			return rest.call( proxy, arguments, this.headers, this.cookies, this.form );
 		}
 
 		throw new UnsupportedOperationException( "Could not handle method " + method );

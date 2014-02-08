@@ -1,3 +1,4 @@
+
 package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
@@ -31,7 +32,7 @@ extends AnnotationAction<BeanParam>
 		final Collection<Action> actions = new LinkedList<>();
 
 		for( final Annotation a : field.getAnnotations() ) {
-			final Action action = RestMethod.createAction( a, 0 );
+			final Action action = Action.createAction( a, 0 );
 
 			if( action != null ) {
 				actions.add( action );
@@ -50,4 +51,3 @@ extends AnnotationAction<BeanParam>
 		}
 	}
 }
-

@@ -3,7 +3,6 @@ package ascelion.rest.bridge.client;
 
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
@@ -20,7 +19,7 @@ class RestContext
 
 	final Form form = new Form();
 
-	final List<Object> validate = new LinkedList<>();
+	final Object[] arguments;
 
 	String[] accepts;
 
@@ -36,9 +35,13 @@ class RestContext
 
 	WebTarget target;
 
-	RestContext( WebTarget target, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
+	final Object proxy;
+
+	RestContext( WebTarget target, Object proxy, Object[] arguments, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
 	{
 		this.target = target;
+		this.proxy = proxy;
+		this.arguments = arguments == null ? new Object[0] : arguments;
 
 		this.headers.putAll( headers );
 		this.cookies.addAll( cookies );
