@@ -39,7 +39,12 @@ extends Action
 	private static ValidatorFactory getValidator()
 	{
 		if( isCDI ) {
-			return cdiValidator();
+			try {
+				return cdiValidator();
+			}
+			catch( final Exception e ) {
+				;
+			}
 		}
 
 		try {
