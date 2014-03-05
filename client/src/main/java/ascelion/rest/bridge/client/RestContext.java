@@ -11,7 +11,7 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
-class RestContext
+final class RestContext
 {
 
 	final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();

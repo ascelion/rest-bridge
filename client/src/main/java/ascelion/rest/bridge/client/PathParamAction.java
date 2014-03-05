@@ -1,3 +1,4 @@
+
 package ascelion.rest.bridge.client;
 
 import javax.ws.rs.PathParam;
@@ -18,4 +19,3 @@ extends AnnotationAction<PathParam>
 	}
 
 }
-

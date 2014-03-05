@@ -128,15 +128,13 @@ implements Bean<T>, PassivationCapable
 		final Set<Bean<?>> beans = this.bm.getBeans( RestClient.class );
 
 		if( beans.isEmpty() ) {
-			throw new UnsatisfiedResolutionException(
-				format( "Cannot find bean of type %s", RestClient.class.getName() ) );
+			throw new UnsatisfiedResolutionException( format( "Cannot find bean of type %s", RestClient.class.getName() ) );
 		}
 
 		final Bean<RestClient> bean = (Bean<RestClient>) this.bm.resolve( beans );
 
 		if( bean == null ) {
-			throw new UnsatisfiedResolutionException( format( "Cannot resolve bean of type %s",
-				RestClient.class.getName() ) );
+			throw new UnsatisfiedResolutionException( format( "Cannot resolve bean of type %s", RestClient.class.getName() ) );
 		}
 
 		final CreationalContext<RestClient> context = this.bm.createCreationalContext( bean );

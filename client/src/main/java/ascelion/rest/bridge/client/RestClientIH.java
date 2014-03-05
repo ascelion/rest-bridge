@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
@@ -19,7 +20,7 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
-public class RestClientIH
+final class RestClientIH
 implements InvocationHandler
 {
 
@@ -91,10 +92,13 @@ implements InvocationHandler
 		throw new UnsupportedOperationException( "Could not handle method " + method );
 	}
 
-	private void initMethods()
+	private void addMethod( Method m )
 	{
-		Arrays.asList( this.cls.getMethods() ).stream()
-			.forEach( m -> this.methods.put( m, new RestMethod( this.cls, m, this.target ) ) );
+		this.methods.put( m, new RestMethod( this.cls, m, this.target ) );
 	}
 
+	private void initMethods()
+	{
+		Stream.of( this.cls.getMethods() ).forEach( this::addMethod );
+	}
 }

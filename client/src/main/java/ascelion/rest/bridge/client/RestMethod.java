@@ -19,7 +19,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import com.googlecode.gentyref.GenericTypeReflector;
 
-class RestMethod
+final class RestMethod
 {
 
 	static Collection collection( RestContext cx, Consumer action )

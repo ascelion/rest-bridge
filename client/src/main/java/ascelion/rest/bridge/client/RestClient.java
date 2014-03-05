@@ -10,7 +10,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 
-public class RestClient
+public final class RestClient
 {
 
 	static private String getBase( Class<? extends Application> cls )
