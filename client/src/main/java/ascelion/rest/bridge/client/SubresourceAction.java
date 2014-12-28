@@ -21,7 +21,7 @@ extends Action
 	@Override
 	void execute( RestContext cx )
 	{
-		final RestClientIH ih = new RestClientIH( this.resourceType, cx.target, cx.headers, cx.cookies, cx.form );
+		final RestClientIH ih = new RestClientIH( this.resourceType, cx.target, cx.onBuildRequest, cx.headers, cx.cookies, cx.form );
 
 		cx.result = RestClientIH.newProxy( this.resourceType, ih );
 	}

@@ -4,7 +4,9 @@ package ascelion.rest.bridge.client;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.function.UnaryOperator;
 
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
@@ -21,6 +23,8 @@ final class RestContext
 	final Form form = new Form();
 
 	final Object proxy;
+
+	final UnaryOperator<Builder> onBuildRequest;
 
 	final Method method;
 
@@ -40,9 +44,10 @@ final class RestContext
 
 	WebTarget target;
 
-	RestContext( Object proxy, Method method, Object[] arguments, WebTarget target, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
+	RestContext( Object proxy, Method method, Object[] arguments, WebTarget target, UnaryOperator<Builder> onBuildRequest, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
 	{
 		this.target = target;
+		this.onBuildRequest = onBuildRequest;
 		this.proxy = proxy;
 		this.method = method;
 		this.arguments = arguments == null ? new Object[0] : arguments;

@@ -57,6 +57,8 @@ extends Action
 			cx.entityPresent = true;
 		}
 
+		cx.onBuildRequest.apply( b );
+
 		if( cx.entityPresent ) {
 			cx.result = b.method( this.httpMethod, Entity.entity( cx.entity, cx.contentType ), this.returnType );
 		}
