@@ -163,7 +163,7 @@ public class ValidationActionTest
 	{
 		final Object[] arguments = new Object[] { object };
 		final Method method = findMethod( methodName );
-		final RestContext cx = new RestContext( this.client, method, arguments, null, null, null, null );
+		final RestContext cx = new RestContext( this.client, method, arguments, null, null, null, null, null );
 		final ValidationAction action = new ValidationAction( 0 );
 
 		action.evaluate( arguments );

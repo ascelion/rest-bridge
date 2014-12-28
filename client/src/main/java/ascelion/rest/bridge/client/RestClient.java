@@ -7,6 +7,8 @@ import java.util.function.UnaryOperator;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 
@@ -32,7 +34,13 @@ public final class RestClient
 
 	private final String base;
 
-	private UnaryOperator<Client> onNewClient = t -> t;
+	private UnaryOperator<ClientBuilder> onNewBuilder = b -> b;
+
+	private UnaryOperator<Client> onNewClient = c -> c;
+
+	private UnaryOperator<WebTarget> onNewTarget = t -> t;
+
+	private UnaryOperator<Builder> onBuildRequest = b -> b;
 
 	public RestClient( URI target )
 	{
@@ -52,17 +60,31 @@ public final class RestClient
 
 	public <X> X getInterface( Class<X> cls )
 	{
-		final Client ct = this.onNewClient.apply( ClientBuilder.newClient() );
-
-		WebTarget wt = ct.target( this.target );
+		final ClientBuilder cb = this.onNewBuilder.apply( ClientBuilder.newBuilder() );
+		final Client ct = this.onNewClient.apply( cb.build() );
+		WebTarget wt = this.onNewTarget.apply( ct.target( this.target ) );
 
 		if( this.base != null ) {
 			wt = wt.path( this.base );
 		}
 
-		final RestClientIH ih = new RestClientIH( cls, wt );
+		final RestClientIH ih = new RestClientIH( cls, wt, this.onBuildRequest );
 
 		return RestClientIH.newProxy( cls, ih );
+	}
+
+	public RestClient onBuildRequest( UnaryOperator<Invocation.Builder> onBuildRequest )
+	{
+		this.onBuildRequest = onBuildRequest;
+
+		return this;
+	}
+
+	public RestClient onNewBuilder( UnaryOperator<ClientBuilder> onNewBuilder )
+	{
+		this.onNewBuilder = onNewBuilder;
+
+		return this;
 	}
 
 	public RestClient onNewClient( UnaryOperator<Client> onNewClient )
@@ -71,4 +93,12 @@ public final class RestClient
 
 		return this;
 	}
+
+	public RestClient onNewTarget( UnaryOperator<WebTarget> onNewTarget )
+	{
+		this.onNewTarget = onNewTarget;
+
+		return this;
+	}
+
 }

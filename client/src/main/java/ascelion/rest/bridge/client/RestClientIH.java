@@ -11,9 +11,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
@@ -47,6 +49,8 @@ implements InvocationHandler
 
 	private final WebTarget target;
 
+	private final UnaryOperator<Builder> onBuildRequest;
+
 	private final Map<Method, RestMethod> methods = new HashMap<>();
 
 	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
@@ -55,18 +59,20 @@ implements InvocationHandler
 
 	private final Form form = new Form();
 
-	RestClientIH( Class cls, WebTarget target )
+	RestClientIH( Class cls, WebTarget target, UnaryOperator<Builder> onBuildRequest )
 	{
 		this.cls = cls;
 		this.target = Util.addPathFromAnnotation( cls, target );
+		this.onBuildRequest = onBuildRequest;
 
 		initMethods();
 	}
 
-	RestClientIH( Class cls, WebTarget target, Map<String, List<Object>> headers, Collection<Cookie> cookies, Form form )
+	RestClientIH( Class cls, WebTarget target, UnaryOperator<Builder> onBuildRequest, Map<String, List<Object>> headers, Collection<Cookie> cookies, Form form )
 	{
 		this.cls = cls;
 		this.target = target;
+		this.onBuildRequest = onBuildRequest;
 
 		initMethods();
 
@@ -86,7 +92,7 @@ implements InvocationHandler
 		final RestMethod rest = this.methods.get( method );
 
 		if( rest != null ) {
-			return rest.call( proxy, arguments, this.headers, this.cookies, this.form );
+			return rest.call( proxy, arguments, this.onBuildRequest, this.headers, this.cookies, this.form );
 		}
 
 		throw new UnsupportedOperationException( "Could not handle method " + method );
