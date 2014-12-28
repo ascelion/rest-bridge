@@ -96,7 +96,7 @@ final class RestMethod
 
 		if( this.httpMethod == null ) {
 			if( this.target == target ) {
-				throw new UnsupportedOperationException( "Not a resource method." );
+				throw new UnsupportedOperationException( "Not a resource method: " + method );
 			}
 
 			this.actions.add( new SubresourceAction( (Class) exactReturnType ) );
