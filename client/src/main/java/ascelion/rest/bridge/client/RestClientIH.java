@@ -50,9 +50,9 @@ implements InvocationHandler
 
 	private final Class cls;
 
-	private WebTarget target;
+	private final WebTarget target;
 
-	private URI targetURI;
+	private final URI targetURI;
 
 	private final Map<Method, RestMethod> methods = new HashMap<>();
 
@@ -136,28 +136,26 @@ implements InvocationHandler
 	private Object invoke( Object proxy, RestMethod restMethod, Object[] arguments )
 	throws URISyntaxException
 	{
-		final RestContext cx = new RestContext( proxy, restMethod.method, arguments, this.target, this.client, this.restClient.onNewRequest, this.headers, this.cookies, this.form );
+		final RestContext cx = new RestContext( proxy, restMethod.method, arguments, this.client, restMethod.target, this.restClient.onNewRequest, this.headers, this.cookies, this.form );
 
 		restMethod.call( cx );
 
 		if( cx.redirects > 0 ) {
-			updateTarget( cx.target.getUri() );
+			updateTarget( restMethod, cx.target.getUri() );
 		}
 
 		return cx.result;
 	}
 
-	private void updateTarget( URI newTarget )
+	private void updateTarget( RestMethod restMethod, URI newTarget )
 	throws URISyntaxException
 	{
-		final String path = this.targetURI.getPath();
+		final String path = restMethod.target.getUri().getPath();
 		String newPath = newTarget.getPath();
 
-		final int ix = newPath.indexOf( path );
+		newPath = newPath.substring( 0, newPath.indexOf( path ) + path.length() );
+		newTarget = new URI( newTarget.getScheme(), newTarget.getAuthority(), newPath, null, null );
 
-		newPath = newPath.substring( 0, ix + path.length() );
-
-		this.targetURI = new URI( newTarget.getScheme(), newTarget.getAuthority(), newPath, null, null );
-		this.target = this.client.target( this.targetURI );
+		restMethod.target = this.client.target( newTarget );
 	}
 }

@@ -49,7 +49,7 @@ final class RestContext
 
 	int redirects;
 
-	RestContext( Object proxy, Method method, Object[] arguments, WebTarget target, Client client, UnaryOperator<Builder> onNewRequest, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
+	RestContext( Object proxy, Method method, Object[] arguments, Client client, WebTarget target, UnaryOperator<Builder> onNewRequest, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
 	{
 		this.target = target;
 		this.onNewRequest = onNewRequest;
