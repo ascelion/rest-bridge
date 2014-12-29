@@ -73,11 +73,11 @@ final class RestMethod
 
 	final Method method;
 
+	WebTarget target;
+
 	private final Class returnType;
 
 	private final String httpMethod;
-
-	private final WebTarget target;
 
 	private final Collection<Action> actions = new TreeSet<>();
 
