@@ -7,11 +7,14 @@ import java.util.Iterator;
 import java.util.ServiceLoader;
 
 import org.jboss.arquillian.test.api.ArquillianResource;
+import org.junit.After;
 import org.junit.Before;
 
 import bridge.tests.providers.RestBridgeProvider;
 
 import com.googlecode.gentyref.GenericTypeReflector;
+
+import ascelion.rest.bridge.client.RestClient;
 
 public abstract class AbstractTestCase<T>
 extends Deployments
@@ -44,5 +47,11 @@ extends Deployments
 		final Class<T> clientClass = (Class) GenericTypeReflector.getTypeParameter( getClass(), INTEFACE_TYPE );
 
 		this.client = CLIENT_PROVIDER.createClient( this.target, clientClass );
+	}
+
+	@After
+	public void tearDown()
+	{
+		RestClient.release( this.client );
 	}
 }

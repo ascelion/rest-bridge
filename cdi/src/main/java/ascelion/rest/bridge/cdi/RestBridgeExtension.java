@@ -9,10 +9,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.logging.Logger;
 
-import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.BeforeShutdown;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.ProcessInjectionPoint;
@@ -27,29 +27,33 @@ public class RestBridgeExtension
 implements Extension
 {
 
-	private static final Logger L = Logger.getLogger( RestBridgeExtension.class.getName() );
+	static final Logger L = Logger.getLogger( RestBridgeExtension.class.getName() );
 
-	private final Collection<Class<?>> services = new HashSet<>();
+	private final Collection<Class<?>> clients = new HashSet<>();
 
-	public void afterBeanDescovery( BeanManager bm, @Observes AfterBeanDiscovery event )
+	void afterBeanDescovery( @Observes AfterBeanDiscovery event, BeanManager bm )
 	{
-		for( final Class<?> cls : this.services ) {
-			event.addBean( new RestBridgeBean<>( bm, cls, Dependent.class ) );
+		for( final Class clientType : this.clients ) {
+			event.addBean( new RestBridgeBean<>( clientType, bm ) );
 		}
 	}
 
-	public <T, X> void processInjectionPoint( BeanManager bm, @Observes ProcessInjectionPoint<T, X> event )
+	void beforeShutdown( @Observes BeforeShutdown event )
 	{
-		final InjectionPoint inj = event.getInjectionPoint();
-		final Type t = inj.getType();
+	}
+
+	<T, X> void processInjectionPoint( @Observes ProcessInjectionPoint<T, X> event )
+	{
+		final InjectionPoint ijp = event.getInjectionPoint();
+		final Type t = ijp.getType();
 
 		if( t instanceof Class ) {
 			final Class<?> classType = (Class) t;
 
 			if( classType.isInterface() && classType.isAnnotationPresent( Path.class ) ) {
-				L.info( String.format( "Found %s", inj.getAnnotated() ) );
+				L.info( String.format( "Found %sL %s", ijp.getAnnotated(), classType.getName() ) );
 
-				this.services.add( classType );
+				this.clients.add( classType );
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 
 package ascelion.rest.bridge.client;
 
+import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.util.function.UnaryOperator;
 
@@ -14,6 +15,13 @@ import javax.ws.rs.core.Application;
 
 public final class RestClient
 {
+
+	static public void release( Object itf )
+	{
+		if( itf != null ) {
+			( (RestClientIH) Proxy.getInvocationHandler( itf ) ).close();
+		}
+	}
 
 	static private String getBase( Class<? extends Application> cls )
 	{
@@ -68,7 +76,7 @@ public final class RestClient
 			wt = wt.path( this.base );
 		}
 
-		final RestClientIH ih = new RestClientIH( cls, wt, this.onBuildRequest );
+		final RestClientIH ih = new RestClientIH( cls, wt, this.onBuildRequest, ct );
 
 		return RestClientIH.newProxy( cls, ih );
 	}
