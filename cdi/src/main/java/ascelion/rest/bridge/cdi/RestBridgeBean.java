@@ -9,8 +9,12 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.UnsatisfiedResolutionException;
 import javax.enterprise.inject.spi.Bean;
@@ -23,6 +27,8 @@ import ascelion.rest.bridge.client.RestClient;
 
 import static java.lang.String.format;
 
+import static ascelion.rest.bridge.cdi.RestBridgeExtension.L;
+
 /**
  * @author Pappy STĂNESCU
  *
@@ -31,36 +37,54 @@ class RestBridgeBean<T>
 implements Bean<T>, PassivationCapable
 {
 
+	static class AnyLiteral
+	extends AnnotationLiteral<Any>
+	implements Any
+	{
+	}
+
 	static class DefaultLiteral
 	extends AnnotationLiteral<Default>
 	implements Default
 	{
 	}
 
+	static final Set<Annotation> QUALIFIERS = Stream.of( new AnyLiteral(), new DefaultLiteral() ).collect( Collectors.toSet() );
+
 	private final BeanManager bm;
 
 	private final Class<T> clientType;
 
-	private final Class<? extends Annotation> scope;
-
 	private final String id = UUID.randomUUID().toString();
 
-	RestBridgeBean( BeanManager bm, Class<T> clientType, Class<? extends Annotation> scope )
+	private RestClient client;
+
+	RestBridgeBean( Class<T> clientType, BeanManager bm )
 	{
-		this.bm = bm;
 		this.clientType = clientType;
-		this.scope = scope;
+		this.bm = bm;
 	}
 
 	@Override
 	public T create( CreationalContext<T> creationalContext )
 	{
-		return createRestClient().getInterface( this.clientType );
+		final T itf = createRestClient().getInterface( this.clientType );
+
+		creationalContext.push( itf );
+
+		L.info( String.format( "Created %s", itf ) );
+
+		return itf;
 	}
 
 	@Override
 	public void destroy( T instance, CreationalContext<T> creationalContext )
 	{
+		RestClient.release( instance );
+
+		L.info( String.format( "Destroyed %s", instance ) );
+
+		creationalContext.release();
 	}
 
 	@Override
@@ -90,13 +114,13 @@ implements Bean<T>, PassivationCapable
 	@Override
 	public Set<Annotation> getQualifiers()
 	{
-		return Collections.<Annotation> singleton( new DefaultLiteral() );
+		return QUALIFIERS;
 	}
 
 	@Override
 	public Class<? extends Annotation> getScope()
 	{
-		return this.scope;
+		return ApplicationScoped.class;
 	}
 
 	@Override
@@ -123,8 +147,22 @@ implements Bean<T>, PassivationCapable
 		return false;
 	}
 
+	@Override
+	public String toString()
+	{
+		final StringBuilder builder = new StringBuilder();
+		builder.append( "RestBridgeBean [clientType=" );
+		builder.append( this.clientType.getName() );
+		builder.append( "]" );
+		return builder.toString();
+	}
+
 	private RestClient createRestClient()
 	{
+		if( this.client != null ) {
+			return this.client;
+		}
+
 		final Set<Bean<?>> beans = this.bm.getBeans( RestClient.class );
 
 		if( beans.isEmpty() ) {
@@ -139,7 +177,7 @@ implements Bean<T>, PassivationCapable
 
 		final CreationalContext<RestClient> context = this.bm.createCreationalContext( bean );
 
-		return (RestClient) this.bm.getReference( bean, RestClient.class, context );
+		return this.client = (RestClient) this.bm.getReference( bean, RestClient.class, context );
 	}
 
 }

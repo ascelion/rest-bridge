@@ -4,6 +4,7 @@ package ascelion.rest.bridge.client;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
@@ -49,6 +51,8 @@ implements InvocationHandler
 
 	private final WebTarget target;
 
+	private final URI targetURI;
+
 	private final UnaryOperator<Builder> onBuildRequest;
 
 	private final Map<Method, RestMethod> methods = new HashMap<>();
@@ -59,11 +63,15 @@ implements InvocationHandler
 
 	private final Form form = new Form();
 
-	RestClientIH( Class cls, WebTarget target, UnaryOperator<Builder> onBuildRequest )
+	private Client client;
+
+	RestClientIH( Class cls, WebTarget target, UnaryOperator<Builder> onBuildRequest, Client client )
 	{
 		this.cls = cls;
 		this.target = Util.addPathFromAnnotation( cls, target );
+		this.targetURI = target.getUri();
 		this.onBuildRequest = onBuildRequest;
+		this.client = client;
 
 		initMethods();
 	}
@@ -72,7 +80,9 @@ implements InvocationHandler
 	{
 		this.cls = cls;
 		this.target = target;
+		this.targetURI = target.getUri();
 		this.onBuildRequest = onBuildRequest;
+		this.client = null;
 
 		initMethods();
 
@@ -96,6 +106,21 @@ implements InvocationHandler
 		}
 
 		throw new UnsupportedOperationException( "Could not handle method " + method );
+	}
+
+	@Override
+	public String toString()
+	{
+		return String.format( "%s -> %s", this.cls.getName(), this.targetURI );
+	}
+
+	void close()
+	{
+		if( this.client != null ) {
+			this.client.close();
+
+			this.client = null;
+		}
 	}
 
 	private void addMethod( Method m )
