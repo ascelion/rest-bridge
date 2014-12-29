@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -49,11 +50,9 @@ implements InvocationHandler
 
 	private final Class cls;
 
-	private final WebTarget target;
+	private WebTarget target;
 
-	private final URI targetURI;
-
-	private final UnaryOperator<Builder> onBuildRequest;
+	private URI targetURI;
 
 	private final Map<Method, RestMethod> methods = new HashMap<>();
 
@@ -63,32 +62,35 @@ implements InvocationHandler
 
 	private final Form form = new Form();
 
-	private Client client;
+	private final Client client;
 
-	RestClientIH( Class cls, WebTarget target, UnaryOperator<Builder> onBuildRequest, Client client )
+	private final RestClient restClient;
+
+	RestClientIH( Client client, Class cls, WebTarget target, UnaryOperator<Builder> onBuildRequest, Map<String, List<Object>> headers, Collection<Cookie> cookies, Form form )
 	{
-		this.cls = cls;
-		this.target = Util.addPathFromAnnotation( cls, target );
-		this.targetURI = target.getUri();
-		this.onBuildRequest = onBuildRequest;
+		this.restClient = null;
 		this.client = client;
-
-		initMethods();
-	}
-
-	RestClientIH( Class cls, WebTarget target, UnaryOperator<Builder> onBuildRequest, Map<String, List<Object>> headers, Collection<Cookie> cookies, Form form )
-	{
 		this.cls = cls;
 		this.target = target;
 		this.targetURI = target.getUri();
-		this.onBuildRequest = onBuildRequest;
-		this.client = null;
 
 		initMethods();
 
 		this.headers.putAll( headers );
 		this.cookies.addAll( cookies );
 		this.form.asMap().putAll( form.asMap() );
+	}
+
+	RestClientIH( RestClient restClient, Class cls )
+	{
+		this.restClient = restClient;
+		this.cls = cls;
+		this.client = restClient.createClient();
+		this.target = Util.addPathFromAnnotation( cls, this.client.target( restClient.target ) );
+		this.targetURI = this.target.getUri();
+
+		initMethods();
+
 	}
 
 	@Override
@@ -102,7 +104,7 @@ implements InvocationHandler
 		final RestMethod rest = this.methods.get( method );
 
 		if( rest != null ) {
-			return rest.call( proxy, arguments, this.onBuildRequest, this.headers, this.cookies, this.form );
+			return invoke( proxy, rest, arguments );
 		}
 
 		throw new UnsupportedOperationException( "Could not handle method " + method );
@@ -116,10 +118,8 @@ implements InvocationHandler
 
 	void close()
 	{
-		if( this.client != null ) {
+		if( this.restClient != null && this.client != null ) {
 			this.client.close();
-
-			this.client = null;
 		}
 	}
 
@@ -131,5 +131,33 @@ implements InvocationHandler
 	private void initMethods()
 	{
 		Stream.of( this.cls.getMethods() ).forEach( this::addMethod );
+	}
+
+	private Object invoke( Object proxy, RestMethod restMethod, Object[] arguments )
+	throws URISyntaxException
+	{
+		final RestContext cx = new RestContext( proxy, restMethod.method, arguments, this.target, this.client, this.restClient.onNewRequest, this.headers, this.cookies, this.form );
+
+		restMethod.call( cx );
+
+		if( cx.redirects > 0 ) {
+			updateTarget( cx.target.getUri() );
+		}
+
+		return cx.result;
+	}
+
+	private void updateTarget( URI newTarget )
+	throws URISyntaxException
+	{
+		final String path = this.targetURI.getPath();
+		String newPath = newTarget.getPath();
+
+		final int ix = newPath.indexOf( path );
+
+		newPath = newPath.substring( 0, ix + path.length() );
+
+		this.targetURI = new URI( newTarget.getScheme(), newTarget.getAuthority(), newPath, null, null );
+		this.target = this.client.target( this.targetURI );
 	}
 }

@@ -9,15 +9,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.TreeSet;
 import java.util.function.Consumer;
-import java.util.function.UnaryOperator;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MultivaluedMap;
 
 import com.googlecode.gentyref.GenericTypeReflector;
 
@@ -76,7 +71,7 @@ final class RestMethod
 
 	private final Class cls;
 
-	private final Method method;
+	final Method method;
 
 	private final Class returnType;
 
@@ -150,16 +145,12 @@ final class RestMethod
 		}
 	}
 
-	Object call( Object proxy, Object[] arguments, UnaryOperator<Builder> onBuildRequest, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
+	void call( RestContext context )
 	{
-		final RestContext cx = new RestContext( proxy, this.method, arguments, this.target, onBuildRequest, headers, cookies, form );
-
 		this.actions.forEach( a -> {
-			a.evaluate( arguments );
-			a.execute( cx );
+			a.evaluate( context.arguments );
+			a.execute( context );
 		} );
-
-		return cx.result;
 	}
 
 	private <T extends Annotation> T getAnnotation( Class<T> annCls )

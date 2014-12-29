@@ -10,8 +10,8 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.UriBuilder;
 
 public final class RestClient
 {
@@ -38,17 +38,13 @@ public final class RestClient
 		return path;
 	}
 
-	private final URI target;
-
-	private final String base;
+	final URI target;
 
 	private UnaryOperator<ClientBuilder> onNewBuilder = b -> b;
 
 	private UnaryOperator<Client> onNewClient = c -> c;
 
-	private UnaryOperator<WebTarget> onNewTarget = t -> t;
-
-	private UnaryOperator<Builder> onBuildRequest = b -> b;
+	UnaryOperator<Builder> onNewRequest = b -> b;
 
 	public RestClient( URI target )
 	{
@@ -62,30 +58,22 @@ public final class RestClient
 
 	public RestClient( URI target, String base )
 	{
-		this.target = target;
-		this.base = base;
+		if( base == null ) {
+			this.target = target;
+		}
+		else {
+			this.target = UriBuilder.fromUri( target ).path( base ).build();
+		}
 	}
 
 	public <X> X getInterface( Class<X> cls )
 	{
-		final ClientBuilder cb = this.onNewBuilder.apply( ClientBuilder.newBuilder() );
-		final Client ct = this.onNewClient.apply( cb.build() );
-		WebTarget wt = this.onNewTarget.apply( ct.target( this.target ) );
+		final Client ct = createClient();
+		ct.target( this.target );
 
-		if( this.base != null ) {
-			wt = wt.path( this.base );
-		}
-
-		final RestClientIH ih = new RestClientIH( cls, wt, this.onBuildRequest, ct );
+		final RestClientIH ih = new RestClientIH( this, cls );
 
 		return RestClientIH.newProxy( cls, ih );
-	}
-
-	public RestClient onBuildRequest( UnaryOperator<Invocation.Builder> onBuildRequest )
-	{
-		this.onBuildRequest = onBuildRequest;
-
-		return this;
 	}
 
 	public RestClient onNewBuilder( UnaryOperator<ClientBuilder> onNewBuilder )
@@ -102,11 +90,18 @@ public final class RestClient
 		return this;
 	}
 
-	public RestClient onNewTarget( UnaryOperator<WebTarget> onNewTarget )
+	public RestClient onNewRequest( UnaryOperator<Invocation.Builder> onNewRequest )
 	{
-		this.onNewTarget = onNewTarget;
+		this.onNewRequest = onNewRequest;
 
 		return this;
 	}
 
+	Client createClient()
+	{
+		final ClientBuilder cb = this.onNewBuilder.apply( ClientBuilder.newBuilder() );
+		final Client ct = this.onNewClient.apply( cb.build() );
+
+		return ct;
+	}
 }
