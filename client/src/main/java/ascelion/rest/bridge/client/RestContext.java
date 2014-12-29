@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.function.UnaryOperator;
 
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
@@ -24,7 +25,9 @@ final class RestContext
 
 	final Object proxy;
 
-	final UnaryOperator<Builder> onBuildRequest;
+	final Client client;
+
+	final UnaryOperator<Builder> onNewRequest;
 
 	final Method method;
 
@@ -44,12 +47,15 @@ final class RestContext
 
 	WebTarget target;
 
-	RestContext( Object proxy, Method method, Object[] arguments, WebTarget target, UnaryOperator<Builder> onBuildRequest, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
+	int redirects;
+
+	RestContext( Object proxy, Method method, Object[] arguments, WebTarget target, Client client, UnaryOperator<Builder> onNewRequest, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
 	{
 		this.target = target;
-		this.onBuildRequest = onBuildRequest;
+		this.onNewRequest = onNewRequest;
 		this.proxy = proxy;
 		this.method = method;
+		this.client = client;
 		this.arguments = arguments == null ? new Object[0] : arguments;
 
 		if( headers != null ) {
