@@ -150,12 +150,12 @@ implements InvocationHandler
 	private void updateTarget( RestMethod restMethod, URI newTarget )
 	throws URISyntaxException
 	{
-		final String path = restMethod.target.getUri().getPath();
-		String newPath = newTarget.getPath();
-
-		newPath = newPath.substring( 0, newPath.indexOf( path ) + path.length() );
-		newTarget = new URI( newTarget.getScheme(), newTarget.getAuthority(), newPath, null, null );
-
-		restMethod.target = this.client.target( newTarget );
+		//		final String path = restMethod.target.getUri().getPath();
+		//		String newPath = newTarget.getPath();
+		//
+		//		newPath = newPath.substring( 0, newPath.indexOf( path ) + path.length() );
+		//		newTarget = new URI( newTarget.getScheme(), newTarget.getAuthority(), newPath, null, null );
+		//
+		//		restMethod.target = this.client.target( newTarget );
 	}
 }
