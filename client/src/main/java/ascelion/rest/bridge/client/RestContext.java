@@ -4,7 +4,6 @@ package ascelion.rest.bridge.client;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.function.UnaryOperator;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation.Builder;
@@ -27,7 +26,7 @@ final class RestContext
 
 	final Client client;
 
-	final UnaryOperator<Builder> onNewRequest;
+	final RestCallback<Builder> onNewRequest;
 
 	final Method method;
 
@@ -49,7 +48,7 @@ final class RestContext
 
 	int redirects;
 
-	RestContext( Object proxy, Method method, Object[] arguments, Client client, WebTarget target, UnaryOperator<Builder> onNewRequest, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
+	RestContext( Object proxy, Method method, Object[] arguments, Client client, WebTarget target, RestCallback<Builder> onNewRequest, MultivaluedMap<String, Object> headers, Collection<Cookie> cookies, Form form )
 	{
 		this.target = target;
 		this.onNewRequest = onNewRequest;
