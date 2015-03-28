@@ -1,8 +1,10 @@
+
 package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
-
-import ascelion.rest.bridge.client.Action.Priority;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 abstract class AnnotationAction<A extends Annotation>
 extends Action
@@ -40,5 +42,33 @@ extends Action
 
 		return builder.toString();
 	}
-}
 
+	<T> Collection<T> visitCollection( RestContext cx )
+	{
+		final Collection<T> c;
+
+		if( cx.parameterValue instanceof Collection ) {
+			c = (Collection<T>) cx.parameterValue;
+		}
+		else if( cx.parameterValue instanceof Object[] ) {
+			c = Arrays.asList( (T[]) cx.parameterValue );
+		}
+		else if( cx.parameterValue != null ) {
+			c = Arrays.asList( (T) cx.parameterValue );
+		}
+		else {
+			c = Collections.EMPTY_LIST;
+		}
+
+		for( final T t : c ) {
+			visitElement( cx, t );
+		}
+
+		return c;
+	}
+
+	<T> void visitElement( RestContext cx, T t )
+	{
+
+	}
+}

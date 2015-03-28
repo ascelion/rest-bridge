@@ -8,7 +8,6 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
 
@@ -26,7 +25,7 @@ public final class RestClient
 	{
 		String path = null;
 
-		for( Class c = cls; path == null && c != Application.class; c = cls.getSuperclass() ) {
+		for( Class<?> c = cls; path == null && c != Application.class; c = cls.getSuperclass() ) {
 			final ApplicationPath a = (ApplicationPath) c.getAnnotation( ApplicationPath.class );
 
 			if( a != null ) {
@@ -39,11 +38,11 @@ public final class RestClient
 
 	final URI target;
 
-	private RestCallback<ClientBuilder> onNewBuilder = b -> b;
+	private RestCallback<ClientBuilder> onNewBuilder = new RestCallbackWrapper<ClientBuilder>( null );
 
-	private RestCallback<Client> onNewClient = c -> c;
+	private RestCallback<Client> onNewClient = new RestCallbackWrapper<Client>( null );
 
-	RestCallback<Builder> onNewRequest = b -> b;
+	RestCallback<Invocation.Builder> onNewRequest = new RestCallbackWrapper<Invocation.Builder>( null );
 
 	public RestClient( URI target )
 	{
@@ -68,6 +67,7 @@ public final class RestClient
 	public <X> X getInterface( Class<X> cls )
 	{
 		final Client ct = createClient();
+
 		ct.target( this.target );
 
 		final RestClientIH ih = new RestClientIH( this, cls );
@@ -77,7 +77,7 @@ public final class RestClient
 
 	public RestClient onNewBuilder( RestCallback<ClientBuilder> onNewBuilder )
 	{
-		this.onNewBuilder = onNewBuilder;
+		this.onNewBuilder = new RestCallbackWrapper<ClientBuilder>( onNewBuilder );
 
 		return this;
 	}
@@ -98,13 +98,24 @@ public final class RestClient
 
 	Client createClient()
 	{
-		ClientBuilder newBuilder;
+		ClientBuilder newBuilder = null;
+		RuntimeException exception = null;
 
 		try {
 			newBuilder = this.onNewBuilder.apply( ClientBuilder.newBuilder() );
 		}
-		catch( final Throwable t ) {
+		catch( final RuntimeException t ) {
+			exception = t;
 			newBuilder = this.onNewBuilder.apply( null );
+		}
+
+		if( newBuilder == null ) {
+			if( exception != null ) {
+				throw exception;
+			}
+			else {
+				throw new RuntimeException( "Cannot create ClientBuilder" );
+			}
 		}
 
 		final ClientBuilder cb = this.onNewBuilder.apply( newBuilder );

@@ -2,8 +2,8 @@
 package ascelion.rest.bridge.client;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation.Builder;
@@ -16,9 +16,9 @@ import javax.ws.rs.core.MultivaluedMap;
 final class RestContext
 {
 
-	final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
+	final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<String, Object>();
 
-	final Collection<Cookie> cookies = new LinkedList<>();
+	final Collection<Cookie> cookies = new ArrayList<Cookie>();
 
 	final Form form = new Form();
 

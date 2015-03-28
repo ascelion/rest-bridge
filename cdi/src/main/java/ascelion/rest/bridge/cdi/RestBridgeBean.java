@@ -4,13 +4,16 @@
 
 package ascelion.rest.bridge.cdi;
 
+import static java.lang.String.format;
+
+import static ascelion.rest.bridge.cdi.RestBridgeExtension.L;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.spi.CreationalContext;
@@ -24,10 +27,6 @@ import javax.enterprise.inject.spi.PassivationCapable;
 import javax.enterprise.util.AnnotationLiteral;
 
 import ascelion.rest.bridge.client.RestClient;
-
-import static java.lang.String.format;
-
-import static ascelion.rest.bridge.cdi.RestBridgeExtension.L;
 
 /**
  * @author Pappy STĂNESCU
@@ -49,7 +48,14 @@ implements Bean<T>, PassivationCapable
 	{
 	}
 
-	static final Set<Annotation> QUALIFIERS = Stream.of( new AnyLiteral(), new DefaultLiteral() ).collect( Collectors.toSet() );
+	static final Set<Annotation> QUALIFIERS = Collections.unmodifiableSet( new HashSet<Annotation>()
+	{
+
+		{
+			add( new AnyLiteral() );
+			add( new DefaultLiteral() );
+		}
+	} );
 
 	private final BeanManager bm;
 

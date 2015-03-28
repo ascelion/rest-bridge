@@ -3,8 +3,8 @@ package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 
 import javax.ws.rs.BeanParam;
 
@@ -23,13 +23,15 @@ extends AnnotationAction<BeanParam>
 		if( cx.parameterValue != null ) {
 			final Object bean = cx.parameterValue;
 
-			Util.getDeclaredFields( cx.parameterValue.getClass() ).forEach( f -> addAction( cx, f, bean ) );
+			for( final Field field : Util.getDeclaredFields( cx.parameterValue.getClass() ) ) {
+				addAction( cx, field, bean );
+			}
 		}
 	}
 
 	private void addAction( RestContext cx, Field field, Object bean )
 	{
-		final Collection<Action> actions = new LinkedList<>();
+		final Collection<Action> actions = new ArrayList<Action>();
 
 		for( final Annotation a : field.getAnnotations() ) {
 			final Action action = Action.createAction( a, 0 );
@@ -47,7 +49,9 @@ extends AnnotationAction<BeanParam>
 				throw new RuntimeException( e );
 			}
 
-			actions.forEach( a -> a.execute( cx ) );
+			for( final Action action : actions ) {
+				action.execute( cx );
+			}
 		}
 	}
 }

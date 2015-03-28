@@ -2,8 +2,6 @@
 package ascelion.rest.bridge.client;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Optional;
 
 import javax.validation.ConstraintViolationException;
 
@@ -150,10 +148,10 @@ public class ValidationActionTest
 
 	private Method findMethod( String methodName )
 	{
-		final Optional<Method> method = Arrays.asList( Validated.class.getMethods() ).stream().filter( m -> methodName.equals( m.getName() ) ).findFirst();
-
-		if( method.isPresent() ) {
-			return method.get();
+		for( final Method m : Validated.class.getMethods() ) {
+			if( m.getName().equals( methodName ) ) {
+				return m;
+			}
 		}
 
 		throw new NoSuchMethodError( methodName );

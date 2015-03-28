@@ -4,11 +4,8 @@ package ascelion.rest.bridge.client;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.TreeSet;
-import java.util.function.Consumer;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -19,31 +16,7 @@ import com.googlecode.gentyref.GenericTypeReflector;
 final class RestMethod
 {
 
-	static Collection collection( RestContext cx, Consumer action )
-	{
-		final Collection c;
-
-		if( cx.parameterValue instanceof Collection ) {
-			c = (Collection) cx.parameterValue;
-		}
-		else if( cx.parameterValue instanceof Object[] ) {
-			c = Arrays.asList( (Object[]) cx.parameterValue );
-		}
-		else if( cx.parameterValue != null ) {
-			c = Arrays.asList( cx.parameterValue );
-		}
-		else {
-			c = Collections.EMPTY_LIST;
-		}
-
-		if( action != null ) {
-			c.forEach( action );
-		}
-
-		return c;
-	}
-
-	static <T extends Annotation> T getAnnotation( Class cls, Class<T> annCls )
+	static <T extends Annotation> T getAnnotation( Class<?> cls, Class<T> annCls )
 	{
 		T a = (T) cls.getAnnotation( annCls );
 
@@ -51,7 +24,7 @@ final class RestMethod
 			return a;
 		}
 
-		for( final Class c : cls.getInterfaces() ) {
+		for( final Class<?> c : cls.getInterfaces() ) {
 			a = getAnnotation( c, annCls );
 
 			if( a != null ) {
@@ -69,19 +42,19 @@ final class RestMethod
 
 	//	static private final Logger L = LoggerFactory.getLogger( RestMethod.class );
 
-	private final Class cls;
+	private final Class<?> cls;
 
 	final Method method;
 
 	WebTarget target;
 
-	private final Class returnType;
+	private final Class<?> returnType;
 
 	private final String httpMethod;
 
-	private final Collection<Action> actions = new TreeSet<>();
+	private final Collection<Action> actions = new TreeSet<Action>();
 
-	RestMethod( Class cls, Method method, WebTarget target )
+	RestMethod( Class<?> cls, Method method, WebTarget target )
 	{
 		this.cls = cls;
 		this.method = method;
@@ -147,10 +120,11 @@ final class RestMethod
 
 	void call( RestContext context )
 	{
-		this.actions.forEach( a -> {
+		for( final Action a : this.actions ) {
 			a.evaluate( context.arguments );
 			a.execute( context );
-		} );
+		}
+		;
 	}
 
 	private <T extends Annotation> T getAnnotation( Class<T> annCls )
