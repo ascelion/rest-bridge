@@ -6,8 +6,8 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
@@ -27,9 +27,9 @@ final class Util
 		return target;
 	}
 
-	static Iterable<Field> getDeclaredFields( Class cls )
+	static Iterable<Field> getDeclaredFields( Class<?> cls )
 	{
-		final Collection<Field> fields = new LinkedList<>();
+		final Collection<Field> fields = new ArrayList<Field>();
 
 		addDeclaredFields( cls, fields );
 
@@ -55,7 +55,7 @@ final class Util
 		return null;
 	}
 
-	private static void addDeclaredFields( Class cls, Collection<Field> fields )
+	private static void addDeclaredFields( Class<?> cls, Collection<Field> fields )
 	{
 		if( cls == Object.class ) {
 			return;

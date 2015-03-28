@@ -18,12 +18,10 @@
 		<module>client</module>
 		<module>cdi</module>
 
-		<module>retro</module>
-
 		<!-- <module>tests</module>
-		<module>tests/application</module>
-		<module>tests/arquillian</module>
-		<module>tests/providers</module> -->
+			<module>tests/application</module>
+			<module>tests/arquillian</module>
+			<module>tests/providers</module> -->
 	</modules>
 
 	<prerequisites>
@@ -52,8 +50,8 @@
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>3.1</version>
 					<configuration>
-						<source>1.8</source>
-						<target>1.8</target>
+						<source>1.6</source>
+						<target>1.6</target>
 					</configuration>
 				</plugin>
 				<plugin>

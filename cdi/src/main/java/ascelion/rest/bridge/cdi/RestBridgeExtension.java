@@ -29,12 +29,12 @@ implements Extension
 
 	static final Logger L = Logger.getLogger( RestBridgeExtension.class.getName() );
 
-	private final Collection<Class<?>> clients = new HashSet<>();
+	private final Collection<Class<?>> clients = new HashSet<Class<?>>();
 
 	void afterBeanDescovery( @Observes AfterBeanDiscovery event, BeanManager bm )
 	{
-		for( final Class clientType : this.clients ) {
-			event.addBean( new RestBridgeBean<>( clientType, bm ) );
+		for( final Class<?> clientType : this.clients ) {
+			event.addBean( new RestBridgeBean( clientType, bm ) );
 		}
 	}
 
@@ -48,7 +48,7 @@ implements Extension
 		final Type t = ijp.getType();
 
 		if( t instanceof Class ) {
-			final Class<?> classType = (Class) t;
+			final Class<?> classType = (Class<?>) t;
 
 			if( classType.isInterface() && classType.isAnnotationPresent( Path.class ) ) {
 				L.info( String.format( "Found %sL %s", ijp.getAnnotated(), classType.getName() ) );

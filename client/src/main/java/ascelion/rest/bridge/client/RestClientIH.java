@@ -6,15 +6,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation.Builder;
@@ -28,16 +25,16 @@ final class RestClientIH
 implements InvocationHandler
 {
 
-	static private final Set<Method> O_METHODS = methodsOf( Object.class );
+	static private final Collection<Method> O_METHODS = methodsOf( Object.class );
 
 	static <T> T[] A( T... ts )
 	{
 		return ts;
 	}
 
-	static Set<Method> methodsOf( Class cls )
+	static Collection<Method> methodsOf( Class cls )
 	{
-		return Arrays.asList( cls.getMethods() ).stream().collect( Collectors.toSet() );
+		return Arrays.asList( cls.getMethods() );
 	}
 
 	static <X> X newProxy( Class<X> cls, RestClientIH ih )
@@ -53,11 +50,11 @@ implements InvocationHandler
 
 	private final URI targetURI;
 
-	private final Map<Method, RestMethod> methods = new HashMap<>();
+	private final Map<Method, RestMethod> methods = new HashMap<Method, RestMethod>();
 
-	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
+	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<String, Object>();
 
-	private final Collection<Cookie> cookies = new LinkedList<>();
+	private final Collection<Cookie> cookies = new ArrayList<Cookie>();
 
 	private final Form form = new Form();
 
@@ -129,7 +126,9 @@ implements InvocationHandler
 
 	private void initMethods()
 	{
-		Stream.of( this.cls.getMethods() ).forEach( this::addMethod );
+		for( final Method m : this.cls.getMethods() ) {
+			addMethod( m );
+		}
 	}
 
 	private Object invoke( Object proxy, RestMethod restMethod, Object[] arguments )

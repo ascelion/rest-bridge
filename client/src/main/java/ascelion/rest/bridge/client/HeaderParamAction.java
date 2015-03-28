@@ -1,3 +1,4 @@
+
 package ascelion.rest.bridge.client;
 
 import javax.ws.rs.HeaderParam;
@@ -14,8 +15,12 @@ extends AnnotationAction<HeaderParam>
 	@Override
 	public void execute( RestContext cx )
 	{
-		RestMethod.collection( cx, v -> cx.headers.add( this.annotation.value(), v ) );
+		visitCollection( cx );
 	}
 
+	@Override
+	void visitElement( RestContext cx, Object v )
+	{
+		cx.headers.add( this.annotation.value(), v );
+	}
 }
-

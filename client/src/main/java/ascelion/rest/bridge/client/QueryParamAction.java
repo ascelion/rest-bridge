@@ -1,3 +1,4 @@
+
 package ascelion.rest.bridge.client;
 
 import javax.ws.rs.QueryParam;
@@ -14,7 +15,6 @@ extends AnnotationAction<QueryParam>
 	@Override
 	public void execute( RestContext cx )
 	{
-		cx.target = cx.target.queryParam( this.annotation.value(), RestMethod.collection( cx, null ).toArray() );
+		cx.target = cx.target.queryParam( this.annotation.value(), visitCollection( cx ).toArray() );
 	}
 }
-

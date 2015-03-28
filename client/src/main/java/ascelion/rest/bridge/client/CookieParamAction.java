@@ -1,3 +1,4 @@
+
 package ascelion.rest.bridge.client;
 
 import javax.ws.rs.CookieParam;
@@ -12,21 +13,23 @@ extends AnnotationAction<CookieParam>
 		super( annotation, ix );
 	}
 
+	@SuppressWarnings( "unchecked" )
 	@Override
-	public void execute( RestContext cx )
+	public void execute( final RestContext cx )
 	{
-		RestMethod.collection( cx, v -> {
-			if( v instanceof Cookie ) {
-				final Cookie c = (Cookie) v;
-
-				cx.cookies.add( new Cookie( this.annotation.value(),
-					c.getValue(), c.getPath(), c.getDomain(), c.getVersion() ) );
-			}
-			else {
-				cx.cookies.add( new Cookie( this.annotation.value(), v.toString() ) );
-			}
-		} );
+		visitCollection( cx );
 	}
 
-}
+	@Override
+	void visitElement( RestContext cx, Object v )
+	{
+		if( v instanceof Cookie ) {
+			final Cookie c = (Cookie) v;
 
+			cx.cookies.add( new Cookie( this.annotation.value(), c.getValue(), c.getPath(), c.getDomain(), c.getVersion() ) );
+		}
+		else {
+			cx.cookies.add( new Cookie( this.annotation.value(), v.toString() ) );
+		}
+	}
+}

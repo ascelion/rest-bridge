@@ -7,6 +7,7 @@ import java.net.URI;
 import javax.ws.rs.RedirectionException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -41,7 +42,9 @@ extends Action
 				b.accept( cx.accepts );
 			}
 
-			cx.cookies.forEach( c -> b.cookie( c ) );
+			for( final Cookie c : cx.cookies ) {
+				b.cookie( c );
+			}
 
 			if( cx.entityPresent ) {
 				if( cx.entity instanceof Form ) {
