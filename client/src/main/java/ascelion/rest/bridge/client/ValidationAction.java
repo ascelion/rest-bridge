@@ -14,6 +14,8 @@ class ValidationAction
 extends Action
 {
 
+	static private final boolean isCDI = isCDI();
+
 	private static ValidatorFactory cdiValidator()
 	{
 		return CDI.current().select( ValidatorFactory.class ).get();
@@ -33,7 +35,7 @@ extends Action
 		try {
 			return Validation.buildDefaultValidatorFactory();
 		}
-		catch( final Exception e ) {
+		catch( final Throwable e ) {
 			return null;
 		}
 	}
@@ -41,7 +43,7 @@ extends Action
 	private static boolean isCDI()
 	{
 		try {
-			Class.forName( "javax.enterprise.inject.spi.CDI", false, Thread.currentThread().getContextClassLoader() );
+			Class.forName( "javax.enterprise.inject.spi.CDI" );
 
 			return true;
 		}
@@ -50,8 +52,6 @@ extends Action
 		}
 
 	}
-
-	static private final boolean isCDI = isCDI();
 
 	ValidationAction( int ix )
 	{
