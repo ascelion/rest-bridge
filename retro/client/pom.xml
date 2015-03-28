@@ -23,6 +23,10 @@
 				<groupId>net.orfjackal.retrolambda</groupId>
 				<artifactId>retrolambda-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -30,6 +34,13 @@
 		<dependency>
 			<groupId>ascelion.rest-bridge</groupId>
 			<artifactId>rest-bridge-client</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>ascelion.rest-bridge</groupId>
+			<artifactId>rest-bridge-client</artifactId>
+			<classifier>sources</classifier>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>

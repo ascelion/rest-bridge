@@ -22,6 +22,34 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<version>2.10</version>
+					<executions>
+						<execution>
+							<phase>compile</phase>
+							<goals>
+								<goal>unpack</goal>
+							</goals>
+							<configuration>
+								<artifactItems>
+									<artifactItem>
+										<outputDirectory>${project.build.directory}/classes-1.8</outputDirectory>
+										<groupId>ascelion.rest-bridge</groupId>
+										<artifactId>${project.artifactId}</artifactId>
+									</artifactItem>
+									<artifactItem>
+										<outputDirectory>${project.build.directory}/sources-1.8</outputDirectory>
+										<groupId>ascelion.rest-bridge</groupId>
+										<artifactId>${project.artifactId}</artifactId>
+										<classifier>sources</classifier>
+									</artifactItem>
+								</artifactItems>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
 					<groupId>net.orfjackal.retrolambda</groupId>
 					<artifactId>retrolambda-maven-plugin</artifactId>
 					<version>1.8.1</version>
@@ -39,22 +67,18 @@
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-dependency-plugin</artifactId>
-					<version>2.10</version>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.5.3</version>
 					<executions>
 						<execution>
-							<phase>generate-resources</phase>
+							<phase>package</phase>
 							<goals>
-								<goal>unpack</goal>
+								<goal>single</goal>
 							</goals>
 							<configuration>
-								<outputDirectory>${project.build.directory}/classes-1.8</outputDirectory>
-								<artifactItems>
-									<artifactItem>
-										<groupId>ascelion.rest-bridge</groupId>
-										<artifactId>${project.artifactId}</artifactId>
-									</artifactItem>
-								</artifactItems>
+								<descriptors>
+									<descriptor>../sources.xml</descriptor>
+								</descriptors>
 							</configuration>
 						</execution>
 					</executions>

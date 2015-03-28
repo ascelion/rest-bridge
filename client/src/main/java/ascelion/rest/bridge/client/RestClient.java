@@ -98,7 +98,16 @@ public final class RestClient
 
 	Client createClient()
 	{
-		final ClientBuilder cb = this.onNewBuilder.apply( ClientBuilder.newBuilder() );
+		ClientBuilder newBuilder;
+
+		try {
+			newBuilder = this.onNewBuilder.apply( ClientBuilder.newBuilder() );
+		}
+		catch( final Throwable t ) {
+			newBuilder = this.onNewBuilder.apply( null );
+		}
+
+		final ClientBuilder cb = this.onNewBuilder.apply( newBuilder );
 		final Client ct = this.onNewClient.apply( cb.build() );
 
 		return ct;
