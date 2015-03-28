@@ -39,9 +39,7 @@ implements InvocationHandler
 
 	static <X> X newProxy( Class<X> cls, RestClientIH ih )
 	{
-		final ClassLoader cld = Thread.currentThread().getContextClassLoader();
-
-		return (X) Proxy.newProxyInstance( cld, A( cls ), ih );
+		return (X) Proxy.newProxyInstance( cls.getClassLoader(), A( cls ), ih );
 	}
 
 	private final Class cls;
