@@ -13,7 +13,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,6 +27,8 @@ import javax.ws.rs.core.MultivaluedMap;
 final class RestClientIH
 implements InvocationHandler
 {
+
+	static private final Set<Method> O_METHODS = methodsOf( Object.class );
 
 	static <T> T[] A( T... ts )
 	{
@@ -45,8 +46,6 @@ implements InvocationHandler
 
 		return (X) Proxy.newProxyInstance( cld, A( cls ), ih );
 	}
-
-	static private final Set<Method> O_METHODS = methodsOf( Object.class );
 
 	private final Class cls;
 
@@ -66,7 +65,7 @@ implements InvocationHandler
 
 	private final RestClient restClient;
 
-	RestClientIH( Client client, Class cls, WebTarget target, UnaryOperator<Builder> onBuildRequest, Map<String, List<Object>> headers, Collection<Cookie> cookies, Form form )
+	RestClientIH( Client client, Class cls, WebTarget target, RestCallback<Builder> onBuildRequest, Map<String, List<Object>> headers, Collection<Cookie> cookies, Form form )
 	{
 		this.restClient = null;
 		this.client = client;

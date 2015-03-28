@@ -3,7 +3,6 @@ package ascelion.rest.bridge.client;
 
 import java.lang.reflect.Proxy;
 import java.net.URI;
-import java.util.function.UnaryOperator;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.client.Client;
@@ -40,11 +39,11 @@ public final class RestClient
 
 	final URI target;
 
-	private UnaryOperator<ClientBuilder> onNewBuilder = b -> b;
+	private RestCallback<ClientBuilder> onNewBuilder = b -> b;
 
-	private UnaryOperator<Client> onNewClient = c -> c;
+	private RestCallback<Client> onNewClient = c -> c;
 
-	UnaryOperator<Builder> onNewRequest = b -> b;
+	RestCallback<Builder> onNewRequest = b -> b;
 
 	public RestClient( URI target )
 	{
@@ -76,21 +75,21 @@ public final class RestClient
 		return RestClientIH.newProxy( cls, ih );
 	}
 
-	public RestClient onNewBuilder( UnaryOperator<ClientBuilder> onNewBuilder )
+	public RestClient onNewBuilder( RestCallback<ClientBuilder> onNewBuilder )
 	{
 		this.onNewBuilder = onNewBuilder;
 
 		return this;
 	}
 
-	public RestClient onNewClient( UnaryOperator<Client> onNewClient )
+	public RestClient onNewClient( RestCallback<Client> onNewClient )
 	{
 		this.onNewClient = onNewClient;
 
 		return this;
 	}
 
-	public RestClient onNewRequest( UnaryOperator<Invocation.Builder> onNewRequest )
+	public RestClient onNewRequest( RestCallback<Invocation.Builder> onNewRequest )
 	{
 		this.onNewRequest = onNewRequest;
 
