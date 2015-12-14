@@ -4,3 +4,5 @@ rootProject.name = 'rest-bridge'
 include( 'cdi' )
 include( 'client' )
 include( 'tests:application' )
+include( 'tests:arquillian' )
+//include( 'tests:jetty' )
