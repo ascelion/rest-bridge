@@ -1,6 +1,3 @@
-/**
- *
- */
 
 package ascelion.rest.bridge.cdi;
 
@@ -17,36 +14,24 @@ import java.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Default;
 import javax.enterprise.inject.UnsatisfiedResolutionException;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
-import javax.enterprise.util.AnnotationLiteral;
+
+import org.apache.deltaspike.core.api.literal.AnyLiteral;
+import org.apache.deltaspike.core.api.literal.DefaultLiteral;
 
 import ascelion.rest.bridge.client.RestClient;
 
 /**
- * @author Pappy STĂNESCU
+ * @author pappy
  *
  */
 class RestBridgeBean<T>
 implements Bean<T>, PassivationCapable
 {
-
-	static class AnyLiteral
-	extends AnnotationLiteral<Any>
-	implements Any
-	{
-	}
-
-	static class DefaultLiteral
-	extends AnnotationLiteral<Default>
-	implements Default
-	{
-	}
 
 	static final Set<Annotation> QUALIFIERS = Collections.unmodifiableSet( new HashSet<Annotation>()
 	{

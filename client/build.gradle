@@ -33,7 +33,7 @@ dependencies {
 	provided( dep.jee7.jax_rs )
 	provided( dep.jee7.validation )
 
-	testCompile( project( ':tests:application' ).sourceSets.main.output )
+	testCompile( project( ':tests:application' ) )
 	testCompile( dep.junit )
 	testCompile( dep.mockito.all )
 

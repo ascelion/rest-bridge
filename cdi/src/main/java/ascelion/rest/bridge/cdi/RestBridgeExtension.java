@@ -22,14 +22,13 @@ import javax.ws.rs.Path;
  * @author Pappy STĂNESCU
  *
  */
-@SuppressWarnings( "CdiManagedBeanInconsistencyInspection" )
 public class RestBridgeExtension
 implements Extension
 {
 
 	static final Logger L = Logger.getLogger( RestBridgeExtension.class.getName() );
 
-	private final Collection<Class<?>> clients = new HashSet<Class<?>>();
+	private final Collection<Class<?>> clients = new HashSet<>();
 
 	void afterBeanDescovery( @Observes AfterBeanDiscovery event, BeanManager bm )
 	{

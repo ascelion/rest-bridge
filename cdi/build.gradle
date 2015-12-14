@@ -1,6 +1,7 @@
 
 dependencies {
 	compile( project( ':client' ) )
+	compile( dep.deltaspike.core.api )
 	
 	provided( dep.jee7.cdi )
 	provided( dep.jee7.jax_rs )
