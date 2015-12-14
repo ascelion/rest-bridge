@@ -1,0 +1,6 @@
+
+rootProject.name = 'rest-bridge'
+
+include( 'cdi' )
+include( 'client' )
+include( 'tests:application' )
