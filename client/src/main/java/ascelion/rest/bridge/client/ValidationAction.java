@@ -3,7 +3,6 @@ package ascelion.rest.bridge.client;
 
 import java.util.Set;
 
-import javax.enterprise.inject.spi.CDI;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;
@@ -18,7 +17,7 @@ extends Action
 
 	private static ValidatorFactory cdiValidator()
 	{
-		return CDI.current().select( ValidatorFactory.class ).get();
+		return javax.enterprise.inject.spi.CDI.current().select( ValidatorFactory.class ).get();
 	}
 
 	private static ValidatorFactory getValidator()

@@ -1,0 +1,21 @@
+[
+	asc: [
+		arquillian_ext:		'ascelion.shared:arquillian-ext:1.0.0',
+		aspects_impl:		'ascelion.shared:ascelion-aspects:1.1.2',
+		cdi_utils:			'ascelion.shared:cdi-utils:1.0.1',
+		cdi_unit_ext:		'ascelion.shared:cdi-unit-ext:1.0.0',
+		dao:				[
+			api:			'ascelion.shared:dao-api:1.0.2-SNAPSHOT',
+			impl:			'ascelion.shared:dao-impl:1.0.2-SNAPSHOT',
+		],
+		flyway_cdi:			'ascelion.shared:flyway-cdi:1.0.0',
+		flyway_patch:		'ascelion.shared:flyway321-patch:1.0.0',
+		fmt_log:			'ascelion.shared:fmt-log:1.1.2-SNAPSHOT',
+		junit_ext:			'ascelion.shared:junit-ext:1.1.1',
+		utils:				'ascelion.shared:ascelion-utils:1.1.1',
+	],
+
+	wildfly: [
+		dist:				'org.wildfly:wildfly-dist:8.2.1.Final@zip',
+	],
+]

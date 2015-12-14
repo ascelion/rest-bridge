@@ -1,0 +1,14 @@
+
+apply( plugin: 'war' )
+
+jar.enabled = true
+
+dependencies {
+	compile( dep.jackson.databind )
+	compile( dep.gentyref )
+	
+	provided( dep.jee7.cdi )
+	provided( dep.jee7.jax_rs )
+	provided( dep.jee7.validation )
+	provided( dep.jee7.servlet )
+}

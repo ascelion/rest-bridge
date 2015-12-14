@@ -1,32 +1,17 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" output="target/classes" path="src/main/java">
-		<attributes>
-			<attribute name="optional" value="true"/>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="src" output="target/test-classes" path="src/test/java">
-		<attributes>
-			<attribute name="optional" value="true"/>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry excluding="**" kind="src" output="target/classes" path="src/main/resources">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="output" path="target/classes"/>
+  <classpathentry kind="output" path="build/classes/default"/>
+  <classpathentry kind="src" path="src/main/java" output="build/classes/main" exported="true"/>
+  <classpathentry kind="src" path="src/main/resources" exported="false" excluding="**/*"/>
+  <classpathentry kind="lib" path="/home/root/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.4.4/jackson-databind-2.4.4.jar" exported="false"/>
+  <classpathentry sourcepath="/home/root/.gradle/caches/modules-2/files-2.1/com.googlecode.gentyref/gentyref/1.2.0/cb132ffa7a05c242e7d2b5478e3fdca5c3a57d87/gentyref-1.2.0-sources.jar" kind="lib" path="/home/root/.gradle/caches/modules-2/files-2.1/com.googlecode.gentyref/gentyref/1.2.0/8d776d0a52d707fa29c7449ddd4d102ac7002d6c/gentyref-1.2.0.jar" exported="false"/>
+  <classpathentry sourcepath="/home/root/.m2/repository/javax/enterprise/cdi-api/1.2/cdi-api-1.2-sources.jar" kind="lib" path="/home/root/.m2/repository/javax/enterprise/cdi-api/1.2/cdi-api-1.2.jar" exported="false"/>
+  <classpathentry sourcepath="/home/root/.m2/repository/javax/ws/rs/javax.ws.rs-api/2.0.1/javax.ws.rs-api-2.0.1-sources.jar" kind="lib" path="/home/root/.m2/repository/javax/ws/rs/javax.ws.rs-api/2.0.1/javax.ws.rs-api-2.0.1.jar" exported="false"/>
+  <classpathentry sourcepath="/home/root/.m2/repository/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final-sources.jar" kind="lib" path="/home/root/.m2/repository/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final.jar" exported="false"/>
+  <classpathentry sourcepath="/home/root/.gradle/caches/modules-2/files-2.1/javax.servlet/javax.servlet-api/3.1.0/ab3976d4574c48d22dc1abf6a9e8bd0fdf928223/javax.servlet-api-3.1.0-sources.jar" kind="lib" path="/home/root/.gradle/caches/modules-2/files-2.1/javax.servlet/javax.servlet-api/3.1.0/3cd63d075497751784b2fa84be59432f4905bf7c/javax.servlet-api-3.1.0.jar" exported="false"/>
+  <classpathentry sourcepath="/home/root/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.4.0/jackson-annotations-2.4.0-sources.jar" kind="lib" path="/home/root/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.4.0/jackson-annotations-2.4.0.jar" exported="false"/>
+  <classpathentry kind="lib" path="/home/root/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.4.4/jackson-core-2.4.4.jar" exported="false"/>
+  <classpathentry sourcepath="/home/root/.m2/repository/javax/el/javax.el-api/3.0.0/javax.el-api-3.0.0-sources.jar" kind="lib" path="/home/root/.m2/repository/javax/el/javax.el-api/3.0.0/javax.el-api-3.0.0.jar" exported="false"/>
+  <classpathentry sourcepath="/home/root/.m2/repository/javax/interceptor/javax.interceptor-api/1.2/javax.interceptor-api-1.2-sources.jar" kind="lib" path="/home/root/.m2/repository/javax/interceptor/javax.interceptor-api/1.2/javax.interceptor-api-1.2.jar" exported="false"/>
+  <classpathentry sourcepath="/home/root/.m2/repository/javax/inject/javax.inject/1/javax.inject-1-sources.jar" kind="lib" path="/home/root/.m2/repository/javax/inject/javax.inject/1/javax.inject-1.jar" exported="false"/>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 </classpath>

@@ -1,0 +1,8 @@
+
+dependencies {
+	compile( project( ':client' ) )
+	
+	provided( dep.jee7.cdi )
+	provided( dep.jee7.jax_rs )
+	provided( dep.jee7.validation )
+}
