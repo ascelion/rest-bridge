@@ -1,14 +1,13 @@
 
 buildscript {
 	dependencies {
-		classpath( 'ascelion.gradle.plugins:gradle-ascelion-plugin:0.1.10' ) { exclude( group: 'net.sf.proguard' ) }
+		classpath( 'ascelion.gradle.plugins:gradle-ascelion-plugin:0.1.12' ) { exclude( group: 'net.sf.proguard' ) }
 	}
 }
 
 allprojects { apply( plugin: 'eclipse' ) }
 
 subprojects {
-	apply( plugin: 'java' )
 	apply( plugin: 'ascelion' )
 
 	group = 'ascelion.rest-bridge'
@@ -28,6 +27,9 @@ subprojects { sub ->
 	eclipse {
 		project { 
 			name = "${rootProject.name}${sub.path.replace(':', '-')}" 
+
+			println "${sub.projectDir} -> $name"
 		}
 	}
 }
+
