@@ -1,11 +1,9 @@
 
-apply( plugin: 'java' )
-
 dependencies {
-	compile( project( ':client' ) )
-	compile( dep.deltaspike.core.api )
-	
-	provided( dep.jee7.cdi )
-	provided( dep.jee7.jax_rs )
-	provided( dep.jee7.validation )
+	compileOnly 'javax.ws.rs:javax.ws.rs-api'
+	compileOnly 'javax.validation:validation-api'
+	compileOnly 'javax.enterprise:cdi-api'
+
+	compile 'org.apache.deltaspike.core:deltaspike-core-api'
+	compile project( ':client' )
 }

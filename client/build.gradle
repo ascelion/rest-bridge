@@ -1,27 +1,16 @@
 
-apply( plugin: 'java' )
-
-ascelion {
-	java {
-		main {
-			source = JavaVersion.VERSION_1_7
-
-			artifactId = "${rootProject.name}-${project.name}"
-		}
-	}
-}
-
 dependencies {
-	compile( dep.gentyref )
+	compileOnly 'javax.ws.rs:javax.ws.rs-api'
+	compileOnly 'javax.validation:validation-api'
+	compileOnly 'javax.enterprise:cdi-api'
 
-	provided( dep.jee7.cdi )
-	provided( dep.jee7.jax_rs )
-	provided( dep.jee7.validation )
+	compile 'io.leangen.geantyref:geantyref'
 
-	testCompile( project( ':tests:application' ) )
-	testCompile( dep.junit )
-	testCompile( dep.mockito.all )
+	testCompile 'javax.ws.rs:javax.ws.rs-api'
+	testCompile 'javax.validation:validation-api'
+	testCompile project( ':tests:api' )
 
-	testRuntime( dep.jersey.client )
-	testRuntime( dep.hibernate.validator )
+	testRuntime 'org.hibernate:hibernate-validator'
+	testRuntime 'org.glassfish:javax.el'
+	testRuntime 'org.glassfish.jersey.core:jersey-client'
 }

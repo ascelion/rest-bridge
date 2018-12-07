@@ -11,14 +11,14 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.WebTarget;
 
-import com.googlecode.gentyref.GenericTypeReflector;
+import io.leangen.geantyref.GenericTypeReflector;
 
 final class RestMethod
 {
 
 	static <T extends Annotation> T getAnnotation( Class<?> cls, Class<T> annCls )
 	{
-		T a = (T) cls.getAnnotation( annCls );
+		T a = cls.getAnnotation( annCls );
 
 		if( a != null ) {
 			return a;
@@ -52,7 +52,7 @@ final class RestMethod
 
 	private final String httpMethod;
 
-	private final Collection<Action> actions = new TreeSet<Action>();
+	private final Collection<Action> actions = new TreeSet<>();
 
 	RestMethod( Class<?> cls, Method method, WebTarget target )
 	{

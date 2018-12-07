@@ -1,2 +1,12 @@
+apply plugin: 'war'
 
-description = ''
+dependencies {
+	runtime project( ':tests:app' )
+
+	testCompile project(':tests:arquillian')
+	
+	testRuntime 'org.jboss.arquillian.junit:arquillian-junit-container'
+	testRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
+
+	testRuntime 'org.jboss.arquillian.container:arquillian-glassfish-embedded-3.1'
+}

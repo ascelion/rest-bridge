@@ -2,35 +2,71 @@
 package bridge.tests;
 
 import java.net.URI;
+import java.util.NoSuchElementException;
+import java.util.ServiceLoader;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 
-public interface TestClientProvider
+import bridge.tests.providers.JerseyBridgeProvider;
+import lombok.Getter;
+import org.glassfish.jersey.logging.LoggingFeature.Verbosity;
+
+public abstract class TestClientProvider<B extends ClientBuilder>
 {
 
-	<T> T createClient( URI target, Class<T> cls );
+	private static TestClientProvider<?> instance;
 
-	default <C extends Client> C onNewClient( C client )
+	static public <B extends ClientBuilder> TestClientProvider<B> getInstance()
 	{
-		final ClassLoader cld = Thread.currentThread().getContextClassLoader();
+		if( instance == null ) {
+			try {
+				instance = ServiceLoader.load( TestClientProvider.class ).iterator().next();
+			}
+			catch( final NoSuchElementException e ) {
+				instance = new JerseyBridgeProvider();
+			}
+		}
+
+		return (TestClientProvider<B>) instance;
+	}
+
+	public static void setInstance( TestClientProvider<?> instance )
+	{
+		TestClientProvider.instance = instance;
+	}
+
+	@Getter
+	protected final B builder;
+
+	public TestClientProvider( B builder )
+	{
+		this.builder = builder;
 
 		try {
-			client.register( cld.loadClass( "org.glassfish.jersey.jackson.JacksonFeature" ) );
+			builder.register( org.glassfish.jersey.jackson.JacksonFeature.class );
 		}
-		catch( final ClassNotFoundException e ) {
+		catch( final NoClassDefFoundError e ) {
 		}
 
 		try {
-			client.register(
-				cld.loadClass( "org.glassfish.jersey.filter.LoggingFilter" )
-					.getConstructor( Logger.class, int.class )
-					.newInstance( Logger.getLogger( "ascelion.bridge.REST" ), 32768 )
-				);
-		}
-		catch( final Exception e ) {
-		}
+			final Logger logger = Logger.getLogger( "ascelion.bridge.REST" );
 
-		return client;
+			builder.register( new org.glassfish.jersey.logging.LoggingFeature( logger, Level.INFO, Verbosity.PAYLOAD_TEXT, null ) );
+		}
+		catch( final NoClassDefFoundError e ) {
+		}
+	}
+
+	public abstract <T> T createClient( URI target, Class<T> cls );
+
+	public boolean hasClientValidation()
+	{
+		return false;
+	}
+
+	protected void release( Object client )
+	{
 	}
 }

@@ -1,23 +1,21 @@
 
 package bridge.tests;
 
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.junit.Test;
-
-import bridge.tests.arquillian.IgnoreWith;
-import bridge.tests.providers.JerseyProxyProvider;
-
+import ascelion.rest.bridge.web.API;
 import ascelion.rest.bridge.web.BeanParamData;
 import ascelion.rest.bridge.web.BeanResource;
-import ascelion.rest.bridge.web.RestApplication;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import bridge.tests.arquillian.IgnoreWithProvider;
+import bridge.tests.providers.JerseyProxyProvider;
+import org.junit.Test;
 
 public class BeanResourceTest
 extends AbstractTestCase<BeanResource>
@@ -47,7 +45,7 @@ extends AbstractTestCase<BeanResource>
 	}
 
 	@Test
-	@IgnoreWith( JerseyProxyProvider.class )
+	@IgnoreWithProvider( JerseyProxyProvider.class )
 	public void get()
 	{
 		assertValid( this.client.get( createBean() ) );
@@ -56,9 +54,11 @@ extends AbstractTestCase<BeanResource>
 	@Test
 	public void getByClient()
 	{
-		final WebTarget w = ClientBuilder.newClient()
+		final WebTarget w = TestClientProvider.getInstance()
+			.getBuilder()
+			.build()
 			.target( this.target )
-			.path( RestApplication.BASE )
+			.path( API.BASE )
 			.path( "beans" )
 			.path( "{path1}/{path2}" )
 			.resolveTemplate( "path1", "path1" )

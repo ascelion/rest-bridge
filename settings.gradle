@@ -1,9 +1,11 @@
 
 rootProject.name = 'rest-bridge'
 
-include( 'cdi' )
-include( 'client' )
-include( 'tests:application' )
-include( 'tests:arquillian' )
-include( 'tests:jetty' )
-
+include 'cdi'
+include 'client'
+include 'tests:api'
+include 'tests:app'
+include 'tests:arquillian'
+//include 'tests:glassfish'
+//include 'tests:jetty'
+include 'tests:payara'

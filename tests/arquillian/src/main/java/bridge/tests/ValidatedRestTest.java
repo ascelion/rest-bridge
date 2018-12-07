@@ -1,9 +1,6 @@
 
 package bridge.tests;
 
-import java.net.URI;
-
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
@@ -12,26 +9,21 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.junit.Test;
-
+import ascelion.rest.bridge.web.API;
 import ascelion.rest.bridge.web.BeanData;
-import ascelion.rest.bridge.web.RestApplication;
 import ascelion.rest.bridge.web.Validated;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import org.junit.Test;
 
 public class ValidatedRestTest
 extends Deployments
 {
-
-	@ArquillianResource
-	private URI target;
 
 	@Test
 	public void bean_WithInvalid()
@@ -158,14 +150,16 @@ extends Deployments
 
 	private WebTarget getTarget( String path )
 	{
-		return ClientBuilder.newClient()
+		return TestClientProvider.getInstance()
+			.getBuilder()
+			.build()
 			.target( this.target )
-			.path( RestApplication.BASE )
+			.path( API.BASE )
 			.path( Validated.PATH )
 			.path( path );
 	}
 
-	private void notNullFormParam( final String v, Status status )
+	private void notNullFormParam( String v, Status status )
 	{
 		final WebTarget w = getTarget( "notNullFormParam" );
 		final Builder b = w.request( MediaType.APPLICATION_FORM_URLENCODED );

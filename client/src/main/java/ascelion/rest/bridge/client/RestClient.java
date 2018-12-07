@@ -26,7 +26,7 @@ public final class RestClient
 		String path = null;
 
 		for( Class<?> c = cls; path == null && c != Application.class; c = cls.getSuperclass() ) {
-			final ApplicationPath a = (ApplicationPath) c.getAnnotation( ApplicationPath.class );
+			final ApplicationPath a = c.getAnnotation( ApplicationPath.class );
 
 			if( a != null ) {
 				path = a.value();
@@ -38,24 +38,36 @@ public final class RestClient
 
 	final URI target;
 
-	private RestCallback<ClientBuilder> onNewBuilder = new RestCallbackWrapper<ClientBuilder>( null );
+	private RestCallback<ClientBuilder> onNewBuilder = new RestCallbackWrapper<>( null );
+	private RestCallback<Client> onNewClient = new RestCallbackWrapper<>( null );
+	RestCallback<Invocation.Builder> onNewRequest = new RestCallbackWrapper<>( null );
 
-	private RestCallback<Client> onNewClient = new RestCallbackWrapper<Client>( null );
-
-	RestCallback<Invocation.Builder> onNewRequest = new RestCallbackWrapper<Invocation.Builder>( null );
+	private Client client;
 
 	public RestClient( URI target )
 	{
-		this( target, (String) null );
+		this( null, target, (String) null );
 	}
 
 	public RestClient( URI target, Class<? extends Application> cls )
 	{
-		this( target, getBase( cls ) );
+		this( null, target, getBase( cls ) );
 	}
 
-	public RestClient( URI target, String base )
+	public RestClient( Client client, URI target )
 	{
+		this( client, target, (String) null );
+	}
+
+	public RestClient( Client client, URI target, Class<? extends Application> cls )
+	{
+		this( client, target, getBase( cls ) );
+	}
+
+	public RestClient( Client client, URI target, String base )
+	{
+		this.client = client;
+
 		if( base == null ) {
 			this.target = target;
 		}
@@ -66,18 +78,20 @@ public final class RestClient
 
 	public <X> X getInterface( Class<X> cls )
 	{
-		final Client ct = createClient();
+		if( this.client == null ) {
+			this.client = createClient();
+		}
 
-		ct.target( this.target );
+		this.client.target( this.target );
 
-		final RestClientIH ih = new RestClientIH( this, cls );
+		final RestClientIH ih = new RestClientIH( this, this.client, cls );
 
 		return RestClientIH.newProxy( cls, ih );
 	}
 
 	public RestClient onNewBuilder( RestCallback<ClientBuilder> onNewBuilder )
 	{
-		this.onNewBuilder = new RestCallbackWrapper<ClientBuilder>( onNewBuilder );
+		this.onNewBuilder = new RestCallbackWrapper<>( onNewBuilder );
 
 		return this;
 	}
@@ -96,7 +110,7 @@ public final class RestClient
 		return this;
 	}
 
-	Client createClient()
+	private Client createClient()
 	{
 		ClientBuilder newBuilder = null;
 		RuntimeException exception = null;
