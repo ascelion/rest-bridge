@@ -48,11 +48,11 @@ implements InvocationHandler
 
 	private final URI targetURI;
 
-	private final Map<Method, RestMethod> methods = new HashMap<Method, RestMethod>();
+	private final Map<Method, RestMethod> methods = new HashMap<>();
 
-	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<String, Object>();
+	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
 
-	private final Collection<Cookie> cookies = new ArrayList<Cookie>();
+	private final Collection<Cookie> cookies = new ArrayList<>();
 
 	private final Form form = new Form();
 
@@ -75,11 +75,11 @@ implements InvocationHandler
 		this.form.asMap().putAll( form.asMap() );
 	}
 
-	RestClientIH( RestClient restClient, Class cls )
+	RestClientIH( RestClient restClient, Client client, Class cls )
 	{
 		this.restClient = restClient;
 		this.cls = cls;
-		this.client = restClient.createClient();
+		this.client = client;
 		this.target = Util.addPathFromAnnotation( cls, this.client.target( restClient.target ) );
 		this.targetURI = this.target.getUri();
 
@@ -88,8 +88,7 @@ implements InvocationHandler
 	}
 
 	@Override
-	public Object invoke( Object proxy, Method method, Object[] arguments )
-	throws Throwable
+	public Object invoke( Object proxy, Method method, Object[] arguments ) throws Throwable
 	{
 		if( O_METHODS.contains( method ) ) {
 			return method.invoke( this, arguments );
@@ -129,8 +128,7 @@ implements InvocationHandler
 		}
 	}
 
-	private Object invoke( Object proxy, RestMethod restMethod, Object[] arguments )
-	throws URISyntaxException
+	private Object invoke( Object proxy, RestMethod restMethod, Object[] arguments ) throws URISyntaxException
 	{
 		final RestContext cx = new RestContext( proxy, restMethod.method, arguments, this.client, restMethod.target, this.restClient.onNewRequest, this.headers, this.cookies, this.form );
 
@@ -144,7 +142,7 @@ implements InvocationHandler
 	}
 
 	private void updateTarget( RestMethod restMethod, URI newTarget )
-	throws URISyntaxException
+																		throws URISyntaxException
 	{
 		//		final String path = restMethod.target.getUri().getPath();
 		//		String newPath = newTarget.getPath();

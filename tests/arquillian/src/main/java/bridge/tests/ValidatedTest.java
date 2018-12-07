@@ -8,17 +8,17 @@ import javax.validation.Validation;
 import javax.validation.ValidationException;
 import javax.ws.rs.BadRequestException;
 
-import org.junit.Assert;
+import ascelion.rest.bridge.web.BeanData;
+import ascelion.rest.bridge.web.Validated;
+
+import static org.junit.Assert.assertEquals;
+
+import bridge.tests.arquillian.IgnoreWithProvider;
+import bridge.tests.providers.JerseyProxyProvider;
+import bridge.tests.providers.ResteasyProxyProvider;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import bridge.tests.arquillian.IgnoreWith;
-import bridge.tests.providers.RestBridgeProvider;
-import bridge.tests.providers.ResteasyProvider;
-
-import ascelion.rest.bridge.web.BeanData;
-import ascelion.rest.bridge.web.Validated;
 
 public class ValidatedTest
 extends AbstractTestCase<Validated>
@@ -33,7 +33,7 @@ extends AbstractTestCase<Validated>
 	}
 
 	@Test
-	@IgnoreWith( ResteasyProvider.class )
+	@IgnoreWithProvider( ResteasyProxyProvider.class )
 	public void bean_WithNull()
 	{
 		runTest( this.client::bean, null );
@@ -52,7 +52,7 @@ extends AbstractTestCase<Validated>
 	}
 
 	@Test
-	@IgnoreWith( ResteasyProvider.class )
+	@IgnoreWithProvider( ResteasyProxyProvider.class )
 	public void beanNotNull_WithNull()
 	{
 		setUpValidationException();
@@ -75,7 +75,7 @@ extends AbstractTestCase<Validated>
 	}
 
 	@Test
-	@IgnoreWith( ResteasyProvider.class )
+	@IgnoreWithProvider( ResteasyProxyProvider.class )
 	public void beanValid_WithNull()
 	{
 		runTest( this.client::beanValid, null );
@@ -96,7 +96,7 @@ extends AbstractTestCase<Validated>
 	}
 
 	@Test
-	@IgnoreWith( ResteasyProvider.class )
+	@IgnoreWithProvider( ResteasyProxyProvider.class )
 	public void beanValidNotNull_WithNull()
 	{
 		setUpValidationException();
@@ -117,7 +117,7 @@ extends AbstractTestCase<Validated>
 	}
 
 	@Test
-	@IgnoreWith( ResteasyProvider.class )
+	@IgnoreWithProvider( value = JerseyProxyProvider.class, reason = "unable to get content-type" )
 	public void notNullFormParam_WithNull()
 	{
 		setUpValidationException();
@@ -155,13 +155,13 @@ extends AbstractTestCase<Validated>
 
 	private <T> void runTest( Function<T, T> func, T data )
 	{
-		Assert.assertEquals( data, func.apply( data ) );
+		assertEquals( data, func.apply( data ) );
 	}
 
 	private void setUpValidationException()
 	{
 		try {
-			if( RestBridgeProvider.class.isInstance( AbstractTestCase.CLIENT_PROVIDER ) ) {
+			if( TestClientProvider.getInstance().hasClientValidation() ) {
 				Validation.buildDefaultValidatorFactory().getValidator();
 
 				this.ex.expect( ConstraintViolationException.class );

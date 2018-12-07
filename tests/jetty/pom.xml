@@ -11,7 +11,7 @@
 	<artifactId>tests-jetty</artifactId>
 
 	<properties>
-		<jetty.version>9.3.0.M1</jetty.version>
+		<jetty.version>9.3.6.v20151106</jetty.version>
 	</properties>
 
 	<profiles>
@@ -23,11 +23,11 @@
 					<artifactId>jersey-container-servlet</artifactId>
 					<scope>runtime</scope>
 				</dependency>
-				<dependency>
+				<!-- <dependency>
 					<groupId>org.glassfish.jersey.containers.glassfish</groupId>
 					<artifactId>jersey-gf-cdi</artifactId>
 					<scope>runtime</scope>
-				</dependency>
+				</dependency> -->
 				<dependency>
 					<groupId>org.jboss.weld.servlet</groupId>
 					<artifactId>weld-servlet</artifactId>
@@ -86,6 +86,10 @@
 				</dependency>
 				<dependency>
 					<groupId>org.eclipse.jetty</groupId>
+					<artifactId>jetty-deploy</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>org.eclipse.jetty</groupId>
 					<artifactId>jetty-annotations</artifactId>
 				</dependency>
 				<dependency>
@@ -101,7 +105,7 @@
 			<dependency>
 				<groupId>org.jboss.arquillian.container</groupId>
 				<artifactId>arquillian-jetty-embedded-9</artifactId>
-				<version>1.0.0.CR2</version>
+				<version>1.0.0.CR3</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>

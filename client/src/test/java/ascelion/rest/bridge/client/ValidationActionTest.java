@@ -5,19 +5,23 @@ import java.lang.reflect.Method;
 
 import javax.validation.ConstraintViolationException;
 
+import ascelion.rest.bridge.web.BeanData;
+import ascelion.rest.bridge.web.Validated;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
-import ascelion.rest.bridge.web.BeanData;
-import ascelion.rest.bridge.web.Validated;
+import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith( MockitoJUnitRunner.class )
 public class ValidationActionTest
 {
+
+	static {
+//		asList( System.getProperty( "java.class.path", "" ).split( ":" ) ).forEach( System.out::println );
+	}
 
 	@Mock
 	private Validated client;

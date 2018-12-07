@@ -1,23 +1,58 @@
-
-buildscript {
-	dependencies {
-		classpath( 'ascelion.gradle.plugins:gradle-ascelion-plugin:0.1.12' ) { exclude( group: 'net.sf.proguard' ) }
+allprojects {
+	repositories {
+		jcenter()
+		maven {
+			url = 'https://repo.gradle.org/gradle/libs-releases'
+		}
 	}
+
+	apply plugin: 'eclipse'
+
+	defaultTasks 'build'
 }
 
-allprojects { apply( plugin: 'eclipse' ) }
-
 subprojects {
-	apply( plugin: 'ascelion' )
+	apply plugin: 'java'
 
 	group = 'ascelion.rest-bridge'
+	version = '1.0.2-SNAPSHOT'
 
-	ascelion {
-		java {
-			version = JavaVersion.VERSION_1_8
+	sourceCompatibility = JavaVersion.VERSION_1_8
 
-			main { 
-				artifactId = "${rootProject.name}-${project.name}" 
+	apply from: rootProject.file( 'dependencies.gradle' )
+
+	tasks.withType( Test ) {
+		outputs.upToDateWhen { false }
+
+		ignoreFailures = true
+		enableAssertions = true
+		scanForTestClasses = true
+
+		testLogging {
+			exceptionFormat 'full'
+			showStandardStreams = true
+		}
+		reports {
+			html.enabled = true
+		}
+	}
+	
+	tasks.withType( War ) {
+		jar.enabled = true
+
+		apply plugin: 'eclipse-wtp'
+
+		eclipse {
+			wtp {
+				facet {
+					facet name: 'jst.web', version: '3.1'
+
+					file {
+						whenMerged { facets ->
+							facets.facets.removeIf { it.name == 'jst.utility' }
+						}
+					}
+				}
 			}
 		}
 	}
@@ -27,9 +62,18 @@ subprojects { sub ->
 	eclipse {
 		project { 
 			name = "${rootProject.name}${sub.path.replace(':', '-')}" 
+		}
 
-			println "${sub.projectDir} -> $name"
+		classpath {
+			file {
+				whenMerged {
+					entries.findAll { it.kind == 'src' }
+						.each {
+							if( it.entryAttributes.containsKey('gradle_scope'))
+							it.entryAttributes['test'] = it.entryAttributes['gradle_scope'] == 'test'
+						}
+				}
+			}
 		}
 	}
 }
-

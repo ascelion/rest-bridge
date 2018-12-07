@@ -4,24 +4,21 @@ package bridge.tests.arquillian;
 import java.util.Arrays;
 import java.util.List;
 
+import bridge.tests.TestClientProvider;
 import org.jboss.arquillian.junit.Arquillian;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
-
-import bridge.tests.AbstractTestCase;
-import bridge.tests.TestClientProvider;
 
 public class ArquillianUnit
 extends Arquillian
 {
 
 	static {
-		Arrays.asList( System.getProperty( "java.class.path", "" ).split( ":" ) ).forEach( System.out::println );
+//		Arrays.asList( System.getProperty( "java.class.path", "" ).split( ":" ) ).forEach( System.out::println );
 	}
 
-	public ArquillianUnit( Class<?> klass )
-	throws InitializationError
+	public ArquillianUnit( Class<?> klass ) throws InitializationError
 	{
 		super( klass );
 	}
@@ -37,12 +34,13 @@ extends Arquillian
 		}
 	}
 
-	private boolean isIgnored( FrameworkMethod method )
+	@Override
+	protected boolean isIgnored( FrameworkMethod method )
 	{
-		IgnoreWith a = method.getAnnotation( IgnoreWith.class );
+		IgnoreWithProvider a = method.getAnnotation( IgnoreWithProvider.class );
 
 		if( a == null ) {
-			a = method.getMethod().getDeclaringClass().getAnnotation( IgnoreWith.class );
+			a = method.getMethod().getDeclaringClass().getAnnotation( IgnoreWithProvider.class );
 		}
 
 		if( a == null ) {
@@ -51,6 +49,6 @@ extends Arquillian
 
 		final List<Class<? extends TestClientProvider>> clients = Arrays.asList( a.value() );
 
-		return clients.stream().anyMatch( c -> c.isInstance( AbstractTestCase.CLIENT_PROVIDER ) );
+		return clients.stream().anyMatch( c -> c.isInstance( TestClientProvider.getInstance() ) );
 	}
 }

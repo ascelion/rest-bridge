@@ -7,9 +7,9 @@
 	<defaultProtocol type="Servlet 3.0" />
 
 	<container qualifier="default" default="true">
-		<configuration>
+		<!-- <configuration>
 			<property name="glassFishHome">${unpackTarget}/glassfish4</property>
-		</configuration>
+		</configuration> -->
 	</container>
 
 </arquillian>

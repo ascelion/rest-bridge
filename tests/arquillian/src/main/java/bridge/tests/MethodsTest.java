@@ -1,9 +1,12 @@
 
 package bridge.tests;
 
-import org.junit.Test;
-
 import ascelion.rest.bridge.web.Methods;
+
+import bridge.tests.arquillian.IgnoreWithProvider;
+import bridge.tests.providers.ResteasyBridgeProvider;
+import bridge.tests.providers.ResteasyProxyProvider;
+import org.junit.Test;
 
 public class MethodsTest
 extends AbstractTestCase<Methods>
@@ -22,6 +25,12 @@ extends AbstractTestCase<Methods>
 	}
 
 	@Test
+	@IgnoreWithProvider(
+		reason = "unable to handle empty response for HEAD",
+		value = {
+			ResteasyBridgeProvider.class,
+			ResteasyProxyProvider.class,
+		} )
 	public void head()
 	{
 		this.client.head();
