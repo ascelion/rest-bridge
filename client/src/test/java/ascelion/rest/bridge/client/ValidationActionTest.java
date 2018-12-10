@@ -5,8 +5,8 @@ import java.lang.reflect.Method;
 
 import javax.validation.ConstraintViolationException;
 
-import ascelion.rest.bridge.web.BeanData;
-import ascelion.rest.bridge.web.Validated;
+import ascelion.rest.bridge.tests.api.BeanData;
+import ascelion.rest.bridge.tests.api.Validated;
 
 import org.junit.Rule;
 import org.junit.Test;

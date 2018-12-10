@@ -1,0 +1,24 @@
+repositories {
+	jcenter()
+}
+
+apply plugin: 'groovy'
+apply plugin: 'eclipse'
+
+dependencies
+{
+	compile localGroovy()
+	compile gradleApi()
+
+	compileOnly 'org.projectlombok:lombok:1.18.4'
+	annotationProcessor 'org.projectlombok:lombok:1.18.4'
+}
+
+eclipse {
+	project {
+		name = 'rest-bridge-build'
+	}
+	classpath {
+		defaultOutputDir file("build/eclipse")
+	}
+}

@@ -6,9 +6,10 @@ dependencies {
 
 	compile 'io.leangen.geantyref:geantyref'
 
+	testCompile project( ':tests:api' )
+
 	testCompile 'javax.ws.rs:javax.ws.rs-api'
 	testCompile 'javax.validation:validation-api'
-	testCompile project( ':tests:api' )
 
 	testRuntime 'org.hibernate:hibernate-validator'
 	testRuntime 'org.glassfish:javax.el'
