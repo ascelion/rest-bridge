@@ -6,20 +6,20 @@ allprojects {
 		}
 	}
 
-	apply plugin: 'eclipse'
-
 	defaultTasks 'build'
 }
 
+apply plugin: 'eclipse'
+
 subprojects {
-	apply plugin: 'java'
+	apply plugin: ascelion.rest.bridge.BuildPlugin
+	apply from: rootProject.file( 'dependencies.gradle' )
 
 	group = 'ascelion.rest-bridge'
 	version = '1.0.2-SNAPSHOT'
 
 	sourceCompatibility = JavaVersion.VERSION_1_8
-
-	apply from: rootProject.file( 'dependencies.gradle' )
+	targetCompatibility = JavaVersion.VERSION_1_8
 
 	tasks.withType( Test ) {
 		outputs.upToDateWhen { false }
@@ -36,7 +36,7 @@ subprojects {
 			html.enabled = true
 		}
 	}
-	
+
 	tasks.withType( War ) {
 		jar.enabled = true
 
@@ -56,23 +56,20 @@ subprojects {
 			}
 		}
 	}
-}
 
-subprojects { sub ->
-	eclipse {
-		project { 
-			name = "${rootProject.name}${sub.path.replace(':', '-')}" 
-		}
-
-		classpath {
-			file {
-				whenMerged {
-					entries.findAll { it.kind == 'src' }
-						.each {
-							if( it.entryAttributes.containsKey('gradle_scope'))
-							it.entryAttributes['test'] = it.entryAttributes['gradle_scope'] == 'test'
-						}
-				}
+	plugins.withType( ascelion.rest.bridge.ASPlugin ) {
+		containers {
+			payara41( payara ) {
+				distribution 'fish.payara.distributions:payara:4.1.2.+@zip'
+			}
+			payara5( payara ) {
+				distribution 'fish.payara.distributions:payara:5.+@zip'
+			}
+			gf4( glassfish ) {
+				distribution 'org.glassfish.main.distributions:glassfish:4.+@zip'
+			}
+			gf5( glassfish ) {
+				distribution 'org.glassfish.main.distributions:glassfish:5.+@zip'
 			}
 		}
 	}

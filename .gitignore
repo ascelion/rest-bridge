@@ -1,9 +1,6 @@
 bin/
 target/
 build/
-.gradle
-.project
-.classpath
-.settings/
-.external*/
 *.log
+.*
+!.gitignore

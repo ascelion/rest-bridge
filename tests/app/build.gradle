@@ -1,6 +1,10 @@
+apply plugin: 'war'
+
+war.archiveName = "${project.name}.war"
+jar.enabled = true
 
 dependencies {
-	compile project( ':tests:api' )
+	implementation project( ':tests:api' )
 
 	compileOnly 'javax.servlet:javax.servlet-api'
 	compileOnly 'javax.validation:validation-api'
@@ -11,4 +15,78 @@ dependencies {
 
 	compileOnly 'com.fasterxml.jackson.core:jackson-annotations'
 	compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+	compileOnly 'org.glassfish.jersey.media:jersey-media-json-jackson'
+}
+
+// testing
+apply plugin: ascelion.rest.bridge.ASPlugin
+
+sourceSets {
+	arquillian
+}
+
+processArquillianResources {
+	inputs.property 'serverName', serverName
+
+	filesMatching( '**/*.xml' ) {
+		expand([
+			server: containers[serverName]
+		])
+	}
+}
+
+dependencies {
+	arquillianImplementation project(':client')
+	arquillianImplementation project(':tests:api')
+
+	arquillianImplementation 'junit:junit'
+	arquillianImplementation 'org.slf4j:slf4j-api'
+	arquillianImplementation 'io.leangen.geantyref:geantyref'
+	arquillianImplementation 'org.apache.commons:commons-io'
+	arquillianImplementation 'org.jboss.arquillian.test:arquillian-test-api'
+	arquillianImplementation 'org.jboss.arquillian.junit:arquillian-junit-core'
+	arquillianImplementation 'org.jboss.arquillian.container:arquillian-container-test-api'
+	arquillianImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
+	arquillianImplementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-gradle-embedded-archive'
+	arquillianImplementation 'org.glassfish.jersey.ext:jersey-proxy-client'
+	arquillianImplementation 'org.jboss.resteasy:resteasy-client'
+	arquillianImplementation 'org.glassfish.jersey.core:jersey-client'
+	arquillianImplementation 'org.glassfish.jersey.media:jersey-media-json-jackson'
+
+	arquillianRuntime 'ch.qos.logback:logback-classic'
+	arquillianRuntime 'org.glassfish.jersey.inject:jersey-hk2'
+	arquillianRuntime 'org.glassfish.jersey.connectors:jersey-grizzly-connector'
+	arquillianRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
+	arquillianRuntime 'com.fasterxml.jackson.core:jackson-annotations'
+	arquillianRuntime 'com.fasterxml.jackson.core:jackson-databind'
+
+	arquillianRuntime 'org.jboss.arquillian.junit:arquillian-junit-container'
+	arquillianRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
+
+	arquillianRuntime "fish.payara.arquillian:arquillian-payara-server-4-${serverType}"
+}
+
+task arquillian( type: Test ) {
+	dependsOn "${serverName}-install"
+	dependsOn arquillianClasses
+
+	include '**/ProvidersSuite.class'
+
+	classpath = files()
+	classpath += sourceSets.arquillian.output
+	classpath += configurations.arquillianCompileClasspath
+	classpath += configurations.arquillianRuntimeClasspath
+
+	testClassesDirs = sourceSets.arquillian.output.classesDirs
+}
+
+check {
+	dependsOn arquillian
+}
+
+eclipse {
+	classpath {
+		plusConfigurations += [ configurations.arquillianCompileClasspath ]
+		plusConfigurations += [ configurations.arquillianRuntimeClasspath ]
+	}
 }
