@@ -1,28 +1,25 @@
 
 package ascelion.rest.bridge.tests.app;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleAbstractTypeResolver;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 @Provider
+@ApplicationScoped
 public class JacksonResolver implements ContextResolver<ObjectMapper>
 {
 
+	@Produces
 	private final ObjectMapper om = new ObjectMapper();
 
 	public JacksonResolver()
 	{
-//		final SimpleModule sm = new SimpleModule( "user-info" );
-//		final SimpleAbstractTypeResolver rz = new SimpleAbstractTypeResolver();
-//
-//		rz.addMapping( UserInfo.class, UserInfoImpl.class );
-//		sm.setAbstractTypes( rz );
-//
-//		this.om.registerModule( sm );
+		this.om.enable( SerializationFeature.INDENT_OUTPUT );
 	}
 
 	@Override

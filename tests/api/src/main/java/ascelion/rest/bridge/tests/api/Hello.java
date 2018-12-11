@@ -1,7 +1,6 @@
 
 package ascelion.rest.bridge.tests.api;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -12,19 +11,20 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 @Path( "hello" )
-@Produces( MediaType.APPLICATION_JSON )
-@Consumes( MediaType.APPLICATION_JSON )
 public interface Hello
 {
 
 	@GET
 	@Path( "authenticate" )
+	@Produces( MediaType.APPLICATION_JSON )
 	UserInfo authenticate( @QueryParam( "username" ) String username, @HeaderParam( "password" ) String password );
 
 	@GET
+	@Produces( MediaType.TEXT_PLAIN )
 	String sayByParam( @QueryParam( "username" ) @DefaultValue( "guest" ) String username );
 
 	@GET
 	@Path( "{username}" )
+	@Produces( MediaType.TEXT_PLAIN )
 	String sayByPath( @PathParam( "username" ) String username );
 }

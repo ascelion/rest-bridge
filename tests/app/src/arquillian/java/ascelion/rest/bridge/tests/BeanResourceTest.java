@@ -11,6 +11,7 @@ import ascelion.rest.bridge.tests.api.BeanParamData;
 import ascelion.rest.bridge.tests.api.BeanResource;
 import ascelion.rest.bridge.tests.arquillian.IgnoreWithProvider;
 import ascelion.rest.bridge.tests.providers.JerseyProxyProvider;
+import ascelion.rest.bridge.tests.providers.ResteasyProxyProvider;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -46,9 +47,12 @@ extends AbstractTestCase<BeanResource>
 
 	@Test
 	@IgnoreWithProvider( JerseyProxyProvider.class )
+	@IgnoreWithProvider( value = ResteasyProxyProvider.class, reason = "bad accept header" )
 	public void get()
 	{
-		assertValid( this.client.get( createBean() ) );
+		final BeanParamData bean = this.client.get( createBean() );
+
+		assertValid( bean );
 	}
 
 	@Test

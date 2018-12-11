@@ -2,15 +2,13 @@
 package ascelion.rest.bridge.tests;
 
 import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.ws.rs.client.ClientBuilder;
 
 import ascelion.rest.bridge.tests.providers.JerseyBridgeProvider;
 
 import lombok.Getter;
-import org.glassfish.jersey.logging.LoggingFeature.Verbosity;
+import org.glassfish.jersey.jackson.JacksonFeature;
 
 public abstract class TestClientProvider<B extends ClientBuilder>
 {
@@ -38,19 +36,9 @@ public abstract class TestClientProvider<B extends ClientBuilder>
 	{
 		this.builder = builder;
 
-		try {
-			builder.register( org.glassfish.jersey.jackson.JacksonFeature.class );
-		}
-		catch( final NoClassDefFoundError e ) {
-		}
-
-		try {
-			final Logger logger = Logger.getLogger( "ascelion.bridge.REST" );
-
-			builder.register( new org.glassfish.jersey.logging.LoggingFeature( logger, Level.INFO, Verbosity.PAYLOAD_TEXT, null ) );
-		}
-		catch( final NoClassDefFoundError e ) {
-		}
+		builder.register( JerseyTrace.class );
+		builder.register( RestClientTrace.class );
+		builder.register( JacksonFeature.class );
 	}
 
 	public abstract <T> T createClient( URI target, Class<T> cls );

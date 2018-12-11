@@ -27,6 +27,9 @@ abstract class Server implements Named {
 		this.instantiator = instantiator
 	}
 
+	abstract protected File getExecutable()
+	abstract boolean isServerUp()
+
 	File getHome() {
 		return new File( sc.base, name )
 	}
@@ -40,7 +43,9 @@ abstract class Server implements Named {
 	}
 
 	protected final void createTasks() {
-		createTask('install', null) { configureInstall( it ) }
+		createTask( 'install', null) { configureInstall( it ) }
+		createTask( 'start', "Start ${this.name} instance") {  configureStart( it ) }
+		createTask( 'stop', "Stop ${this.name} instance") { configureStop( it ) }
 	}
 
 	protected final void createTask(String taskName, String description, Closure<Task> closure) {
@@ -53,7 +58,21 @@ abstract class Server implements Named {
 		}
 	}
 
-	abstract protected File getExecutable()
+	protected final void addTaskDependency( Task second, String taskName ) {
+		this.project.tasks.all { Task first ->
+			if( first.name == "${this.name}-${taskName}" ) {
+				second.dependsOn( first )
+			}
+		}
+	}
+
+	protected final void mustRunAfter( Task second, String taskName ) {
+		this.project.tasks.all { Task first ->
+			if( first.name == "${this.name}-${taskName}" ) {
+				second.mustRunAfter( first )
+			}
+		}
+	}
 
 	protected void configureInstall(Task task) {
 		Configuration dist = this.project.configurations.create( "${this.name}-dist" )
@@ -91,5 +110,15 @@ abstract class Server implements Named {
 				}
 			}
 		}
+	}
+
+	protected void configureStart(Task task) {
+		addTaskDependency( task, "install" )
+
+		task.onlyIf { !this.serverUp }
+	}
+
+	protected void configureStop(Task task) {
+		task.onlyIf { this.serverUp }
 	}
 }

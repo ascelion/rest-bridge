@@ -3,8 +3,15 @@ package ascelion.rest.bridge.tests.app;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+
+import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.logging.LoggingFeature;
+import org.glassfish.jersey.logging.LoggingFeature.Verbosity;
+import org.glassfish.jersey.server.ServerProperties;
 
 @ApplicationScoped
 public class DefaultRestApplicationConfig implements RestApplicationConfig
@@ -20,6 +27,16 @@ public class DefaultRestApplicationConfig implements RestApplicationConfig
 		classes.add( ValidatedImpl.class );
 
 		classes.add( JacksonResolver.class );
+
+		classes.add( GenericExceptionMapper.class );
+
+		final Logger logger = Logger.getLogger( "ascelion.bridge.REST" );
+
+		singletons.add( new LoggingFeature( logger, Level.INFO, Verbosity.PAYLOAD_TEXT, null ) );
+
+		properties.put( ServerProperties.TRACING, "ON_DEMAND" );
+		properties.put( ServerProperties.TRACING_THRESHOLD, "VERBOSE" );
+		properties.put( CommonProperties.MOXY_JSON_FEATURE_DISABLE, true );
 	}
 
 }
