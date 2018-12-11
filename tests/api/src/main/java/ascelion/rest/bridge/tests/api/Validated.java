@@ -39,7 +39,7 @@ public interface Validated
 
 	@POST
 	@Path( "notNullFormParam" )
-	@Produces( MediaType.APPLICATION_FORM_URLENCODED )
+	@Produces( MediaType.TEXT_PLAIN )
 	@Consumes( MediaType.APPLICATION_FORM_URLENCODED )
 	String notNullFormParam( @FormParam( "value" ) @NotNull String value );
 

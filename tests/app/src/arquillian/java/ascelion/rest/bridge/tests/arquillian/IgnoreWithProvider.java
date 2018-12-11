@@ -27,4 +27,6 @@ public @interface IgnoreWithProvider
 	Class<? extends TestClientProvider>[] value();
 
 	String reason() default "";
+
+	String[] reasons() default {};
 }

@@ -4,7 +4,7 @@ package ascelion.rest.bridge.tests;
 import ascelion.rest.bridge.tests.api.BeanAPI;
 import ascelion.rest.bridge.tests.api.BeanData;
 import ascelion.rest.bridge.tests.arquillian.IgnoreWithProvider;
-import ascelion.rest.bridge.tests.providers.ResteasyBridgeProvider;
+import ascelion.rest.bridge.tests.providers.JerseyProxyProvider;
 import ascelion.rest.bridge.tests.providers.ResteasyProxyProvider;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -18,10 +18,9 @@ extends AbstractTestCase<BeanAPI>
 {
 
 	@Test
-	@IgnoreWithProvider( {
-		ResteasyBridgeProvider.class,
-		ResteasyProxyProvider.class,
-	} )
+	@IgnoreWithProvider(
+		value = { ResteasyProxyProvider.class, JerseyProxyProvider.class, },
+		reason = "interface too generic, cannot infer the return type" )
 	public void create()
 	{
 		final BeanData b0 = new BeanData( "cici" );
@@ -31,10 +30,9 @@ extends AbstractTestCase<BeanAPI>
 	}
 
 	@Test
-	@IgnoreWithProvider( {
-		ResteasyBridgeProvider.class,
-		ResteasyProxyProvider.class,
-	} )
+	@IgnoreWithProvider(
+		value = { ResteasyProxyProvider.class, JerseyProxyProvider.class, },
+		reason = "interface too generic, cannot infer the return type" )
 	public void get()
 	{
 		final BeanData b0 = new BeanData( "value" );

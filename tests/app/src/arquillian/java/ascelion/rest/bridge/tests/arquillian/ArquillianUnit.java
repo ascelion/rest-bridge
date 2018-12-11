@@ -1,10 +1,14 @@
 
 package ascelion.rest.bridge.tests.arquillian;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.stream.Stream;
 
 import ascelion.rest.bridge.tests.TestClientProvider;
+import ascelion.rest.bridge.tests.arquillian.IgnoreWithProvider.IgnoreWithProviders;
+
+import static java.util.Arrays.asList;
 
 import org.jboss.arquillian.junit.Arquillian;
 import org.junit.runner.notification.RunNotifier;
@@ -38,18 +42,32 @@ extends Arquillian
 	@Override
 	protected boolean isIgnored( FrameworkMethod method )
 	{
-		IgnoreWithProvider a = method.getAnnotation( IgnoreWithProvider.class );
-
-		if( a == null ) {
-			a = method.getMethod().getDeclaringClass().getAnnotation( IgnoreWithProvider.class );
+		if( super.isIgnored( method ) ) {
+			return true;
 		}
 
-		if( a == null ) {
-			return false;
+		final Collection<IgnoreWithProvider> ignores = new HashSet<>();
+
+		IgnoreWithProvider a1 = method.getAnnotation( IgnoreWithProvider.class );
+
+		if( a1 == null ) {
+			a1 = method.getMethod().getDeclaringClass().getAnnotation( IgnoreWithProvider.class );
+		}
+		if( a1 != null ) {
+			ignores.add( a1 );
 		}
 
-		final List<Class<? extends TestClientProvider>> clients = Arrays.asList( a.value() );
+		IgnoreWithProviders a2 = method.getAnnotation( IgnoreWithProviders.class );
 
-		return clients.stream().anyMatch( c -> c.isInstance( TestClientProvider.getInstance() ) );
+		if( a2 == null ) {
+			a2 = method.getMethod().getDeclaringClass().getAnnotation( IgnoreWithProviders.class );
+		}
+		if( a2 != null ) {
+			ignores.addAll( asList( a2.value() ) );
+		}
+
+		return ignores.stream()
+			.flatMap( t -> Stream.of( t.value() ) )
+			.anyMatch( c -> c.isInstance( TestClientProvider.getInstance() ) );
 	}
 }

@@ -7,6 +7,10 @@
 
 	<defaultProtocol type="Servlet 3.0" />
 
+	<engine>
+		<property name="deploymentExportPath">build/deployments</property>
+	</engine>
+
 	<container qualifier="glassfish" default="true">
 		<configuration>
 			<property name="adminPort">${server.adminPort}</property>

@@ -118,6 +118,7 @@ extends AbstractTestCase<Validated>
 
 	@Test
 	@IgnoreWithProvider( value = JerseyProxyProvider.class, reason = "unable to get content-type" )
+	@IgnoreWithProvider( value = ResteasyProxyProvider.class, reason = "unable to get content-type" )
 	public void notNullFormParam_WithNull()
 	{
 		setUpValidationException();

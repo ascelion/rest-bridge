@@ -162,7 +162,7 @@ extends Deployments
 	private void notNullFormParam( String v, Status status )
 	{
 		final WebTarget w = getTarget( "notNullFormParam" );
-		final Builder b = w.request( MediaType.APPLICATION_FORM_URLENCODED );
+		final Builder b = w.request( MediaType.WILDCARD );
 
 		final Form f = new Form();
 
