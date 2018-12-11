@@ -46,7 +46,6 @@ dependencies {
 	arquillianImplementation 'org.apache.commons:commons-io'
 	arquillianImplementation 'org.apache.commons:commons-text'
 	arquillianImplementation 'org.jboss.arquillian.test:arquillian-test-api'
-	arquillianImplementation 'org.jboss.arquillian.junit:arquillian-junit-core'
 	arquillianImplementation 'org.jboss.arquillian.container:arquillian-container-test-api'
 	arquillianImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
 	arquillianImplementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-gradle-embedded-archive'
