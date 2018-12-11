@@ -1,0 +1,49 @@
+apply plugin: ascelion.rest.bridge.ASPlugin
+
+def tckDir = file 'eclipse/tck/src/main/java'
+
+sourceSets {
+	tck {
+		java {
+			srcDir tckDir
+		}
+	}
+}
+
+dependencies {
+	compileOnly 'javax.ws.rs:javax.ws.rs-api'
+	compileOnly 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+
+	implementation project( ':client' )
+
+	tckCompile 'javax.ws.rs:javax.ws.rs-api'
+	tckCompile 'javax.annotation:javax.annotation-api'
+	tckCompile 'javax.validation:validation-api'
+	tckCompile 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+	tckCompile 'javax.json:javax.json-api'
+	tckCompile 'javax.json.bind:javax.json.bind-api'
+	tckCompile 'javax.enterprise:cdi-api'
+	tckCompile 'org.testng:testng'
+	tckCompile 'com.github.tomakehurst:wiremock'
+	tckRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
+	tckCompile 'org.jboss.arquillian.testng:arquillian-testng-container'
+	tckCompile 'com.beust:jcommander'
+	tckRuntime 'org.glassfish.jersey.core:jersey-client'
+	tckRuntime "fish.payara.arquillian:arquillian-payara-server-4-${serverType}"
+}
+
+processTestResources {
+	inputs.property 'serverName', serverName
+
+	filesMatching( '**/*.xml' ) {
+		expand([
+			server: containers[serverName]
+		])
+	}
+}
+
+task(name: "tck-test", type: Test ) {
+	useTestNG()
+	
+	onlyIf { tckDir.directory }
+}
