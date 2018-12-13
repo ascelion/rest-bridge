@@ -12,7 +12,6 @@ extends AnnotationAction<FormParam>
 		super( annotation, ix );
 	}
 
-	@SuppressWarnings( "unchecked" )
 	@Override
 	public void execute( final RestContext cx )
 	{
