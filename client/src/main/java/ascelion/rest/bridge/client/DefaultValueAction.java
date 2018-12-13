@@ -1,8 +1,7 @@
+
 package ascelion.rest.bridge.client;
 
 import javax.ws.rs.DefaultValue;
-
-import ascelion.rest.bridge.client.Action.Priority;
 
 class DefaultValueAction
 extends AnnotationAction<DefaultValue>
@@ -22,4 +21,3 @@ extends AnnotationAction<DefaultValue>
 	}
 
 }
-
