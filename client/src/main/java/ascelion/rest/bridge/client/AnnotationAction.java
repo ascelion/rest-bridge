@@ -69,6 +69,5 @@ extends Action
 
 	<T> void visitElement( RestContext cx, T t )
 	{
-
 	}
 }
