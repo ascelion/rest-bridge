@@ -29,10 +29,11 @@ class BuildPlugin implements Plugin<Project> {
 
 					file {
 						whenMerged {
+							configureScope( entries )
+
 							target.sourceSets.each { SourceSet set ->
 								configureJava( target, entries, set )
 								configureResources( target, entries, set )
-								configureScope( entries )
 							}
 						}
 					}

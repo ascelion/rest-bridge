@@ -1,7 +1,9 @@
 apply plugin: 'war'
 
-war.archiveName = "${project.name}.war"
+jar.archiveName = "${project.name}.jar"
 jar.enabled = true
+war.archiveName = "${project.name}.war"
+war.dependsOn jar
 
 dependencies {
 	implementation project( ':tests:api' )
@@ -20,58 +22,51 @@ dependencies {
 }
 
 // testing
-apply plugin: ascelion.rest.bridge.ASPlugin
-
 sourceSets {
 	arquillian
 }
 
-processArquillianResources {
-	inputs.property 'serverName', serverName
-
-	filesMatching( '**/*.xml' ) {
-		expand([
-			server: containers[serverName]
-		])
-	}
-}
-
 dependencies {
-	arquillianImplementation project(':client')
-	arquillianImplementation project(':tests:api')
+	arquillianCompile project(':client')
+	arquillianCompile project(':tests:api')
 
-	arquillianImplementation 'junit:junit'
-	arquillianImplementation 'org.slf4j:slf4j-api'
-	arquillianImplementation 'io.leangen.geantyref:geantyref'
-	arquillianImplementation 'org.apache.commons:commons-io'
-	arquillianImplementation 'org.apache.commons:commons-text'
-	arquillianImplementation 'org.jboss.arquillian.test:arquillian-test-api'
-	arquillianImplementation 'org.jboss.arquillian.junit:arquillian-junit-core'
-	arquillianImplementation 'org.jboss.arquillian.container:arquillian-container-test-api'
-	arquillianImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
-	arquillianImplementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-gradle-embedded-archive'
-	arquillianImplementation 'org.glassfish.jersey.ext:jersey-proxy-client'
-	arquillianImplementation 'org.jboss.resteasy:resteasy-client'
-	arquillianImplementation 'org.glassfish.jersey.core:jersey-client'
-	arquillianImplementation 'org.glassfish.jersey.media:jersey-media-json-jackson'
+	arquillianCompile 'junit:junit'
+	arquillianCompile 'org.slf4j:slf4j-api'
+	arquillianCompile 'io.leangen.geantyref:geantyref'
+	arquillianCompile 'org.apache.commons:commons-io'
+	arquillianCompile 'org.apache.commons:commons-text'
+	arquillianCompile 'org.jboss.arquillian.test:arquillian-test-api'
+	arquillianCompile 'org.jboss.arquillian.junit:arquillian-junit-core'
+	arquillianCompile 'org.jboss.arquillian.container:arquillian-container-test-api'
+	arquillianCompile 'org.jboss.shrinkwrap:shrinkwrap-api'
+	arquillianCompile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-gradle-embedded-archive'
+	arquillianCompile 'org.glassfish.jersey.ext:jersey-proxy-client'
+	arquillianCompile 'org.jboss.resteasy:resteasy-client'
+	arquillianCompile 'org.glassfish.jersey.core:jersey-client'
+	arquillianCompile 'org.glassfish.jersey.media:jersey-media-json-jackson'
+	arquillianCompile 'org.glassfish.jersey.core:jersey-server'
 
-	arquillianCompileOnly 'org.glassfish.jersey.core:jersey-server'
-
+	arquillianRuntime 'javax.servlet:javax.servlet-api'
 	arquillianRuntime 'ch.qos.logback:logback-classic'
 	arquillianRuntime 'org.glassfish.jersey.inject:jersey-hk2'
 	arquillianRuntime 'org.glassfish.jersey.connectors:jersey-grizzly-connector'
 	arquillianRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
 	arquillianRuntime 'com.fasterxml.jackson.core:jackson-annotations'
 	arquillianRuntime 'com.fasterxml.jackson.core:jackson-databind'
+	
+	arquillianCompile 'org.glassfish.jersey.containers:jersey-container-servlet'
+	arquillianRuntime 'org.jboss.weld.servlet:weld-servlet-core'
+	arquillianRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
 
 	arquillianRuntime 'org.jboss.arquillian.junit:arquillian-junit-container'
 	arquillianRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
-
-	arquillianRuntime "fish.payara.arquillian:arquillian-payara-server-4-${serverType}"
+	arquillianRuntime 'org.jboss.arquillian.container:arquillian-jetty-embedded-9'
+	arquillianRuntime 'org.eclipse.jetty:jetty-server'
+	arquillianRuntime 'org.eclipse.jetty:jetty-deploy'
+	arquillianRuntime 'org.eclipse.jetty:jetty-annotations'
 }
 
 task arquillian( type: Test ) {
-	dependsOn "${serverName}-start"
 	dependsOn arquillianClasses
 
 	include '**/ProvidersSuite.class'
@@ -81,12 +76,6 @@ task arquillian( type: Test ) {
 	classpath += configurations.arquillianRuntimeClasspath
 
 	testClassesDirs = sourceSets.arquillian.output.classesDirs
-}
-
-tasks.all { t ->
-	if( t.name == "${serverName}-start" ) {
-		onlyIf { serverType == 'remote' }
-	}
 }
 
 check {
