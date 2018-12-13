@@ -43,22 +43,15 @@ final class RestMethod
 	//	static private final Logger L = LoggerFactory.getLogger( RestMethod.class );
 
 	private final Class<?> cls;
-
 	final Method method;
-
-	WebTarget target;
-
-	private final Class<?> returnType;
-
+	final WebTarget target;
 	private final String httpMethod;
-
 	private final Collection<Action> actions = new TreeSet<>();
 
 	RestMethod( Class<?> cls, Method method, WebTarget target )
 	{
 		this.cls = cls;
 		this.method = method;
-		this.returnType = method.getReturnType();
 		this.httpMethod = Util.getHttpMethod( method );
 		this.target = Util.addPathFromAnnotation( method, target );
 

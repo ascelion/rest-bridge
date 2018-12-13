@@ -65,8 +65,6 @@ extends Action
 				cx.entityPresent = true;
 			}
 
-			cx.onNewRequest.apply( b );
-
 			if( cx.entityPresent ) {
 				cx.result = b.method( this.httpMethod, Entity.entity( cx.entity, cx.contentType ), this.returnType );
 			}

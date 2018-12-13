@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
@@ -27,61 +26,34 @@ implements InvocationHandler
 
 	static private final Collection<Method> O_METHODS = methodsOf( Object.class );
 
-	static <T> T[] A( T... ts )
-	{
-		return ts;
-	}
-
 	static Collection<Method> methodsOf( Class cls )
 	{
 		return Arrays.asList( cls.getMethods() );
 	}
 
-	static <X> X newProxy( Class<X> cls, RestClientIH ih )
-	{
-		return (X) Proxy.newProxyInstance( cls.getClassLoader(), A( cls ), ih );
-	}
-
+	private final Client client;
+	private final WebTarget target;
 	private final Class cls;
 
-	private final WebTarget target;
-
-	private final URI targetURI;
-
 	private final Map<Method, RestMethod> methods = new HashMap<>();
-
 	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
-
 	private final Collection<Cookie> cookies = new ArrayList<>();
-
 	private final Form form = new Form();
 
-	private final Client client;
-
-	private final RestClient restClient;
-
-	RestClientIH( Client client, Class cls, WebTarget target, RestCallback<Builder> onBuildRequest, Map<String, List<Object>> headers, Collection<Cookie> cookies, Form form )
+	RestClientIH( Client client, WebTarget target, Class cls, Map<String, List<Object>> headers, Collection<Cookie> cookies, Form form )
 	{
-		this.restClient = null;
-		this.client = client;
-		this.cls = cls;
-		this.target = target;
-		this.targetURI = target.getUri();
-
-		initMethods();
+		this( client, target, cls );
 
 		this.headers.putAll( headers );
 		this.cookies.addAll( cookies );
 		this.form.asMap().putAll( form.asMap() );
 	}
 
-	RestClientIH( RestClient restClient, Client client, Class cls )
+	RestClientIH( Client client, WebTarget target, Class cls )
 	{
-		this.restClient = restClient;
-		this.cls = cls;
 		this.client = client;
-		this.target = Util.addPathFromAnnotation( cls, this.client.target( restClient.target ) );
-		this.targetURI = this.target.getUri();
+		this.target = target;
+		this.cls = cls;
 
 		initMethods();
 
@@ -106,14 +78,7 @@ implements InvocationHandler
 	@Override
 	public String toString()
 	{
-		return String.format( "%s -> %s", this.cls.getName(), this.targetURI );
-	}
-
-	void close()
-	{
-		if( this.restClient != null && this.client != null ) {
-			this.client.close();
-		}
+		return String.format( "%s -> %s", this.cls.getName(), this.target );
 	}
 
 	private void addMethod( Method m )
@@ -128,21 +93,20 @@ implements InvocationHandler
 		}
 	}
 
-	private Object invoke( Object proxy, RestMethod restMethod, Object[] arguments ) throws URISyntaxException
+	private Object invoke( Object proxy, RestMethod method, Object[] arguments ) throws URISyntaxException
 	{
-		final RestContext cx = new RestContext( proxy, restMethod.method, arguments, this.client, restMethod.target, this.restClient.onNewRequest, this.headers, this.cookies, this.form );
+		final RestContext cx = new RestContext( proxy, method.method, arguments, this.client, method.target, this.headers, this.cookies, this.form );
 
-		restMethod.call( cx );
+		method.call( cx );
 
 		if( cx.redirects > 0 ) {
-			updateTarget( restMethod, cx.target.getUri() );
+			updateTarget( method, cx.target.getUri() );
 		}
 
 		return cx.result;
 	}
 
-	private void updateTarget( RestMethod restMethod, URI newTarget )
-																		throws URISyntaxException
+	private void updateTarget( RestMethod restMethod, URI newTarget ) throws URISyntaxException
 	{
 		//		final String path = restMethod.target.getUri().getPath();
 		//		String newPath = newTarget.getPath();
@@ -151,5 +115,10 @@ implements InvocationHandler
 		//		newTarget = new URI( newTarget.getScheme(), newTarget.getAuthority(), newPath, null, null );
 		//
 		//		restMethod.target = this.client.target( newTarget );
+	}
+
+	<X> X newProxy()
+	{
+		return (X) Proxy.newProxyInstance( this.cls.getClassLoader(), new Class[] { this.cls }, this );
 	}
 }

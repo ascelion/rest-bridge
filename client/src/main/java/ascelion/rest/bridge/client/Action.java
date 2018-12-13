@@ -12,6 +12,8 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
+import static java.lang.String.format;
+
 abstract class Action
 implements Comparable<Action>
 {
@@ -82,7 +84,7 @@ implements Comparable<Action>
 	@Override
 	public String toString()
 	{
-		return String.format( "%s[ix=%d]", getClass().getSimpleName(), this.ix );
+		return format( "%s[ix=%d]", getClass().getSimpleName(), this.ix );
 	}
 
 	void evaluate( Object[] arguments )
