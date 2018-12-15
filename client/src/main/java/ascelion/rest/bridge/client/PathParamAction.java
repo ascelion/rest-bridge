@@ -7,15 +7,17 @@ class PathParamAction
 extends AnnotationAction<PathParam>
 {
 
-	PathParamAction( PathParam annotation, int ix )
+	PathParamAction( PathParam a, ActionParam p )
 	{
-		super( annotation, ix );
+		super( p, a );
 	}
 
 	@Override
-	public void execute( RestContext cx )
+	public void execute( RestRequest cx )
 	{
-		cx.target = cx.target.resolveTemplate( this.annotation.value(), cx.parameterValue );
+		final String val = this.param.converter.apply( this.param.currentValue( cx ) );
+
+		cx.target = cx.target.resolveTemplate( this.annotation.value(), val, true );
 	}
 
 }

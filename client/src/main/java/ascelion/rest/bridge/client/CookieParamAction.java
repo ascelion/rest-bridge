@@ -8,27 +8,27 @@ class CookieParamAction
 extends AnnotationAction<CookieParam>
 {
 
-	CookieParamAction( CookieParam annotation, int ix )
+	CookieParamAction( CookieParam a, ActionParam p )
 	{
-		super( annotation, ix );
+		super( p, a );
 	}
 
 	@Override
-	public void execute( final RestContext cx )
+	public void execute( final RestRequest cx )
 	{
 		visitCollection( cx );
 	}
 
 	@Override
-	void visitElement( RestContext cx, Object v )
+	void visitElement( RestRequest req, Object v )
 	{
 		if( v instanceof Cookie ) {
 			final Cookie c = (Cookie) v;
 
-			cx.cookies.add( new Cookie( this.annotation.value(), c.getValue(), c.getPath(), c.getDomain(), c.getVersion() ) );
+			req.cookies.add( new Cookie( this.annotation.value(), c.getValue(), c.getPath(), c.getDomain(), c.getVersion() ) );
 		}
 		else {
-			cx.cookies.add( new Cookie( this.annotation.value(), v.toString() ) );
+			req.cookies.add( new Cookie( this.annotation.value(), this.param.converter.apply( v ) ) );
 		}
 	}
 }

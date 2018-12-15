@@ -1,6 +1,7 @@
 
 package ascelion.rest.bridge.client;
 
+import java.lang.reflect.Method;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
@@ -52,19 +53,23 @@ extends Action
 
 	}
 
-	ValidationAction( int ix )
+	private final Method method;
+
+	ValidationAction( Method method )
 	{
-		super( ix );
+		super( new ActionParam( HEAD ) );
+
+		this.method = method;
 	}
 
 	@Override
-	public void execute( RestContext cx )
+	public void execute( RestRequest cx )
 	{
 		final ValidatorFactory vf = getValidator();
 
 		if( vf != null ) {
 			final ExecutableValidator val = vf.getValidator().forExecutables();
-			final Set<ConstraintViolation<Object>> vio = val.validateParameters( cx.proxy, cx.method, cx.arguments );
+			final Set<ConstraintViolation<Object>> vio = val.validateParameters( cx.proxy, this.method, cx.arguments );
 
 			if( vio.size() > 0 ) {
 				throw new ConstraintViolationException( vio );

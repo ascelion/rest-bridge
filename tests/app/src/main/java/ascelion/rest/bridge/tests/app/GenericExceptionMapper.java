@@ -1,10 +1,12 @@
 
 package ascelion.rest.bridge.tests.app;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -12,33 +14,35 @@ import javax.ws.rs.ext.Provider;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.glassfish.jersey.server.ParamException;
 
 @Provider
 @Produces( MediaType.WILDCARD )
-public class GenericExceptionMapper implements ExceptionMapper<Exception>
+public class GenericExceptionMapper implements ExceptionMapper<Throwable>
 {
 
 	@Inject
 	private ObjectMapper om;
 
 	@Override
-	public Response toResponse( Exception exception )
+	public Response toResponse( Throwable t )
 	{
 		try {
-			final HashMap map = new HashMap<>();
-
-			map.put( "class", exception.getClass() );
-			map.put( "message", exception.getMessage() );
-
-			final Throwable cause = exception.getCause();
-
-			if( cause != null && cause != exception ) {
-				map.put( "cause", cause.toString() );
-			}
-
+			final Map<String, Object> map = buildMap( t );
 			final String ent = this.om.writeValueAsString( map );
 
-			return Response.status( Response.Status.INTERNAL_SERVER_ERROR )
+			Response.StatusType status = Response.Status.INTERNAL_SERVER_ERROR;
+
+			if( t instanceof WebApplicationException ) {
+				if( t instanceof ParamException ) {
+					status = Response.Status.BAD_REQUEST;
+				}
+				else {
+					status = ( (WebApplicationException) t ).getResponse().getStatusInfo();
+				}
+			}
+
+			return Response.status( status )
 				.type( MediaType.APPLICATION_JSON_TYPE )
 				.entity( ent )
 				.build();
@@ -50,6 +54,22 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception>
 				.build();
 		}
 
+	}
+
+	private Map<String, Object> buildMap( Throwable t )
+	{
+		final Map<String, Object> map = new LinkedHashMap<>();
+
+		map.put( "message", t.getMessage() );
+		map.put( "class", t.getClass().getName() );
+
+		final Throwable cause = t.getCause();
+
+		if( cause != null && cause != t ) {
+			map.put( "cause", buildMap( cause ) );
+		}
+
+		return map;
 	}
 
 }

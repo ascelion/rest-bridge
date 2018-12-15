@@ -1,3 +1,4 @@
+
 package ascelion.rest.bridge.client;
 
 import java.lang.reflect.Type;
@@ -8,18 +9,16 @@ extends Action
 
 	final Type entityType;
 
-	EntityAction( Type entityType, int ix )
+	EntityAction( ActionParam p, Type entityType )
 	{
-		super( ix );
+		super( p );
 
 		this.entityType = entityType;
 	}
 
 	@Override
-	public void execute( RestContext cx )
+	public void execute( RestRequest cx )
 	{
-		cx.entity = cx.parameterValue;
-		cx.entityPresent = true;
+		cx.entity = this.param.currentValue( cx );
 	}
 }
-

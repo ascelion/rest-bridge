@@ -7,14 +7,20 @@ class QueryParamAction
 extends AnnotationAction<QueryParam>
 {
 
-	QueryParamAction( QueryParam annotation, int ix )
+	QueryParamAction( QueryParam a, ActionParam p )
 	{
-		super( annotation, ix );
+		super( p, a );
 	}
 
 	@Override
-	public void execute( RestContext cx )
+	public void execute( RestRequest cx )
 	{
-		cx.target = cx.target.queryParam( this.annotation.value(), visitCollection( cx ).toArray() );
+		visitCollection( cx );
+	}
+
+	@Override
+	void visitElement( RestRequest cx, Object v )
+	{
+		cx.target = cx.target.queryParam( this.annotation.value(), this.param.converter.apply( v ) );
 	}
 }
