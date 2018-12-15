@@ -6,55 +6,41 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import static java.lang.String.format;
+
 abstract class AnnotationAction<A extends Annotation>
 extends Action
 {
 
 	final A annotation;
 
-	AnnotationAction( A annotation, int ix )
+	AnnotationAction( ActionParam param, A annotation )
 	{
-		super( ix );
-
-		this.annotation = annotation;
-	}
-
-	AnnotationAction( A annotation, int ix, Priority px )
-	{
-		super( ix, px );
+		super( param );
 
 		this.annotation = annotation;
 	}
 
 	@Override
-	public String toString()
+	String inspect()
 	{
-		final StringBuilder builder = new StringBuilder();
-
-		builder.append( getClass().getSimpleName() );
-		builder.append( "[ix=" );
-		builder.append( this.ix );
-		builder.append( ", px=" );
-		builder.append( this.px );
-		builder.append( ", annotation=" );
-		builder.append( this.annotation );
-		builder.append( "]" );
-
-		return builder.toString();
+		return format( "%s, annotation = %s", super.inspect(), this.annotation );
 	}
 
-	<T> Collection<T> visitCollection( RestContext cx )
+	final <T> Collection<T> visitCollection( RestRequest cx )
 	{
+		final Object value = this.param.currentValue( cx );
+
 		final Collection<T> c;
 
-		if( cx.parameterValue instanceof Collection ) {
-			c = (Collection<T>) cx.parameterValue;
+		if( value instanceof Collection ) {
+			c = (Collection<T>) value;
 		}
-		else if( cx.parameterValue instanceof Object[] ) {
-			c = Arrays.asList( (T[]) cx.parameterValue );
+		else if( value instanceof Object[] ) {
+			c = Arrays.asList( (T[]) value );
 		}
-		else if( cx.parameterValue != null ) {
-			c = Arrays.asList( (T) cx.parameterValue );
+		else if( value != null ) {
+			c = Arrays.asList( (T) value );
 		}
 		else {
 			c = Collections.EMPTY_LIST;
@@ -67,7 +53,7 @@ extends Action
 		return c;
 	}
 
-	<T> void visitElement( RestContext cx, T t )
+	<T> void visitElement( RestRequest cx, T t )
 	{
 	}
 }

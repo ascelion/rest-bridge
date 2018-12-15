@@ -5,6 +5,7 @@ import java.net.URI;
 
 import javax.ws.rs.client.ClientBuilder;
 
+import ascelion.rest.bridge.tests.api.util.RestClientTrace;
 import ascelion.rest.bridge.tests.providers.JerseyBridgeProvider;
 
 import lombok.Getter;
@@ -30,7 +31,7 @@ public abstract class TestClientProvider<B extends ClientBuilder>
 	}
 
 	@Getter
-	protected final B builder;
+	private final B builder;
 
 	public TestClientProvider( B builder )
 	{

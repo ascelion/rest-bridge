@@ -1,3 +1,4 @@
+
 package ascelion.rest.bridge.client;
 
 import javax.ws.rs.MatrixParam;
@@ -6,15 +7,15 @@ class MatrixParamAction
 extends AnnotationAction<MatrixParam>
 {
 
-	MatrixParamAction( MatrixParam annotation, int ix )
+	MatrixParamAction( MatrixParam a, ActionParam p )
 	{
-		super( annotation, ix );
+		super( p, a );
 	}
 
 	@Override
-	public void execute( RestContext cx )
+	public void execute( RestRequest cx )
 	{
+		throw new UnsupportedOperationException( "TODO" );
 	}
 
 }
-

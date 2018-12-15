@@ -30,10 +30,4 @@ extends TestClientProvider<JerseyClientBuilder>
 	{
 		return true;
 	}
-
-	@Override
-	protected void release( Object client )
-	{
-		RestClient.release( client );
-	}
 }

@@ -1,15 +1,18 @@
 
 dependencies {
 	compileOnly 'javax.ws.rs:javax.ws.rs-api'
+	compileOnly 'javax.annotation:javax.annotation-api'
 	compileOnly 'javax.validation:validation-api'
 	compileOnly 'javax.enterprise:cdi-api'
 
 	compile 'io.leangen.geantyref:geantyref'
+	compile 'org.apache.commons:commons-lang3'
 
 	testCompile project( ':tests:api' )
 
 	testCompile 'javax.ws.rs:javax.ws.rs-api'
 	testCompile 'javax.validation:validation-api'
+	testCompile 'com.github.tomakehurst:wiremock'
 
 	testCompile 'junit:junit'
 	testCompile 'org.mockito:mockito-core'
@@ -17,5 +20,6 @@ dependencies {
 	testRuntime 'org.hibernate:hibernate-validator'
 	testRuntime 'org.glassfish:javax.el'
 	testRuntime 'org.glassfish.jersey.core:jersey-client'
+	testRuntime 'org.glassfish.jersey.inject:jersey-hk2'
 }
 

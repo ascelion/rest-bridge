@@ -1,95 +1,36 @@
 
 package ascelion.rest.bridge.client;
 
-import java.lang.annotation.Annotation;
-
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.MatrixParam;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-
 import static java.lang.String.format;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 abstract class Action
 implements Comparable<Action>
 {
 
-	enum Priority
+	static final int HEAD = -1000;
+	static final int TAIL = +1000;
+
+	final ActionParam param;
+
+	@Override
+	public int compareTo( Action that )
 	{
-		SET_VALUE,
-		DEFAULT_VALUE,
-		ANY,
-	}
-
-	static Action createAction( Annotation a, int ix )
-	{
-		if( CookieParam.class.isInstance( a ) ) {
-			return new CookieParamAction( (CookieParam) a, ix );
-		}
-		if( DefaultValue.class.isInstance( a ) ) {
-			return new DefaultValueAction( (DefaultValue) a, ix );
-		}
-		if( FormParam.class.isInstance( a ) ) {
-			return new FormParamAction( (FormParam) a, ix );
-		}
-		if( MatrixParam.class.isInstance( a ) ) {
-			return new MatrixParamAction( (MatrixParam) a, ix );
-		}
-		if( PathParam.class.isInstance( a ) ) {
-			return new PathParamAction( (PathParam) a, ix );
-		}
-		if( QueryParam.class.isInstance( a ) ) {
-			return new QueryParamAction( (QueryParam) a, ix );
-		}
-		if( HeaderParam.class.isInstance( a ) ) {
-			return new HeaderParamAction( (HeaderParam) a, ix );
-		}
-		if( BeanParam.class.isInstance( a ) ) {
-			return new BeanParamAction( (BeanParam) a, ix );
-		}
-
-		return null;
-	}
-
-	final int ix;
-
-	final Action.Priority px;
-
-	Action( int ix )
-	{
-		this.ix = ix;
-		this.px = Priority.ANY;
-	}
-
-	Action( int ix, Action.Priority px )
-	{
-		this.ix = ix;
-		this.px = px;
+		return Integer.compare( this.param.index, that.param.index );
 	}
 
 	@Override
-	public int compareTo( Action o )
+	public final String toString()
 	{
-		if( this.ix != o.ix ) {
-			return this.ix - o.ix;
-		}
-
-		return this.px.compareTo( o.px );
+		return format( "%s[%s]", getClass().getSimpleName(), inspect() );
 	}
 
-	@Override
-	public String toString()
+	String inspect()
 	{
-		return format( "%s[ix=%d]", getClass().getSimpleName(), this.ix );
+		return format( "index = %s", this.param.index );
 	}
 
-	void evaluate( Object[] arguments )
-	{
-	}
-
-	abstract void execute( RestContext cx );
+	abstract void execute( RestRequest cx );
 }

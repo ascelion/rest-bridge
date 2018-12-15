@@ -7,20 +7,20 @@ class HeaderParamAction
 extends AnnotationAction<HeaderParam>
 {
 
-	HeaderParamAction( HeaderParam annotation, int ix )
+	HeaderParamAction( HeaderParam a, ActionParam p )
 	{
-		super( annotation, ix );
+		super( p, a );
 	}
 
 	@Override
-	public void execute( RestContext cx )
+	public void execute( RestRequest cx )
 	{
 		visitCollection( cx );
 	}
 
 	@Override
-	void visitElement( RestContext cx, Object v )
+	void visitElement( RestRequest cx, Object v )
 	{
-		cx.headers.add( this.annotation.value(), v );
+		cx.headers.add( this.annotation.value(), this.param.converter.apply( v ) );
 	}
 }
