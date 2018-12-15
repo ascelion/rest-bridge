@@ -13,9 +13,9 @@ extends AnnotationAction<Produces>
 	}
 
 	@Override
-	public void execute( RestRequest cx )
+	public void execute( RestRequest req )
 	{
-		cx.accepts = this.annotation.value();
+		req.produces( this.annotation.value() );
 	}
 
 }

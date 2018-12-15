@@ -15,6 +15,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
@@ -138,7 +139,7 @@ public class RestClientTest
 	}
 
 	@Test
-	public void dateFormat() throws NoSuchMethodException, SecurityException, IllegalArgumentException, IllegalAccessException
+	public void dateFormat() throws Exception
 	{
 		final RestClient rc = new RestClient( this.client, this.target );
 		final Interface ct = rc.getInterface( Interface.class );
@@ -156,7 +157,7 @@ public class RestClientTest
 	}
 
 	@Test
-	public void dateFormatDefault() throws NoSuchMethodException, SecurityException, IllegalArgumentException, IllegalAccessException
+	public void dateFormatDefault() throws Exception
 	{
 		final RestClient rc = new RestClient( this.client, this.target );
 		final Interface ct = rc.getInterface( Interface.class );
@@ -174,7 +175,7 @@ public class RestClientTest
 	}
 
 	@Test
-	public void parseFormat() throws NoSuchMethodException, SecurityException, IllegalArgumentException, IllegalAccessException
+	public void parseFormat() throws Exception
 	{
 		this.client.register( LocalDateBodyReader.class );
 
@@ -194,7 +195,7 @@ public class RestClientTest
 	}
 
 	@Test
-	public void parseFormatDefault() throws NoSuchMethodException, SecurityException, IllegalArgumentException, IllegalAccessException
+	public void parseFormatDefault() throws Exception
 	{
 		this.client.register( LocalDateBodyReader.class );
 
@@ -211,6 +212,32 @@ public class RestClientTest
 
 		verify( this.conv, times( 0 ) ).toString( any() );
 		verify( this.conv, times( 0 ) ).toString( any( String.class ) );
+	}
+
+	@Test
+	public void redirect()
+	{
+		final RestClient rc = new RestClient( this.client, this.target );
+		final Interface ct = rc.getInterface( Interface.class );
+
+		final String dest = UriBuilder.fromUri( this.target )
+			.path( Interface.class )
+			.path( "redirected" )
+			.build()
+			.toASCIIString();
+
+		this.rule.stubFor( any( urlPathEqualTo( "/interface/redirect" ) )
+			.willReturn(
+				aResponse()
+					.withStatus( 301 )
+					.withHeader( "Location", dest ) ) );
+		this.rule.stubFor( any( urlPathEqualTo( "/interface/redirected" ) )
+			.willReturn(
+				aResponse()
+					.withBody( "redirected" )
+					.withHeader( "content-type", "text/plain" ) ) );
+
+		assertThat( ct.redirect(), equalTo( "redirected" ) );
 	}
 
 	private void stubParse( final LocalDate now )

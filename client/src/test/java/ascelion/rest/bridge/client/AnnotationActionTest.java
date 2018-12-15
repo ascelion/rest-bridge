@@ -3,6 +3,7 @@ package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,6 @@ public class AnnotationActionTest
 
 	private final MockClient mc = new MockClient();
 	private RestMethod met;
-	private RestRequest req;
 	private List<Action> actions;
 
 	@Before
@@ -65,14 +65,13 @@ public class AnnotationActionTest
 
 		final Method m = Interface.class.getMethod( "get" );
 		this.met = new RestMethod( cvsf, Interface.class, m, this.mc.methodTarget );
-		this.req = new RestRequest( mock( Interface.class ), this.mc.client, this.mc.methodTarget );
 		this.actions = (List<Action>) readDeclaredField( this.met, "actions", true );
 
-		this.actions.removeIf( a -> !InvokeAction.class.isInstance( a ) );
+		this.actions.clear();
 	}
 
 	@Test
-	public void consumes() throws AnnotationFormatException
+	public void consumes() throws Exception
 	{
 		final Map<String, Object> map = singletonMap( PARAM_VALUE, new String[] { "type/subtype" } );
 		final Consumes ann = TypeFactory.annotation( Consumes.class, map );
@@ -88,7 +87,8 @@ public class AnnotationActionTest
 				return null;
 			} );
 
-		this.met.call( this.req );
+		final RestRequest req = this.met.request( mock( Interface.class ) );
+		req.run();
 
 		assertThat( arguments[1], instanceOf( Entity.class ) );
 
@@ -98,21 +98,24 @@ public class AnnotationActionTest
 	}
 
 	@Test
-	public void cookieParam() throws AnnotationFormatException
+	public void cookieParam() throws Exception
 	{
 		createAction( CookieParam.class, CookieParamAction::new );
 
-		this.met.call( this.req );
+		final RestRequest req = this.met.request( mock( Interface.class ) );
+		req.run();
 
-		assertThat( this.req.cookies, hasSize( 1 ) );
+		final Collection<Cookie> cookies = (Collection<Cookie>) readDeclaredField( req, "cookies", true );
 
-		final Cookie cookie = this.req.cookies.iterator().next();
+		assertThat( cookies, hasSize( 1 ) );
+
+		final Cookie cookie = cookies.iterator().next();
 
 		verify( this.mc.bld, times( 1 ) ).cookie( same( cookie ) );
 	}
 
 	@Test
-	public void formParam() throws AnnotationFormatException
+	public void formParam() throws Exception
 	{
 		createAction( FormParam.class, FormParamAction::new );
 
@@ -124,7 +127,8 @@ public class AnnotationActionTest
 				return null;
 			} );
 
-		this.met.call( this.req );
+		final RestRequest req = this.met.request( mock( Interface.class ) );
+		req.run();
 
 		assertThat( arguments[1], instanceOf( Entity.class ) );
 
@@ -138,31 +142,34 @@ public class AnnotationActionTest
 	}
 
 	@Test
-	public void headerParam() throws AnnotationFormatException
+	public void headerParam() throws Exception
 	{
 		createAction( HeaderParam.class, HeaderParamAction::new );
 
-		this.met.call( this.req );
+		final RestRequest req = this.met.request( mock( Interface.class ) );
+		req.run();
 
-		verify( this.mc.bld, times( 1 ) ).headers( same( this.req.headers ) );
+		final MultivaluedMap<String, Object> headers = (MultivaluedMap<String, Object>) readDeclaredField( req, "headers", true );
 
-		assertThat( this.req.headers, hasEntry( ANNOTATION_VALUE, asList( PARAM_VALUE ) ) );
+		assertThat( headers, hasEntry( ANNOTATION_VALUE, asList( PARAM_VALUE ) ) );
+		verify( this.mc.bld, times( 1 ) ).headers( same( headers ) );
 	}
 
 	@Test
-	public void pathParam() throws AnnotationFormatException
+	public void pathParam() throws Exception
 	{
 		createAction( PathParam.class, PathParamAction::new );
 
 		when( this.mc.methodTarget.resolveTemplate( any( String.class ), any( String.class ), any( boolean.class ) ) ).thenReturn( this.mc.methodTarget );
 
-		this.met.call( this.req );
+		final RestRequest req = this.met.request( mock( Interface.class ) );
+		req.run();
 
 		verify( this.mc.methodTarget, times( 1 ) ).resolveTemplate( eq( ANNOTATION_VALUE ), eq( PARAM_VALUE ), eq( true ) );
 	}
 
 	@Test
-	public void produces() throws AnnotationFormatException
+	public void produces() throws Exception
 	{
 		final Map<String, Object> map = singletonMap( PARAM_VALUE, new String[] { ANNOTATION_VALUE } );
 		final Produces ann = TypeFactory.annotation( Produces.class, map );
@@ -178,19 +185,21 @@ public class AnnotationActionTest
 				return null;
 			} );
 
-		this.met.call( this.req );
+		final RestRequest req = this.met.request( mock( Interface.class ) );
+		req.run();
 
 		assertThat( asList( accepts ), hasItem( ANNOTATION_VALUE ) );
 	}
 
 	@Test
-	public void queryParam() throws AnnotationFormatException
+	public void queryParam() throws Exception
 	{
 		createAction( QueryParam.class, QueryParamAction::new );
 
 		when( this.mc.methodTarget.queryParam( any( String.class ), any( String.class ) ) ).thenReturn( this.mc.methodTarget );
 
-		this.met.call( this.req );
+		final RestRequest req = this.met.request( mock( Interface.class ) );
+		req.run();
 
 		verify( this.mc.methodTarget, times( 1 ) ).queryParam( eq( ANNOTATION_VALUE ), eq( PARAM_VALUE ) );
 	}
