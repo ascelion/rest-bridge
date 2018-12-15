@@ -2,8 +2,10 @@
 package ascelion.rest.bridge.client;
 
 import java.lang.reflect.Method;
+import java.util.stream.Stream;
 
 import javax.validation.ConstraintViolationException;
+import javax.ws.rs.client.WebTarget;
 
 import ascelion.rest.bridge.tests.api.BeanData;
 import ascelion.rest.bridge.tests.api.Validated;
@@ -23,6 +25,10 @@ public class ValidationActionTest
 //		asList( System.getProperty( "java.class.path", "" ).split( ":" ) ).forEach( System.out::println );
 	}
 
+	static private final Object NULL = null;
+
+	@Mock
+	private WebTarget target;
 	@Mock
 	private Validated client;
 
@@ -37,7 +43,7 @@ public class ValidationActionTest
 	@Test
 	public void bean_WithNull()
 	{
-		runTest( "bean", null );
+		runTest( "bean", NULL );
 	}
 
 	@Test
@@ -57,7 +63,7 @@ public class ValidationActionTest
 	{
 		setUpValidationException();
 
-		runTest( "beanNotNull", null );
+		runTest( "beanNotNull", NULL );
 	}
 
 	@Test
@@ -77,7 +83,7 @@ public class ValidationActionTest
 	@Test
 	public void beanValid_WithNull()
 	{
-		runTest( "beanValid", null );
+		runTest( "beanValid", NULL );
 	}
 
 	@Test
@@ -99,7 +105,7 @@ public class ValidationActionTest
 	{
 		setUpValidationException();
 
-		runTest( "beanValidNotNull", null );
+		runTest( "beanValidNotNull", NULL );
 	}
 
 	@Test
@@ -119,7 +125,7 @@ public class ValidationActionTest
 	{
 		setUpValidationException();
 
-		runTest( "notNullFormParam", null );
+		runTest( "notNullFormParam", NULL );
 	}
 
 	@Test
@@ -133,7 +139,7 @@ public class ValidationActionTest
 	{
 		setUpValidationException();
 
-		runTest( "notNullHeaderParam", null );
+		runTest( "notNullHeaderParam", NULL );
 	}
 
 	@Test
@@ -147,32 +153,28 @@ public class ValidationActionTest
 	{
 		setUpValidationException();
 
-		runTest( "notNullQueryParam", null );
-	}
-
-	private Method findMethod( String methodName )
-	{
-		for( final Method m : Validated.class.getMethods() ) {
-			if( m.getName().equals( methodName ) ) {
-				return m;
-			}
-		}
-
-		throw new NoSuchMethodError( methodName );
-	}
-
-	private void runTest( String methodName, Object object )
-	{
-		final Object[] arguments = new Object[] { object };
-		final Method method = findMethod( methodName );
-		final RestRequest cx = new RestRequest( this.client, null, null, arguments);
-		final ValidationAction action = new ValidationAction( method );
-
-		action.execute( cx );
+		runTest( "notNullQueryParam", NULL );
 	}
 
 	private void setUpValidationException()
 	{
 		this.ex.expect( ConstraintViolationException.class );
+	}
+
+	private void runTest( String methodName, Object... arguments )
+	{
+		final Method method = findMethod( methodName );
+		final RestRequest req = new RestRequest( this.client, "GET", this.target, Object.class, arguments );
+		final ValidationAction action = new ValidationAction( method );
+
+		action.execute( req );
+	}
+
+	private Method findMethod( String methodName )
+	{
+		return Stream.of( Validated.class.getMethods() )
+			.filter( m -> methodName.equals( m.getName() ) )
+			.findFirst()
+			.orElseThrow( () -> new NoSuchMethodError( methodName ) );
 	}
 }

@@ -19,8 +19,8 @@ extends AnnotationAction<QueryParam>
 	}
 
 	@Override
-	void visitElement( RestRequest cx, Object v )
+	void visitElement( RestRequest req, Object v )
 	{
-		cx.target = cx.target.queryParam( this.annotation.value(), this.param.converter.apply( v ) );
+		req.query( this.annotation.value(), this.param.converter.apply( v ) );
 	}
 }

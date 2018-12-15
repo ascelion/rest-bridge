@@ -13,6 +13,9 @@ public interface Interface
 {
 
 	@GET
+	String get();
+
+	@GET
 	@Path( "format" )
 	String format( @QueryParam( "value" ) @DefaultValue( "1643-01-04" ) LocalDate date );
 
@@ -21,5 +24,10 @@ public interface Interface
 	LocalDate parse( @QueryParam( "value" ) @DefaultValue( "1643-01-04" ) String date );
 
 	@GET
-	String get();
+	@Path( "redirect" )
+	String redirect();
+
+	@GET
+	@Path( "redirected" )
+	String redirected();
 }

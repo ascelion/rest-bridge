@@ -6,6 +6,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -50,20 +51,19 @@ final class RestMethod
 
 	//	static private final Logger L = LoggerFactory.getLogger( RestMethod.class );
 
-	private final Class<?> cls;
-	final Method method;
+	final Method javaMethod;
 	final WebTarget target;
 	private final String httpMethod;
 	private final List<Action> actions = new ArrayList<>( 8 );
+	private final Type returnType;
 
 	RestMethod( ConvertersFactory cvsf, Class<?> cls, Method method, WebTarget target )
 	{
-		this.cls = cls;
-		this.method = method;
+		this.javaMethod = method;
 		this.httpMethod = Util.getHttpMethod( method );
 		this.target = Util.addPathFromAnnotation( method, target );
 
-		final Type exactReturnType = GenericTypeReflector.getExactReturnType( this.method, this.cls );
+		this.returnType = GenericTypeReflector.getExactReturnType( this.javaMethod, cls );
 
 		if( this.httpMethod == null ) {
 //			// TODO better check for resource methods
@@ -71,7 +71,7 @@ final class RestMethod
 				throw new UnsupportedOperationException( "Not a resource method: " + method );
 			}
 
-			this.actions.add( new SubresourceAction( (Class) exactReturnType, new ActionParam( -1 ) ) );
+			this.actions.add( new SubresourceAction( (Class) this.returnType, new ActionParam( -1 ) ) );
 		}
 		else {
 			final Parameter[] params = method.getParameters();
@@ -99,19 +99,10 @@ final class RestMethod
 				}
 			}
 
-			final Produces produces = getAnnotation( Produces.class );
-
-			if( produces != null ) {
-				this.actions.add( new ProducesAction( produces, this.actions.size() ) );
-			}
-
-			final Consumes consumes = getAnnotation( Consumes.class );
-
-			if( consumes != null ) {
-				this.actions.add( new ConsumesAction( consumes, this.actions.size() ) );
-			}
-
-			this.actions.add( new InvokeAction( this.httpMethod, exactReturnType ) );
+			Util.findAnnotation( Produces.class, method, cls )
+				.ifPresent( a -> this.actions.add( new ProducesAction( a, this.actions.size() ) ) );
+			Util.findAnnotation( Consumes.class, method, cls )
+				.ifPresent( a -> this.actions.add( new ConsumesAction( a, this.actions.size() ) ) );
 		}
 
 		Collections.sort( this.actions );
@@ -187,21 +178,14 @@ final class RestMethod
 		return true;
 	}
 
-	void call( RestRequest req )
+	RestRequest request( Object proxy, Object... arguments ) throws URISyntaxException
 	{
+		final RestRequest req = new RestRequest( proxy, this.httpMethod, this.target, this.returnType, arguments );
+
 		for( final Action a : this.actions ) {
 			a.execute( req );
 		}
-	}
 
-	private <T extends Annotation> T getAnnotation( Class<T> type )
-	{
-		final T annot = this.method.getAnnotation( type );
-
-		if( annot != null ) {
-			return annot;
-		}
-
-		return this.cls.getAnnotation( type );
+		return req;
 	}
 }
