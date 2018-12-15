@@ -69,8 +69,6 @@ implements Extension
 		@Override
 		public void destroy( Bean<T> bean, T instance, CreationalContext<T> ccx )
 		{
-			RestClient.release( instance );
-
 			L.finest( format( "Destroyed %s", instance ) );
 
 			ccx.release();

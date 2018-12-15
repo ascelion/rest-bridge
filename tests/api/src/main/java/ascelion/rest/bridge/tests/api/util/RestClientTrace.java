@@ -1,9 +1,8 @@
 
-package ascelion.rest.bridge.tests;
+package ascelion.rest.bridge.tests.api.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,9 +26,10 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.stream.Collectors.joining;
+import static org.apache.commons.io.IOUtils.readLines;
+import static org.apache.commons.io.IOUtils.toByteArray;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.IOUtils;
 
 /**
  * Resteasy client do not run pre-matched filters like {@link org.glassfish.jersey.logging.ClientLoggingFilter}, so we need our own logger.
@@ -40,37 +40,26 @@ import org.apache.commons.io.IOUtils;
 public class RestClientTrace implements ClientRequestFilter, ClientResponseFilter, WriterInterceptor
 {
 
-	static class OLogStream extends FilterOutputStream
+	@RequiredArgsConstructor
+	static class OLogStream extends OutputStream
 	{
 
 		final ByteArrayOutputStream buf = new ByteArrayOutputStream();
+		final OutputStream out;
 		final Formatter fmt;
-
-		int count;
-
-		OLogStream( OutputStream out, Formatter fmt )
-		{
-			super( out );
-
-			this.fmt = fmt;
-		}
 
 		@Override
 		public void write( byte[] b, int off, int len ) throws IOException
 		{
-			super.write( b, off, len );
-
+			this.out.write( b, off, len );
 			this.buf.write( b, off, len );
-			this.count += len;
 		}
 
 		@Override
 		public void write( int b ) throws IOException
 		{
-			super.write( b );
-
+			this.out.write( b );
 			this.buf.write( b );
-			this.count++;
 		}
 	}
 
@@ -79,7 +68,7 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 
 		ILogStream( InputStream in, Formatter fmt ) throws IOException
 		{
-			super( IOUtils.toByteArray( in ) );
+			super( toByteArray( in ) );
 		}
 	}
 
@@ -150,8 +139,8 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 		printLine( fmt, RSP_PREFIX, "%03d %s - %s", rspx.getStatus(), rspx.getStatusInfo(), rspx.getStatusInfo().getReasonPhrase() );
 		printHeaders( fmt, RSP_PREFIX, rspx.getHeaders() );
 
-		if( reqx.hasEntity() && isText( reqx.getMediaType() ) ) {
-			final byte[] body = IOUtils.toByteArray( rspx.getEntityStream() );
+		if( rspx.hasEntity() && isText( rspx.getMediaType() ) ) {
+			final byte[] body = toByteArray( rspx.getEntityStream() );
 
 			printBody( fmt, RSP_PREFIX, body, rspx.getMediaType() );
 
@@ -184,7 +173,7 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 	private void printBody( Formatter fmt, String prefix, byte[] body, MediaType mt )
 	{
 		try {
-			IOUtils.readLines( new ByteArrayInputStream( body ), charset( mt ) )
+			readLines( new ByteArrayInputStream( body ), charset( mt ) )
 				.forEach( line -> printLine( fmt, prefix, "%s", line ) );
 		}
 		catch( final IOException e ) {

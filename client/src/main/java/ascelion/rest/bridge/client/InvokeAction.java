@@ -22,16 +22,16 @@ extends Action
 
 	final GenericType<?> returnType;
 
-	InvokeAction( int ix, String httpMethod, Type exactReturnType )
+	InvokeAction( String httpMethod, Type exactReturnType )
 	{
-		super( ix );
+		super( new ActionParam( TAIL ) );
 
 		this.httpMethod = httpMethod;
 		this.returnType = new GenericType( exactReturnType );
 	}
 
 	@Override
-	void execute( RestContext cx )
+	void execute( RestRequest cx )
 	{
 		try {
 			final Invocation.Builder b = cx.target.request();
@@ -46,27 +46,19 @@ extends Action
 				b.cookie( c );
 			}
 
-			if( cx.entityPresent ) {
-				if( cx.entity instanceof Form ) {
-					( (Form) cx.entity ).asMap().putAll( cx.form.asMap() );
-				}
-				else if( cx.entity != null && !cx.form.asMap().isEmpty() ) {
-					throw new UnsupportedOperationException( "Cannot send both entity and form parameters" );
-				}
-
+			if( cx.entity != null ) {
 				if( cx.contentType == null ) {
-					cx.contentType = MediaType.APPLICATION_OCTET_STREAM;
+					if( cx.entity instanceof Form ) {
+						cx.contentType = MediaType.APPLICATION_FORM_URLENCODED;
+					}
+					else {
+						cx.contentType = MediaType.APPLICATION_OCTET_STREAM;
+					}
 				}
-			}
-			else if( !cx.form.asMap().isEmpty() ) {
-				cx.contentType = MediaType.APPLICATION_FORM_URLENCODED;
-				cx.entity = cx.form;
 
-				cx.entityPresent = true;
-			}
+				final Entity<?> e = Entity.entity( cx.entity, cx.contentType );
 
-			if( cx.entityPresent ) {
-				cx.result = b.method( this.httpMethod, Entity.entity( cx.entity, cx.contentType ), this.returnType );
+				cx.result = b.method( this.httpMethod, e, this.returnType );
 			}
 			else {
 				cx.result = b.method( this.httpMethod, this.returnType );
@@ -81,7 +73,7 @@ extends Action
 		}
 	}
 
-	private void handleRedirection( RestContext cx, RedirectionException ex )
+	private void handleRedirection( RestRequest cx, RedirectionException ex )
 	{
 		final URI location = ex.getLocation();
 		final String path = cx.target.getUri().getPath();

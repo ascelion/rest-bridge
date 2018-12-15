@@ -2,26 +2,33 @@
 package ascelion.rest.bridge.client;
 
 import javax.ws.rs.FormParam;
+import javax.ws.rs.core.Form;
 
 class FormParamAction
 extends AnnotationAction<FormParam>
 {
 
-	FormParamAction( FormParam annotation, int ix )
+	FormParamAction( FormParam a, ActionParam p )
 	{
-		super( annotation, ix );
+		super( p, a );
 	}
 
 	@Override
-	public void execute( final RestContext cx )
+	public void execute( RestRequest cx )
 	{
 		visitCollection( cx );
 	}
 
 	@Override
-	void visitElement( RestContext cx, Object v )
+	void visitElement( RestRequest cx, Object v )
 	{
-		cx.form.param( this.annotation.value(), v.toString() );
+		Form form = (Form) cx.entity;
+
+		if( cx.entity == null ) {
+			cx.entity = form = new Form();
+		}
+
+		form.param( this.annotation.value(), this.param.converter.apply( v ) );
 	}
 
 }
