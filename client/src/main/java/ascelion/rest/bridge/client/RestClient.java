@@ -14,6 +14,7 @@ public final class RestClient
 
 	final Client client;
 	final URI target;
+	final ConvertersFactory cvsf;
 
 	public RestClient( Client client, URI target )
 	{
@@ -30,12 +31,14 @@ public final class RestClient
 		else {
 			this.target = UriBuilder.fromUri( target ).path( base ).build();
 		}
+
+		this.cvsf = new ConvertersFactory( client.getConfiguration() );
 	}
 
 	public <X> X getInterface( Class<X> cls )
 	{
 		final WebTarget newTarget = Util.addPathFromAnnotation( cls, this.client.target( this.target ) );
-		final RestClientIH ih = new RestClientIH( this.client, newTarget, cls );
+		final RestClientIH ih = new RestClientIH( newTarget, cls, this.cvsf );
 
 		return ih.newProxy();
 	}

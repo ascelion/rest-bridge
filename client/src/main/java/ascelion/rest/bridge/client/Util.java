@@ -3,6 +3,7 @@ package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
@@ -57,19 +58,34 @@ final class Util
 		return Integer.compare( p1, p2 );
 	}
 
-	static <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Class cls )
+	static <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Class<?> cls )
 	{
 		if( type == null || (Class) type == Object.class ) {
 			return Optional.empty();
 		}
 
-		final Annotation a = cls.getAnnotation( type );
+		final A a = cls.getAnnotation( type );
 
 		if( a != null ) {
-			return (Optional<A>) Optional.of( a );
+			return Optional.of( a );
 		}
 
 		return findAnnotation( type, cls.getSuperclass() );
+	}
+
+	static <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Member memb, Class<?> cls )
+	{
+		if( type == null || (Class) type == Object.class ) {
+			return Optional.empty();
+		}
+
+		final A a = ( (AnnotatedElement) memb ).getAnnotation( type );
+
+		if( a != null ) {
+			return Optional.of( a );
+		}
+
+		return Optional.ofNullable( cls.getAnnotation( type ) );
 	}
 
 	private Util()

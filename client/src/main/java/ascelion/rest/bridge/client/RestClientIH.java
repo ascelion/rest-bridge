@@ -4,40 +4,31 @@ package ascelion.rest.bridge.client;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
+
+import static java.util.Arrays.asList;
 
 final class RestClientIH
 implements InvocationHandler
 {
 
-	static private final Collection<Method> O_METHODS = methodsOf( Object.class );
+	static private final Collection<Method> O_METHODS = asList( Object.class.getMethods() );
 
-	static Collection<Method> methodsOf( Class cls )
-	{
-		return Arrays.asList( cls.getMethods() );
-	}
-
-	private final Client client;
 	private final ConvertersFactory cvsf;
 	private final WebTarget target;
 	private final Class cls;
 
 	private final Map<Method, RestMethod> methods = new HashMap<>();
 
-	RestClientIH( Client client, WebTarget target, Class cls )
+	RestClientIH( WebTarget target, Class cls, ConvertersFactory cvsf )
 	{
-		this.client = client;
-		this.cvsf = new ConvertersFactory( client.getConfiguration() );
 		this.target = target;
 		this.cls = cls;
+		this.cvsf = cvsf;
 
 		initMethods();
 
@@ -50,24 +41,20 @@ implements InvocationHandler
 			return method.invoke( this, arguments );
 		}
 
-		final RestMethod rest = this.methods.get( method );
+		final RestMethod met = this.methods.get( method );
 
-		if( rest != null ) {
-			return invoke( proxy, rest, arguments );
+		if( met == null ) {
+			// TODO
+			throw new UnsupportedOperationException( "Could not handle method " + method );
 		}
 
-		throw new UnsupportedOperationException( "Could not handle method " + method );
+		return met.request( proxy, arguments ).run();
 	}
 
 	@Override
 	public String toString()
 	{
 		return String.format( "%s -> %s", this.cls.getName(), this.target );
-	}
-
-	private void addMethod( Method m )
-	{
-		this.methods.put( m, new RestMethod( this.cvsf, this.cls, m, this.target ) );
 	}
 
 	private void initMethods()
@@ -77,29 +64,9 @@ implements InvocationHandler
 		}
 	}
 
-	private Object invoke( Object proxy, RestMethod method, Object[] arguments ) throws URISyntaxException
+	private void addMethod( Method m )
 	{
-		final RestRequest cx = new RestRequest( proxy, this.client, method.target, arguments );
-
-		method.call( cx );
-
-		if( cx.redirects > 0 ) {
-			updateTarget( method, cx.target.getUri() );
-		}
-
-		return cx.result;
-	}
-
-	private void updateTarget( RestMethod restMethod, URI newTarget ) throws URISyntaxException
-	{
-		throw new UnsupportedOperationException( "TODO" );
-		//		final String path = restMethod.target.getUri().getPath();
-		//		String newPath = newTarget.getPath();
-		//
-		//		newPath = newPath.substring( 0, newPath.indexOf( path ) + path.length() );
-		//		newTarget = new URI( newTarget.getScheme(), newTarget.getAuthority(), newPath, null, null );
-		//
-		//		restMethod.target = this.client.target( newTarget );
+		this.methods.put( m, new RestMethod( this.cvsf, this.cls, m, this.target ) );
 	}
 
 	<X> X newProxy()

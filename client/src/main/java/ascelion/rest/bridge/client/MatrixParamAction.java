@@ -15,7 +15,12 @@ extends AnnotationAction<MatrixParam>
 	@Override
 	public void execute( RestRequest cx )
 	{
-		throw new UnsupportedOperationException( "TODO" );
+		visitCollection( cx );
 	}
 
+	@Override
+	void visitElement( RestRequest req, Object v )
+	{
+		req.matrix( this.annotation.value(), this.param.converter.apply( v ) );
+	}
 }

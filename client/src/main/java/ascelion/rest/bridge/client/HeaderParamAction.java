@@ -19,8 +19,8 @@ extends AnnotationAction<HeaderParam>
 	}
 
 	@Override
-	void visitElement( RestRequest cx, Object v )
+	void visitElement( RestRequest req, Object v )
 	{
-		cx.headers.add( this.annotation.value(), this.param.converter.apply( v ) );
+		req.header( this.annotation.value(), this.param.converter.apply( v ) );
 	}
 }
