@@ -13,10 +13,8 @@ extends AnnotationAction<Consumes>
 	}
 
 	@Override
-	public void execute( RestRequest cx )
+	public void execute( RestRequest req )
 	{
-		if( this.annotation.value().length > 0 ) {
-			cx.contentType = this.annotation.value()[0];
-		}
+		req.consumes( this.annotation.value() );
 	}
 }

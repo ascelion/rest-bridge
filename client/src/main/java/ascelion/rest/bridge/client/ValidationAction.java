@@ -63,13 +63,13 @@ extends Action
 	}
 
 	@Override
-	public void execute( RestRequest cx )
+	public void execute( RestRequest req )
 	{
 		final ValidatorFactory vf = getValidator();
 
 		if( vf != null ) {
 			final ExecutableValidator val = vf.getValidator().forExecutables();
-			final Set<ConstraintViolation<Object>> vio = val.validateParameters( cx.proxy, this.method, cx.arguments );
+			final Set<ConstraintViolation<Object>> vio = val.validateParameters( req.proxy, this.method, req.arguments );
 
 			if( vio.size() > 0 ) {
 				throw new ConstraintViolationException( vio );

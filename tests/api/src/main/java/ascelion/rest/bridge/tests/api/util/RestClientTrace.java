@@ -136,7 +136,7 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 		final Formatter fmt = new Formatter();
 
 		printLine( fmt, INI_PREFIX, "----------------------------------" );
-		printLine( fmt, RSP_PREFIX, "%03d %s - %s", rspx.getStatus(), rspx.getStatusInfo(), rspx.getStatusInfo().getReasonPhrase() );
+		printLine( fmt, RSP_PREFIX, "%03d %s", rspx.getStatus(), rspx.getStatusInfo().getReasonPhrase() );
 		printHeaders( fmt, RSP_PREFIX, rspx.getHeaders() );
 
 		if( rspx.hasEntity() && isText( rspx.getMediaType() ) ) {
