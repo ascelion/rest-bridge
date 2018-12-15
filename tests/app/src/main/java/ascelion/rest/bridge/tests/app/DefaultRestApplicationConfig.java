@@ -8,6 +8,8 @@ import java.util.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 
+import ascelion.rest.bridge.tests.api.util.JSR310ParamConverters;
+
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.logging.LoggingFeature.Verbosity;
@@ -25,6 +27,9 @@ public class DefaultRestApplicationConfig implements RestApplicationConfig
 		classes.add( HelloImpl.class );
 		classes.add( MethodsImpl.class );
 		classes.add( ValidatedImpl.class );
+		classes.add( ConvertImpl.class );
+
+		classes.add( JSR310ParamConverters.class );
 
 		classes.add( JacksonResolver.class );
 

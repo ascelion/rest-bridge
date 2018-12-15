@@ -7,9 +7,9 @@ extends Action
 
 	final Class resourceType;
 
-	SubresourceAction( Class resourceType )
+	SubresourceAction( Class resourceType, ActionParam param )
 	{
-		super( 0 );
+		super( param );
 
 		if( !resourceType.isInterface() ) {
 			throw new IllegalArgumentException( "Return type not an interface" );
@@ -19,10 +19,11 @@ extends Action
 	}
 
 	@Override
-	void execute( RestContext cx )
+	void execute( RestRequest cx )
 	{
-		final RestClientIH ih = new RestClientIH( cx.client, cx.target, this.resourceType, cx.headers, cx.cookies, cx.form );
-
-		cx.result = ih.newProxy();
+		throw new UnsupportedOperationException( "TODO" );
+//		final RestClientIH ih = new RestClientIH( cx.client, cx.target, this.resourceType, cx.headers, cx.cookies, new Form() );
+//
+//		cx.result = ih.newProxy();
 	}
 }

@@ -9,7 +9,6 @@
 		</encoder>
 	</appender>
 
-	
 
 	<logger name="org.glassfish.jersey" level="INFO" />
 	<logger name="org.glassfish.jersey.process.internal" level="WARN" />

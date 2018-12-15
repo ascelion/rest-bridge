@@ -10,6 +10,8 @@ import javax.ws.rs.core.UriBuilder;
 public final class RestClient
 {
 
+	static public final String INSTANTIATOR_PROPERTY = "ascelion.rest.bridge.client.instantiator";
+
 	final Client client;
 	final URI target;
 
@@ -22,7 +24,7 @@ public final class RestClient
 	{
 		this.client = client;
 
-		if( base == null ) {
+		if( base == null || base.isEmpty() ) {
 			this.target = target;
 		}
 		else {

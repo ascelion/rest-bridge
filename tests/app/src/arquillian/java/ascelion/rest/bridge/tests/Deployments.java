@@ -8,6 +8,7 @@ import ascelion.rest.bridge.tests.arquillian.ArquillianUnit;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.gradle.archive.importer.embedded.EmbeddedGradleImporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -22,15 +23,13 @@ public abstract class Deployments
 	}
 
 	@Deployment( testable = false )
-	static public WebArchive createDeployment() throws IOException
+	static public Archive<?> createDeployment() throws IOException
 	{
 		final WebArchive web = ShrinkWrap.create( EmbeddedGradleImporter.class )
 			.forThisProjectDirectory()
 			.forTasks( "war" )
-			.importBuildOutput()
+			.importBuildOutput( "build/libs/app.war" )
 			.as( WebArchive.class );
-
-		web.addAsWebInfResource( Deployments.class.getResource( "/beans.xml" ), "beans.xml" );
 
 		return web;
 	}

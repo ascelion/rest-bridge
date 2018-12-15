@@ -3,12 +3,10 @@ package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Optional;
 
+import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.WebTarget;
@@ -16,75 +14,62 @@ import javax.ws.rs.client.WebTarget;
 final class Util
 {
 
-	static WebTarget addPathFromAnnotation( final AnnotatedElement ae, WebTarget target )
+	static WebTarget addPathFromAnnotation( AnnotatedElement ae, WebTarget target )
 	{
 		final Path p = ae.getAnnotation( Path.class );
 
-		if( p != null ) {
-			target = target.path( p.value() );
-		}
-
-		return target;
-	}
-
-	static Iterable<Field> getDeclaredFields( Class<?> cls )
-	{
-		final Collection<Field> fields = new ArrayList<Field>();
-
-		addDeclaredFields( cls, fields );
-
-		return fields;
+		return p != null ? target.path( p.value() ) : target;
 	}
 
 	static String getHttpMethod( Method method )
 	{
 		String httpMethod = getHttpMethodName( method );
 
-		if( httpMethod != null ) {
-			return httpMethod;
-		}
-
 		for( final Annotation ann : method.getAnnotations() ) {
-			httpMethod = getHttpMethodName( ann.annotationType() );
+			final String m = getHttpMethodName( ann.annotationType() );
 
-			if( httpMethod != null ) {
-				return httpMethod;
+			if( m != null ) {
+				if( httpMethod != null ) {
+					throw new RuntimeException( "TODO: multiple HTTP methods" );
+				}
+
+				httpMethod = m;
 			}
 		}
 
-		return null;
-	}
-
-	private static void addDeclaredFields( Class<?> cls, Collection<Field> fields )
-	{
-		if( cls == Object.class ) {
-			return;
-		}
-
-		addDeclaredFields( cls.getSuperclass(), fields );
-
-		for( final Field field : cls.getDeclaredFields() ) {
-			final int m = field.getModifiers();
-
-			if( Modifier.isStatic( m ) ) {
-				continue;
-			}
-
-			field.setAccessible( true );
-
-			fields.add( field );
-		}
+		return httpMethod;
 	}
 
 	private static String getHttpMethodName( AnnotatedElement element )
 	{
-		final HttpMethod annotation = element.getAnnotation( HttpMethod.class );
+		final HttpMethod a = element.getAnnotation( HttpMethod.class );
 
-		if( annotation != null ) {
-			return annotation.value();
+		return a != null ? a.value() : null;
+	}
+
+	static int byPriority( Object o1, Object o2 )
+	{
+		final Class c1 = o1 instanceof Class ? (Class) o1 : o1.getClass();
+		final Class c2 = o2 instanceof Class ? (Class) o2 : o2.getClass();
+		final int p1 = findAnnotation( Priority.class, c1 ).map( Priority::value ).orElse( 0 );
+		final int p2 = findAnnotation( Priority.class, c2 ).map( Priority::value ).orElse( 0 );
+
+		return Integer.compare( p1, p2 );
+	}
+
+	static <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Class cls )
+	{
+		if( type == null || (Class) type == Object.class ) {
+			return Optional.empty();
 		}
 
-		return null;
+		final Annotation a = cls.getAnnotation( type );
+
+		if( a != null ) {
+			return (Optional<A>) Optional.of( a );
+		}
+
+		return findAnnotation( type, cls.getSuperclass() );
 	}
 
 	private Util()

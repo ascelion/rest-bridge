@@ -6,19 +6,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
 
 final class RestClientIH
 implements InvocationHandler
@@ -32,26 +26,16 @@ implements InvocationHandler
 	}
 
 	private final Client client;
+	private final ConvertersFactory cvsf;
 	private final WebTarget target;
 	private final Class cls;
 
 	private final Map<Method, RestMethod> methods = new HashMap<>();
-	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
-	private final Collection<Cookie> cookies = new ArrayList<>();
-	private final Form form = new Form();
-
-	RestClientIH( Client client, WebTarget target, Class cls, Map<String, List<Object>> headers, Collection<Cookie> cookies, Form form )
-	{
-		this( client, target, cls );
-
-		this.headers.putAll( headers );
-		this.cookies.addAll( cookies );
-		this.form.asMap().putAll( form.asMap() );
-	}
 
 	RestClientIH( Client client, WebTarget target, Class cls )
 	{
 		this.client = client;
+		this.cvsf = new ConvertersFactory( client.getConfiguration() );
 		this.target = target;
 		this.cls = cls;
 
@@ -83,7 +67,7 @@ implements InvocationHandler
 
 	private void addMethod( Method m )
 	{
-		this.methods.put( m, new RestMethod( this.cls, m, this.target ) );
+		this.methods.put( m, new RestMethod( this.cvsf, this.cls, m, this.target ) );
 	}
 
 	private void initMethods()
@@ -95,7 +79,7 @@ implements InvocationHandler
 
 	private Object invoke( Object proxy, RestMethod method, Object[] arguments ) throws URISyntaxException
 	{
-		final RestContext cx = new RestContext( proxy, method.method, arguments, this.client, method.target, this.headers, this.cookies, this.form );
+		final RestRequest cx = new RestRequest( proxy, this.client, method.target, arguments );
 
 		method.call( cx );
 
@@ -108,6 +92,7 @@ implements InvocationHandler
 
 	private void updateTarget( RestMethod restMethod, URI newTarget ) throws URISyntaxException
 	{
+		throw new UnsupportedOperationException( "TODO" );
 		//		final String path = restMethod.target.getUri().getPath();
 		//		String newPath = newTarget.getPath();
 		//

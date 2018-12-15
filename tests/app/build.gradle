@@ -33,7 +33,6 @@ dependencies {
 	arquillianCompile 'junit:junit'
 	arquillianCompile 'org.slf4j:slf4j-api'
 	arquillianCompile 'io.leangen.geantyref:geantyref'
-	arquillianCompile 'org.apache.commons:commons-io'
 	arquillianCompile 'org.apache.commons:commons-text'
 	arquillianCompile 'org.jboss.arquillian.test:arquillian-test-api'
 	arquillianCompile 'org.jboss.arquillian.junit:arquillian-junit-core'
