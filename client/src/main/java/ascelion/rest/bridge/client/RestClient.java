@@ -2,10 +2,13 @@
 package ascelion.rest.bridge.client;
 
 import java.net.URI;
+import java.util.function.Supplier;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
+
+import lombok.Setter;
 
 public final class RestClient
 {
@@ -13,8 +16,9 @@ public final class RestClient
 	static public final String INSTANTIATOR_PROPERTY = "ascelion.rest.bridge.client.instantiator";
 
 	final Client client;
-	final URI target;
 	final ConvertersFactory cvsf;
+	@Setter
+	private URI target;
 
 	public RestClient( Client client, URI target )
 	{
@@ -37,8 +41,8 @@ public final class RestClient
 
 	public <X> X getInterface( Class<X> cls )
 	{
-		final WebTarget newTarget = Util.addPathFromAnnotation( cls, this.client.target( this.target ) );
-		final RestClientIH ih = new RestClientIH( newTarget, cls, this.cvsf );
+		final Supplier<WebTarget> sup = () -> Util.addPathFromAnnotation( cls, this.client.target( this.target ) );
+		final RestClientIH ih = new RestClientIH( cls, this.cvsf, sup );
 
 		return ih.newProxy();
 	}
