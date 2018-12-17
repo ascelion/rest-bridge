@@ -7,6 +7,7 @@ import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.ws.rs.client.WebTarget;
 
@@ -19,12 +20,12 @@ implements InvocationHandler
 	static private final Collection<Method> O_METHODS = asList( Object.class.getMethods() );
 
 	private final ConvertersFactory cvsf;
-	private final WebTarget target;
-	private final Class cls;
+	private final Supplier<WebTarget> target;
+	private final Class<?> cls;
 
 	private final Map<Method, RestMethod> methods = new HashMap<>();
 
-	RestClientIH( WebTarget target, Class cls, ConvertersFactory cvsf )
+	RestClientIH( Class<?> cls, ConvertersFactory cvsf, Supplier<WebTarget> target )
 	{
 		this.target = target;
 		this.cls = cls;
