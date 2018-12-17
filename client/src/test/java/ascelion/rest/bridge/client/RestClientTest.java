@@ -157,6 +157,31 @@ public class RestClientTest
 	}
 
 	@Test
+	public void changeURI()
+	{
+		final URI t1 = this.target.resolve( "t1" );
+		final URI t2 = this.target.resolve( "t2" );
+		final RestClient rc = new RestClient( this.client, t1 );
+
+		this.rule.stubFor( any( urlPathEqualTo( "/t1/interface" ) )
+			.willReturn(
+				aResponse()
+					.withBody( "t1" ) ) );
+		this.rule.stubFor( any( urlPathEqualTo( "/t2/interface" ) )
+			.willReturn(
+				aResponse()
+					.withBody( "t2" ) ) );
+
+		final Interface api = rc.getInterface( Interface.class );
+
+		assertThat( api.get(), equalTo( "t1" ) );
+
+		rc.setTarget( t2 );
+
+		assertThat( api.get(), equalTo( "t2" ) );
+	}
+
+	@Test
 	public void dateFormatDefault() throws Exception
 	{
 		final RestClient rc = new RestClient( this.client, this.target );
