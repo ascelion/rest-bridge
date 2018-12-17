@@ -1,3 +1,26 @@
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath group: 'pl.allegro.tech.build', name: 'axion-release-plugin', version: '1.10.0'
+	}
+}
+
+apply plugin: 'pl.allegro.tech.build.axion-release'
+apply plugin: 'eclipse'
+
+task publishLocal {
+	doLast {
+		println 'no publishing defined yet'
+	}
+}
+task publish {
+	doLast {
+		println 'no publishing defined yet'
+	}
+}
+
 allprojects {
 	repositories {
 		jcenter()
@@ -8,8 +31,6 @@ allprojects {
 
 	defaultTasks 'test'
 }
-
-apply plugin: 'eclipse'
 
 subprojects {
 	apply plugin: ascelion.rest.bridge.BuildPlugin
