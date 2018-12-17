@@ -19,7 +19,13 @@ final class Util
 	{
 		final Path p = ae.getAnnotation( Path.class );
 
-		return p != null ? target.path( p.value() ) : target;
+		if( p == null ) {
+			return target;
+		}
+
+		final String v = p.value().trim();
+
+		return v.isEmpty() || v.equals( "/" ) ? target : target.path( p.value() );
 	}
 
 	static String getHttpMethod( Method method )
