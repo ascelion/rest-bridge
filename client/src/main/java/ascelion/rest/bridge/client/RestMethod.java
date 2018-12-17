@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -52,16 +53,16 @@ final class RestMethod
 	//	static private final Logger L = LoggerFactory.getLogger( RestMethod.class );
 
 	final Method javaMethod;
-	final WebTarget target;
+	final Supplier<WebTarget> target;
 	private final String httpMethod;
 	private final List<Action> actions = new ArrayList<>( 8 );
 	private final Type returnType;
 
-	RestMethod( ConvertersFactory cvsf, Class<?> cls, Method method, WebTarget target )
+	RestMethod( ConvertersFactory cvsf, Class<?> cls, Method method, Supplier<WebTarget> target )
 	{
 		this.javaMethod = method;
 		this.httpMethod = Util.getHttpMethod( method );
-		this.target = Util.addPathFromAnnotation( method, target );
+		this.target = target;
 
 		this.returnType = GenericTypeReflector.getExactReturnType( this.javaMethod, cls );
 
@@ -180,7 +181,8 @@ final class RestMethod
 
 	RestRequest request( Object proxy, Object... arguments ) throws URISyntaxException
 	{
-		final RestRequest req = new RestRequest( proxy, this.httpMethod, this.target, this.returnType, arguments );
+		final WebTarget actualTarget = Util.addPathFromAnnotation( this.javaMethod, this.target.get() );
+		final RestRequest req = new RestRequest( proxy, this.httpMethod, actualTarget, this.returnType, arguments );
 
 		for( final Action a : this.actions ) {
 			a.execute( req );

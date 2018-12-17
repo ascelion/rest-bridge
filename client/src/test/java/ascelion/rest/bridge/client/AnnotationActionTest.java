@@ -64,7 +64,7 @@ public class AnnotationActionTest
 		final ConvertersFactory cvsf = new ConvertersFactory( this.mc.configuration );
 
 		final Method m = Interface.class.getMethod( "get" );
-		this.met = new RestMethod( cvsf, Interface.class, m, this.mc.methodTarget );
+		this.met = new RestMethod( cvsf, Interface.class, m, () -> this.mc.methodTarget );
 		this.actions = (List<Action>) readDeclaredField( this.met, "actions", true );
 
 		this.actions.clear();
