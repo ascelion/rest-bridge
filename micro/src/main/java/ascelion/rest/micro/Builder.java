@@ -15,6 +15,9 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Configuration;
 
 import ascelion.rest.bridge.client.RestClient;
+import ascelion.rest.bridge.client.RestClientMethodException;
+
+import static java.lang.String.format;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
@@ -173,7 +176,15 @@ public class Builder implements RestClientBuilder
 			throw new RestClientDefinitionException( e );
 		}
 
-		final T clt = this.restClient.getInterface( clazz );
+		final T clt;
+
+		try {
+			clt = this.restClient.getInterface( clazz );
+		}
+		catch( final RestClientMethodException e ) {
+			throw new RestClientDefinitionException( format( "%s in method %s.%s", e.getMessage(),
+				e.getMethod().getDeclaringClass().getName(), e.getMethod().getName() ) );
+		}
 
 		final InvocationHandler ivh = ( proxy, method, args ) -> {
 			ClientMethodProvider.METHOD.set( method );
