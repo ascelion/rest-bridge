@@ -135,6 +135,11 @@ final class RestRequest implements Callable<Object>
 			return b.method( this.httpMethod, e, this.returnType );
 		}
 		else {
+			// to keep TCK happy
+			if( this.contentType != null ) {
+				b.header( "Content-Type", this.contentType );
+			}
+
 			return b.method( this.httpMethod, this.returnType );
 		}
 	}

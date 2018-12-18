@@ -26,9 +26,13 @@ dependencies {
 
 	compileOnly 'javax.ws.rs:javax.ws.rs-api'
 	compileOnly 'javax.annotation:javax.annotation-api'
+	compileOnly 'javax.json:javax.json-api'
+	compileOnly 'javax.enterprise:cdi-api'
+	compileOnly 'org.eclipse.microprofile.config:microprofile-config-api'
 //	compileOnly 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 
 	compileOnly sourceSets.api.output
+
 	compile project( ':client' )
 
 	testCompile sourceSets.api.output
@@ -50,7 +54,10 @@ dependencies {
 	testCompile 'org.jboss.shrinkwrap:shrinkwrap-api'
 	testCompile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-gradle-embedded-archive'
 	testCompile 'com.github.tomakehurst:wiremock'
+	testCompile 'com.github.tomakehurst:wiremock-standalone'
 	testCompile 'com.beust:jcommander'
+
+	testRuntime 'org.apache.geronimo.config:geronimo-config-impl'
 
 	testRuntime 'ch.qos.logback:logback-classic'
 	testRuntime 'org.glassfish.jersey.core:jersey-client'
@@ -83,7 +90,7 @@ task arquillian( type: Test ) {
 		suites 'src/test/resources/tests.xml'
 	}
 
-	runWithWiremock = true
+//	runWithWiremock = true
 }
 
 check {

@@ -23,15 +23,15 @@ import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
 import org.eclipse.microprofile.rest.client.spi.RestClientListener;
 
-public class Builder implements RestClientBuilder
+public class RestBridgeBuilder implements RestClientBuilder
 {
 
-	private final RestClientConfiguration configuration = new RestClientConfiguration();
+	private final RestBridgeConfiguration configuration = new RestBridgeConfiguration();
 	private final ClientBuilder builder;
 	private RestClient restClient;
 	private URL baseUrl;
 
-	Builder( ClientBuilder builder )
+	RestBridgeBuilder( ClientBuilder builder )
 	{
 		this.builder = builder;
 	}
