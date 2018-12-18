@@ -43,6 +43,12 @@ subprojects {
 	targetCompatibility = JavaVersion.VERSION_1_8
 
 	tasks.withType( Test ) {
+		group = 'verification'
+
+		if( name == 'arquillian' ) {
+			description = 'Runs all Arquillian checks.'
+		}
+
 		outputs.upToDateWhen { false }
 
 		ignoreFailures = true
