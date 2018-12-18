@@ -2,16 +2,16 @@
 package ascelion.rest.bridge.tests.app;
 
 import ascelion.rest.bridge.tests.api.Hello;
-import ascelion.rest.bridge.tests.api.UserInfo;
+import ascelion.rest.bridge.tests.api.UserBean;
 
 public class HelloImpl
 implements Hello
 {
 
 	@Override
-	public UserInfo authenticate( String username, String password )
+	public UserBean authenticate( String username, String password )
 	{
-		return new UserInfo( username + "(first)", username + ( "last" ) );
+		return new UserBean( username + "(first)", username + ( "last" ) );
 	}
 
 	@Override

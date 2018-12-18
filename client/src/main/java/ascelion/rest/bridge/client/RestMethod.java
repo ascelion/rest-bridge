@@ -10,6 +10,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -58,52 +59,47 @@ final class RestMethod
 	private final List<Action> actions = new ArrayList<>( 8 );
 	private final Type returnType;
 
-	RestMethod( ConvertersFactory cvsf, Class<?> cls, Method method, Supplier<WebTarget> target )
+	RestMethod( ConvertersFactory cvsf, Class<?> type, Method method, Supplier<WebTarget> target )
 	{
 		this.javaMethod = method;
 		this.httpMethod = Util.getHttpMethod( method );
 		this.target = target;
+		this.returnType = GenericTypeReflector.getExactReturnType( this.javaMethod, type );
 
-		this.returnType = GenericTypeReflector.getExactReturnType( this.javaMethod, cls );
+		final Parameter[] params = method.getParameters();
+
+		final boolean hasEntity = false;
+
+		this.actions.add( new ValidationAction( method ) );
+
+		for( int q = 0, z = params.length; q < z; q++ ) {
+			final int index = q;
+			final Annotation[] annotations = params[index].getAnnotations();
+			final Function<Object, String> cvt = cvsf.getConverter( params[index].getType(), annotations );
+			final ActionParam p = new ActionParam( index, params[index].getType(), annotations, req -> req.arguments[index], cvt );
+			final boolean entityCandidate = collectActions( annotations, p );
+
+			if( entityCandidate ) {
+				if( hasEntity ) {
+					// TODO
+					throw new RuntimeException( "already has entity" );
+				}
+
+				final Type entityType = GenericTypeReflector.getExactParameterTypes( method, type )[index];
+
+				this.actions.add( new EntityAction( p, entityType ) );
+			}
+		}
+
+		Util.findAnnotation( Produces.class, method, type )
+			.ifPresent( a -> this.actions.add( new ProducesAction( a, this.actions.size() ) ) );
+		Util.findAnnotation( Consumes.class, method, type )
+			.ifPresent( a -> this.actions.add( new ConsumesAction( a, this.actions.size() ) ) );
 
 		if( this.httpMethod == null ) {
-//			// TODO better check for resource methods
-			if( this.target == target ) {
-				throw new UnsupportedOperationException( "Not a resource method: " + method );
-			}
-
-			this.actions.add( new SubresourceAction( (Class) this.returnType, new ActionParam( -1 ) ) );
-		}
-		else {
-			final Parameter[] params = method.getParameters();
-
-			final boolean hasEntity = false;
-
-			this.actions.add( new ValidationAction( method ) );
-
-			for( int q = 0, z = params.length; q < z; q++ ) {
-				final int index = q;
-				final Annotation[] annotations = params[index].getAnnotations();
-				final Function<Object, String> cvt = cvsf.getConverter( params[index].getType(), annotations );
-				final ActionParam p = new ActionParam( index, params[index].getType(), annotations, req -> req.arguments[index], cvt );
-				final boolean entityCandidate = collectActions( annotations, p );
-
-				if( entityCandidate ) {
-					if( hasEntity ) {
-						// TODO
-						throw new RuntimeException( "already has entity" );
-					}
-
-					final Type entityType = GenericTypeReflector.getExactParameterTypes( method, cls )[index];
-
-					this.actions.add( new EntityAction( p, entityType ) );
-				}
-			}
-
-			Util.findAnnotation( Produces.class, method, cls )
-				.ifPresent( a -> this.actions.add( new ProducesAction( a, this.actions.size() ) ) );
-			Util.findAnnotation( Consumes.class, method, cls )
-				.ifPresent( a -> this.actions.add( new ConsumesAction( a, this.actions.size() ) ) );
+//			resource methods that have a @Path annotation,
+//			but no HTTP method are considered sub-resource locators.
+			this.actions.add( new SubresourceAction( this.actions.size(), (Class) this.returnType, cvsf ) );
 		}
 
 		Collections.sort( this.actions );
@@ -179,15 +175,20 @@ final class RestMethod
 		return true;
 	}
 
-	RestRequest request( Object proxy, Object... arguments ) throws URISyntaxException
+	Callable<?> request( Object proxy, Object... arguments ) throws URISyntaxException
 	{
-		final WebTarget actualTarget = Util.addPathFromAnnotation( this.javaMethod, this.target.get() );
-		final RestRequest req = new RestRequest( proxy, this.httpMethod, actualTarget, this.returnType, arguments );
+		final RestRequest req = new RestRequest( proxy, this.httpMethod, actualTarget(), this.returnType, arguments );
+		Callable<?> res = null;
 
 		for( final Action a : this.actions ) {
-			a.execute( req );
+			res = a.execute( req );
 		}
 
-		return req;
+		return res;
+	}
+
+	private WebTarget actualTarget()
+	{
+		return Util.addPathFromAnnotation( this.javaMethod, this.target.get() );
 	}
 }

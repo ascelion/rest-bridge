@@ -13,9 +13,11 @@ extends AnnotationAction<MatrixParam>
 	}
 
 	@Override
-	public void execute( RestRequest cx )
+	public RestRequest execute( RestRequest req )
 	{
-		visitCollection( cx );
+		visitCollection( req );
+
+		return req;
 	}
 
 	@Override

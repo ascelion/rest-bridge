@@ -13,8 +13,10 @@ extends AnnotationAction<Consumes>
 	}
 
 	@Override
-	public void execute( RestRequest req )
+	public RestRequest execute( RestRequest req )
 	{
 		req.consumes( this.annotation.value() );
+
+		return req;
 	}
 }
