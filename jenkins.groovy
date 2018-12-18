@@ -1,2 +1,3 @@
 gradle {
+	timeout = 30
 }
