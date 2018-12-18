@@ -3,7 +3,9 @@ package ascelion.rest.micro.cdi;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
@@ -24,6 +26,7 @@ import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.eclipse.microprofile.rest.client.spi.RestClientBuilderResolver;
 
@@ -54,9 +57,24 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 	public T create( CreationalContext<T> creationalContext )
 	{
 		final RestClientBuilder bld = RestClientBuilderResolver.instance().newBuilder();
-		final String url = MP.getConfig( this.type, "url" ).orElseThrow( () -> new IllegalStateException( "Unable to determine base URI from configuration" ) );
+		final String uri = MP.getConfig( this.type, "uri" ).orElse( this.type.getAnnotation( RegisterRestClient.class ).baseUri() );
+		final String url = MP.getConfig( this.type, "url" ).orElse( null );
 
-		bld.baseUri( URI.create( url ) );
+		if( uri == null && url == null ) {
+			throw new IllegalStateException( "Unable to determine base URI/URL from configuration" );
+		}
+
+		if( uri != null ) {
+			bld.baseUri( URI.create( uri ) );
+		}
+		else {
+			try {
+				bld.baseUrl( new URL( url ) );
+			}
+			catch( final MalformedURLException e ) {
+				throw new IllegalStateException( "Unable to parse base URL from configuration", e );
+			}
+		}
 
 		return bld.build( this.type );
 	}
