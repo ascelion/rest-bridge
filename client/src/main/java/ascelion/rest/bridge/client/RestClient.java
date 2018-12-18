@@ -15,8 +15,8 @@ public final class RestClient
 
 	static public final String INSTANTIATOR_PROPERTY = "ascelion.rest.bridge.client.instantiator";
 
-	final Client client;
-	final ConvertersFactory cvsf;
+	private final Client client;
+	private final ConvertersFactory cvsf;
 	@Setter
 	private URI target;
 
