@@ -9,22 +9,20 @@ import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.MatrixParam;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.client.WebTarget;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.reflect.FieldUtils.getAllFieldsList;
 
 import io.leangen.geantyref.GenericTypeReflector;
@@ -53,18 +51,28 @@ final class RestMethod
 
 	//	static private final Logger L = LoggerFactory.getLogger( RestMethod.class );
 
-	final Method javaMethod;
-	final Supplier<WebTarget> target;
+	private final Class<?> type;
+	private final Method javaMethod;
+	private final Supplier<WebTarget> target;
 	private final String httpMethod;
 	private final List<Action> actions = new ArrayList<>( 8 );
 	private final Type returnType;
+	private final Map<String, Boolean> pathElements = new LinkedHashMap<>();
 
 	RestMethod( ConvertersFactory cvsf, Class<?> type, Method method, Supplier<WebTarget> target )
 	{
+		this.type = type;
 		this.javaMethod = method;
 		this.httpMethod = Util.getHttpMethod( method );
 		this.target = target;
 		this.returnType = GenericTypeReflector.getExactReturnType( this.javaMethod, type );
+
+		final String paths = Stream.of( method.getAnnotation( Path.class ), type.getAnnotation( Path.class ) )
+			.filter( Objects::nonNull )
+			.map( Path::value )
+			.collect( joining() );
+
+		Util.pathElements( paths ).forEach( p -> this.pathElements.put( p, false ) );
 
 		final Parameter[] params = method.getParameters();
 
@@ -90,6 +98,12 @@ final class RestMethod
 				this.actions.add( new EntityAction( p, entityType ) );
 			}
 		}
+
+		this.pathElements.entrySet().stream()
+			.filter( e -> !e.getValue() )
+			.findFirst().ifPresent( e -> {
+				throw new RestClientMethodException( format( "Missing @PathParam for element %s", e.getKey() ), method );
+			} );
 
 		Util.findAnnotation( Produces.class, method, type )
 			.ifPresent( a -> this.actions.add( new ProducesAction( a, this.actions.size() ) ) );
@@ -136,7 +150,16 @@ final class RestMethod
 			return false;
 		}
 		if( PathParam.class.isInstance( a ) ) {
-			this.actions.add( new PathParamAction( (PathParam) a, p ) );
+			final PathParam v = (PathParam) a;
+
+			if( this.pathElements.containsKey( v.value() ) ) {
+				this.pathElements.put( v.value(), true );
+			}
+			else {
+				throw new RestClientMethodException( format( "Unknown path element %s", v.value() ), this.javaMethod );
+			}
+
+			this.actions.add( new PathParamAction( v, p ) );
 
 			return false;
 		}
