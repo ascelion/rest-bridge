@@ -2,9 +2,15 @@ plugins {
 	id 'com.williamhill.wiremock' version '0.4.1'
 }
 
+def apiDir = file 'eclipse/api/src/main/java'
 def tckDir = file 'eclipse/tck/src/main/java'
 
 sourceSets {
+	api {
+		java {
+			srcDir apiDir
+		}
+	}
 	test {
 		java {
 			srcDir tckDir
@@ -13,18 +19,27 @@ sourceSets {
 }
 
 dependencies {
+	apiCompileOnly 'org.osgi:org.osgi.annotation.versioning:1.0.0'
+	apiCompileOnly 'javax.ws.rs:javax.ws.rs-api'
+	apiCompileOnly 'javax.annotation:javax.annotation-api'
+	apiCompileOnly 'javax.enterprise:cdi-api'
+
 	compileOnly 'javax.ws.rs:javax.ws.rs-api'
-	compileOnly 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+	compileOnly 'javax.annotation:javax.annotation-api'
+//	compileOnly 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 
-	implementation project( ':client' )
+	compileOnly sourceSets.api.output
+	compile project( ':client' )
 
+	testCompile sourceSets.api.output
 	testCompile 'javax.ws.rs:javax.ws.rs-api'
 	testCompile 'javax.annotation:javax.annotation-api'
 	testCompile 'javax.validation:validation-api'
+	testCompile 'javax.annotation:javax.annotation-api'
 	testCompile 'javax.json:javax.json-api'
 	testCompile 'javax.json.bind:javax.json.bind-api'
 	testCompile 'javax.enterprise:cdi-api'
-	testCompile 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+//	testCompile 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 //	testCompile 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
 	testCompile 'org.testng:testng'
 
@@ -65,4 +80,14 @@ test {
 	runWithWiremock = true
 
 	onlyIf { tckDir.directory }
+}
+
+wiremock {
+	params "--port=8765"
+}
+
+eclipse {
+	classpath {
+		plusConfigurations += [ configurations.apiCompileClasspath ]
+	}
 }

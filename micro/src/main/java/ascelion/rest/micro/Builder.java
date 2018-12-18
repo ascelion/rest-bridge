@@ -1,9 +1,12 @@
 
 package ascelion.rest.micro;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -15,6 +18,7 @@ import ascelion.rest.bridge.client.RestClient;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
+import org.eclipse.microprofile.rest.client.spi.RestClientListener;
 
 public class Builder implements RestClientBuilder
 {
@@ -78,8 +82,9 @@ public class Builder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Object component )
 	{
-		this.configuration.addRegistration( component.getClass() );
-		this.configuration.addInstance( component );
+		if( this.configuration.addRegistration( component.getClass() ) ) {
+			this.configuration.addInstance( component );
+		}
 
 		return this;
 	}
@@ -87,8 +92,9 @@ public class Builder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Object component, int priority )
 	{
-		this.configuration.addRegistration( component.getClass(), priority );
-		this.configuration.addInstance( component );
+		if( this.configuration.addRegistration( component.getClass(), priority ) ) {
+			this.configuration.addInstance( component );
+		}
 
 		return this;
 	}
@@ -96,8 +102,9 @@ public class Builder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Object component, Class<?>... contracts )
 	{
-		this.configuration.addRegistration( component.getClass(), contracts );
-		this.configuration.addInstance( component );
+		if( this.configuration.addRegistration( component.getClass(), contracts ) ) {
+			this.configuration.addInstance( component );
+		}
 
 		return this;
 	}
@@ -105,8 +112,9 @@ public class Builder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Object component, Map<Class<?>, Integer> contracts )
 	{
-		this.configuration.addRegistration( component.getClass(), contracts );
-		this.configuration.addInstance( component );
+		if( this.configuration.addRegistration( component.getClass(), contracts ) ) {
+			this.configuration.addInstance( component );
+		}
 
 		return this;
 	}
@@ -115,6 +123,15 @@ public class Builder implements RestClientBuilder
 	public RestClientBuilder baseUrl( URL url )
 	{
 		this.baseUrl = url;
+
+		if( this.restClient != null ) {
+			try {
+				this.restClient.setTarget( url.toURI() );
+			}
+			catch( final URISyntaxException e ) {
+				throw new IllegalArgumentException( e );
+			}
+		}
 
 		return this;
 	}
@@ -146,6 +163,9 @@ public class Builder implements RestClientBuilder
 	@Override
 	public <T> T build( Class<T> clazz )
 	{
+		ServiceLoader.load( RestClientListener.class )
+			.forEach( l -> l.onNewClient( clazz, this ) );
+
 		try {
 			ensureClientBuilt();
 		}
@@ -153,7 +173,15 @@ public class Builder implements RestClientBuilder
 			throw new RestClientDefinitionException( e );
 		}
 
-		return this.restClient.getInterface( clazz );
+		final T clt = this.restClient.getInterface( clazz );
+
+		final InvocationHandler ivh = ( proxy, method, args ) -> {
+			ClientMethodProvider.METHOD.set( method );
+
+			return method.invoke( clt, args );
+		};
+
+		return (T) Proxy.newProxyInstance( Thread.currentThread().getContextClassLoader(), new Class[] { clazz }, ivh );
 	}
 
 	private void ensureClientBuilt() throws URISyntaxException
