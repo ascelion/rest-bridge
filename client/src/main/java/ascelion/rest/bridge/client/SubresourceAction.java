@@ -1,29 +1,28 @@
 
 package ascelion.rest.bridge.client;
 
+import java.util.concurrent.Callable;
+
 class SubresourceAction
 extends Action
 {
 
-	final Class resourceType;
+	private final Class<?> resourceType;
+	private final ConvertersFactory cvsf;
 
-	SubresourceAction( Class resourceType, ActionParam param )
+	SubresourceAction( int index, Class<?> resourceType, ConvertersFactory cvsf )
 	{
-		super( param );
-
-		if( !resourceType.isInterface() ) {
-			throw new IllegalArgumentException( "Return type not an interface" );
-		}
+		super( new ActionParam( index ) );
 
 		this.resourceType = resourceType;
+		this.cvsf = cvsf;
 	}
 
 	@Override
-	void execute( RestRequest cx )
+	Callable<?> execute( RestRequest req )
 	{
-		throw new UnsupportedOperationException( "TODO" );
-//		final RestClientIH ih = new RestClientIH( cx.client, cx.target, this.resourceType, cx.headers, cx.cookies, new Form() );
-//
-//		cx.result = ih.newProxy();
+		final RestClientIH inv = new RestClientIH( this.resourceType, this.cvsf, () -> req.target );
+
+		return () -> inv.newProxy();
 	}
 }

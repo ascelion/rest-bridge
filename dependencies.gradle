@@ -16,8 +16,8 @@ configurations.all { cf ->
 
 		constraints {
 			add cf.name, 'io.leangen.geantyref:geantyref:1.3.6'
-			add cf.name, 'javax.servlet:javax.servlet-api:3.1.0'
-			add cf.name, 'javax.validation:validation-api:1.1.0.Final'
+			add cf.name, 'javax.servlet:javax.servlet-api:4.0.1'
+			add cf.name, 'javax.validation:validation-api:2.0.1.Final'
 			add cf.name, 'javax.annotation:javax.annotation-api:1.2'
 			add cf.name, 'javax.ws.rs:javax.ws.rs-api:2.1.1'
 			add cf.name, 'javax.xml.bind:jaxb-api:2.3.1'
@@ -33,12 +33,13 @@ configurations.all { cf ->
 			add cf.name, 'org.apache.commons:commons-text:1.6'
 			add cf.name, 'org.apache.commons:commons-lang3:3.8.1'
 
+			add cf.name, 'org.javassist:javassist:3.24.1-GA'
+
 			add cf.name, 'org.jboss.arquillian.container:arquillian-jetty-embedded-9:1.0.0.CR3'
 			add cf.name, 'com.github.tomakehurst:wiremock:2.19.0'
 
 			add cf.name, "org.slf4j:slf4j-api:${versions.slf4j}"
 			add cf.name, 'ch.qos.logback:logback-classic:1.2.3'
-
 			add cf.name, 'org.jboss:jandex:2.0.5.Final'
 
 			add cf.name, "org.gradle:gradle-tooling-api:${gradle.gradleVersion}"

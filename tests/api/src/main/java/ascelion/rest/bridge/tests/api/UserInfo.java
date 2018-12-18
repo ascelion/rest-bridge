@@ -1,33 +1,18 @@
 
 package ascelion.rest.bridge.tests.api;
 
-import java.beans.ConstructorProperties;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
-import lombok.RequiredArgsConstructor;
-
-@RequiredArgsConstructor( onConstructor_ = {
-	@ConstructorProperties( { "firstName", "lastName" } )
-} )
-public class UserInfo
+public interface UserInfo
 {
-
-	private final String firstName;
-	private final String lastName;
 
 	@GET
 	@Path( "firstName" )
-	public String getFirstName()
-	{
-		return this.firstName;
-	}
+	String getFirstName();
 
 	@GET
 	@Path( "lastName" )
-	public String getLastName()
-	{
-		return this.lastName;
-	}
+	String getLastName();
+
 }

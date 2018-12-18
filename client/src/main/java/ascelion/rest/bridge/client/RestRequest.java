@@ -4,6 +4,7 @@ package ascelion.rest.bridge.client;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.Callable;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
@@ -15,13 +16,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
-final class RestRequest
+final class RestRequest implements Callable<Object>
 {
 
 	final Object proxy;
 	final Object[] arguments;
 	private final String httpMethod;
-	private WebTarget target;
+	WebTarget target;
 	private final GenericType<?> returnType;
 
 	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
@@ -106,7 +107,8 @@ final class RestRequest
 		this.target = this.target.queryParam( name, value );
 	}
 
-	Object run()
+	@Override
+	public Object call()
 	{
 		final Invocation.Builder b = this.target.request();
 

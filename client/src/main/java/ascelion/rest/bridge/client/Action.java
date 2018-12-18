@@ -1,6 +1,8 @@
 
 package ascelion.rest.bridge.client;
 
+import java.util.concurrent.Callable;
+
 import static java.lang.String.format;
 
 import lombok.RequiredArgsConstructor;
@@ -32,5 +34,5 @@ implements Comparable<Action>
 		return format( "index = %s", this.param.index );
 	}
 
-	abstract void execute( RestRequest cx );
+	abstract Callable<?> execute( RestRequest cx );
 }

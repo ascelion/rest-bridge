@@ -4,7 +4,7 @@ package ascelion.rest.bridge.tests;
 import org.junit.Test;
 
 import ascelion.rest.bridge.tests.api.Hello;
-import ascelion.rest.bridge.tests.api.UserInfo;
+import ascelion.rest.bridge.tests.api.UserBean;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -21,7 +21,7 @@ extends AbstractTestCase<Hello>
 		final String username = "ghiţă";
 		final String password = "surdu";
 
-		final UserInfo ui = this.client.authenticate( username, password );
+		final UserBean ui = this.client.authenticate( username, password );
 
 		assertThat( ui, is( notNullValue() ) );
 	}

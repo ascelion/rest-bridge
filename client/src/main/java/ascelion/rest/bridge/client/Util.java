@@ -5,14 +5,17 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.WebTarget;
+
+import static org.apache.commons.lang3.reflect.MethodUtils.getOverrideHierarchy;
+
+import org.apache.commons.lang3.ClassUtils.Interfaces;
 
 final class Util
 {
@@ -32,6 +35,15 @@ final class Util
 
 	static String getHttpMethod( Method method )
 	{
+		return getOverrideHierarchy( method, Interfaces.INCLUDE ).stream()
+			.map( Util::httpMethodOf )
+			.filter( Objects::nonNull )
+			.findFirst()
+			.orElse( null );
+	}
+
+	private static String httpMethodOf( Method method )
+	{
 		String httpMethod = getHttpMethodName( method );
 
 		for( final Annotation ann : method.getAnnotations() ) {
@@ -39,14 +51,18 @@ final class Util
 
 			if( m != null ) {
 				if( httpMethod != null ) {
-					throw new RestClientMethodException( "Too many HTTP methods", method );
+					throw new RuntimeException( "TODO: multiple HTTP methods" );
 				}
 
 				httpMethod = m;
 			}
 		}
-
 		return httpMethod;
+	}
+
+	private static Method getOverridenMethod( Class<?> cls, Method method )
+	{
+		return null;
 	}
 
 	private static String getHttpMethodName( AnnotatedElement element )
@@ -94,24 +110,6 @@ final class Util
 		}
 
 		return Optional.ofNullable( cls.getAnnotation( type ) );
-	}
-
-	static Set<String> pathElements( String path )
-	{
-		final Set<String> elements = new LinkedHashSet<>();
-		int index = path.indexOf( '{' );
-
-		while( index >= 0 ) {
-			final int nextIndex = path.indexOf( '}', index + 1 );
-
-			if( nextIndex > 0 ) {
-				elements.add( path.substring( index + 1, nextIndex ) );
-
-				index = path.indexOf( '{', nextIndex + 1 );
-			}
-		}
-
-		return elements;
 	}
 
 	private Util()
