@@ -63,7 +63,7 @@ extends Action
 	}
 
 	@Override
-	public void execute( RestRequest req )
+	public RestRequest execute( RestRequest req )
 	{
 		final ValidatorFactory vf = getValidator();
 
@@ -75,5 +75,7 @@ extends Action
 				throw new ConstraintViolationException( vio );
 			}
 		}
+
+		return req;
 	}
 }

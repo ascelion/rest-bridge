@@ -17,7 +17,9 @@ public interface Hello
 	@GET
 	@Path( "authenticate" )
 	@Produces( MediaType.APPLICATION_JSON )
-	UserInfo authenticate( @QueryParam( "username" ) String username, @HeaderParam( "password" ) String password );
+	UserBean authenticate( @QueryParam( "username" ) String username, @HeaderParam( "password" ) String password );
+
+//	@Path( "{username}" )
 
 	@GET
 	@Produces( MediaType.TEXT_PLAIN )

@@ -14,9 +14,11 @@ extends AnnotationAction<CookieParam>
 	}
 
 	@Override
-	public void execute( final RestRequest cx )
+	public RestRequest execute( final RestRequest req )
 	{
-		visitCollection( cx );
+		visitCollection( req );
+
+		return req;
 	}
 
 	@Override
