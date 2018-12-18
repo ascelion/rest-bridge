@@ -24,10 +24,10 @@ import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.ClassUtils.getAllInterfaces;
 
-public class RestClientConfiguration implements Configuration
+public class RestBridgeConfiguration implements Configuration
 {
 
-	private static final Logger L = Logger.getLogger( "ascelion.rest.micro.config" );
+	private static final Logger L = Logger.getLogger( "ascelion.rest.micro.configuration" );
 
 	static private int getPriority( Class<?> cls )
 	{

@@ -12,6 +12,8 @@ public class TestsExtension implements LoadableExtension
 	{
 		bld.service( ApplicationArchiveProcessor.class, WiremockArchiveProcessor.class );
 		bld.service( ApplicationArchiveProcessor.class, JcommanderArchiveProcessor.class );
+
+		bld.observer( ContainerListener.class );
 	}
 
 }
