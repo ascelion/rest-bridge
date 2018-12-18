@@ -13,9 +13,11 @@ extends AnnotationAction<Produces>
 	}
 
 	@Override
-	public void execute( RestRequest req )
+	public RestRequest execute( RestRequest req )
 	{
 		req.produces( this.annotation.value() );
+
+		return req;
 	}
 
 }

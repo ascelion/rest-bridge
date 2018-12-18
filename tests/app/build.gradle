@@ -31,6 +31,8 @@ dependencies {
 	arquillianCompile project(':tests:api')
 
 	arquillianCompile 'junit:junit'
+	arquillianCompile 'org.hamcrest:hamcrest-core'
+	arquillianCompile 'org.hamcrest:hamcrest-library'
 	arquillianCompile 'org.slf4j:slf4j-api'
 	arquillianCompile 'io.leangen.geantyref:geantyref'
 	arquillianCompile 'org.apache.commons:commons-text'

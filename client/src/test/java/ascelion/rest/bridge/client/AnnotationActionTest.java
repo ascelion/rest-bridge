@@ -3,10 +3,12 @@ package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 
 import javax.ws.rs.Consumes;
@@ -87,8 +89,7 @@ public class AnnotationActionTest
 				return null;
 			} );
 
-		final RestRequest req = this.met.request( mock( Interface.class ) );
-		req.run();
+		callMock();
 
 		assertThat( arguments[1], instanceOf( Entity.class ) );
 
@@ -102,8 +103,7 @@ public class AnnotationActionTest
 	{
 		createAction( CookieParam.class, CookieParamAction::new );
 
-		final RestRequest req = this.met.request( mock( Interface.class ) );
-		req.run();
+		final Object req = callMock();
 
 		final Collection<Cookie> cookies = (Collection<Cookie>) readDeclaredField( req, "cookies", true );
 
@@ -127,8 +127,7 @@ public class AnnotationActionTest
 				return null;
 			} );
 
-		final RestRequest req = this.met.request( mock( Interface.class ) );
-		req.run();
+		callMock();
 
 		assertThat( arguments[1], instanceOf( Entity.class ) );
 
@@ -146,9 +145,7 @@ public class AnnotationActionTest
 	{
 		createAction( HeaderParam.class, HeaderParamAction::new );
 
-		final RestRequest req = this.met.request( mock( Interface.class ) );
-		req.run();
-
+		final Object req = callMock();
 		final MultivaluedMap<String, Object> headers = (MultivaluedMap<String, Object>) readDeclaredField( req, "headers", true );
 
 		assertThat( headers, hasEntry( ANNOTATION_VALUE, asList( PARAM_VALUE ) ) );
@@ -162,8 +159,7 @@ public class AnnotationActionTest
 
 		when( this.mc.methodTarget.resolveTemplate( any( String.class ), any( String.class ), any( boolean.class ) ) ).thenReturn( this.mc.methodTarget );
 
-		final RestRequest req = this.met.request( mock( Interface.class ) );
-		req.run();
+		callMock();
 
 		verify( this.mc.methodTarget, times( 1 ) ).resolveTemplate( eq( ANNOTATION_VALUE ), eq( PARAM_VALUE ), eq( true ) );
 	}
@@ -185,8 +181,7 @@ public class AnnotationActionTest
 				return null;
 			} );
 
-		final RestRequest req = this.met.request( mock( Interface.class ) );
-		req.run();
+		callMock();
 
 		assertThat( asList( accepts ), hasItem( ANNOTATION_VALUE ) );
 	}
@@ -198,10 +193,18 @@ public class AnnotationActionTest
 
 		when( this.mc.methodTarget.queryParam( any( String.class ), any( String.class ) ) ).thenReturn( this.mc.methodTarget );
 
-		final RestRequest req = this.met.request( mock( Interface.class ) );
-		req.run();
+		callMock();
 
 		verify( this.mc.methodTarget, times( 1 ) ).queryParam( eq( ANNOTATION_VALUE ), eq( PARAM_VALUE ) );
+	}
+
+	private Object callMock() throws URISyntaxException, Exception
+	{
+		final Callable<?> req = this.met.request( mock( Interface.class ) );
+
+		req.call();
+
+		return req;
 	}
 
 	private <A extends Annotation, X extends Action> void createAction( Class<A> annoType, BiFunction<A, ActionParam, X> create ) throws AnnotationFormatException

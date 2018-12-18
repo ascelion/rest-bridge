@@ -5,12 +5,17 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.WebTarget;
+
+import static org.apache.commons.lang3.reflect.MethodUtils.getOverrideHierarchy;
+
+import org.apache.commons.lang3.ClassUtils.Interfaces;
 
 final class Util
 {
@@ -30,6 +35,15 @@ final class Util
 
 	static String getHttpMethod( Method method )
 	{
+		return getOverrideHierarchy( method, Interfaces.INCLUDE ).stream()
+			.map( Util::httpMethodOf )
+			.filter( Objects::nonNull )
+			.findFirst()
+			.orElse( null );
+	}
+
+	private static String httpMethodOf( Method method )
+	{
 		String httpMethod = getHttpMethodName( method );
 
 		for( final Annotation ann : method.getAnnotations() ) {
@@ -43,8 +57,12 @@ final class Util
 				httpMethod = m;
 			}
 		}
-
 		return httpMethod;
+	}
+
+	private static Method getOverridenMethod( Class<?> cls, Method method )
+	{
+		return null;
 	}
 
 	private static String getHttpMethodName( AnnotatedElement element )
