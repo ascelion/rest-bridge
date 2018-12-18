@@ -5,8 +5,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
@@ -51,18 +53,13 @@ final class Util
 
 			if( m != null ) {
 				if( httpMethod != null ) {
-					throw new RuntimeException( "TODO: multiple HTTP methods" );
+					throw new RestClientMethodException( "Too many HTTP methods", method );
 				}
 
 				httpMethod = m;
 			}
 		}
 		return httpMethod;
-	}
-
-	private static Method getOverridenMethod( Class<?> cls, Method method )
-	{
-		return null;
 	}
 
 	private static String getHttpMethodName( AnnotatedElement element )
@@ -110,6 +107,24 @@ final class Util
 		}
 
 		return Optional.ofNullable( cls.getAnnotation( type ) );
+	}
+
+	static Set<String> pathElements( String path )
+	{
+		final Set<String> elements = new LinkedHashSet<>();
+		int index = path.indexOf( '{' );
+
+		while( index >= 0 ) {
+			final int nextIndex = path.indexOf( '}', index + 1 );
+
+			if( nextIndex > 0 ) {
+				elements.add( path.substring( index + 1, nextIndex ) );
+
+				index = path.indexOf( '{', nextIndex + 1 );
+			}
+		}
+
+		return elements;
 	}
 
 	private Util()
