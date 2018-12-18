@@ -111,26 +111,71 @@ public class RestClientConfiguration implements Configuration
 		this.properties.put( name, value );
 	}
 
-	void addRegistration( Class<?> componentClass )
+	boolean addRegistration( Class<?> componentClass )
 	{
-		final Map<Class<?>, Integer> contracts = getAllInterfaces( componentClass ).stream()
-			.collect( toMap( c -> c, x -> getPriority( x ) ) );
+		if( this.registrations.containsKey( componentClass ) ) {
+			L.warning( format( "Component %s has been already registered", componentClass.getName() ) );
 
-		this.registrations.put( componentClass, contracts );
-	}
+			return false;
+		}
 
-	void addRegistration( Class<?> componentClass, int priority )
-	{
-		final Map<Class<?>, Integer> contracts = getAllInterfaces( componentClass ).stream()
+		final int priority = getPriority( componentClass );
+		final Map<Class<?>, Integer> cm = getAllInterfaces( componentClass ).stream()
 			.collect( toMap( x -> x, x -> priority ) );
 
-		addRegistration( componentClass, contracts );
+		return doRegistration( componentClass, cm );
 	}
 
-	void addRegistration( Class<?> componentClass, Class<?>[] contracts )
+	boolean addRegistration( Class<?> componentClass, int priority )
 	{
+		if( this.registrations.containsKey( componentClass ) ) {
+			L.warning( format( "Component %s has been already registered", componentClass.getName() ) );
+
+			return false;
+		}
+
+		final Map<Class<?>, Integer> cm = getAllInterfaces( componentClass ).stream()
+			.collect( toMap( x -> x, x -> priority ) );
+
+		return doRegistration( componentClass, cm );
+	}
+
+	boolean addRegistration( Class<?> componentClass, Class<?>[] contracts )
+	{
+		if( this.registrations.containsKey( componentClass ) ) {
+			L.warning( format( "Component %s has been already registered", componentClass.getName() ) );
+
+			return false;
+		}
+
 		final Map<Class<?>, Integer> cm = Stream.of( contracts )
-			.filter( c -> {
+			.collect( toMap( x -> x, x -> getPriority( x ) ) );
+
+		return doRegistration( componentClass, cm );
+	}
+
+	boolean addRegistration( Class<?> componentClass, Map<Class<?>, Integer> contracts )
+	{
+		if( this.registrations.containsKey( componentClass ) ) {
+			L.warning( format( "Component %s has been already registered", componentClass.getName() ) );
+
+			return false;
+		}
+
+		return doRegistration( componentClass, contracts );
+	}
+
+	void addInstance( Object instance )
+	{
+		this.instances.add( instance );
+	}
+
+	boolean doRegistration( Class<?> componentClass, Map<Class<?>, Integer> contracts )
+	{
+		final Map<Class<?>, Integer> mc = contracts.entrySet().stream()
+			.filter( e -> {
+				final Class<?> c = e.getKey();
+
 				if( c.isAssignableFrom( componentClass ) ) {
 					return true;
 				}
@@ -139,18 +184,16 @@ public class RestClientConfiguration implements Configuration
 
 				return false;
 			} )
-			.collect( toMap( x -> x, x -> getPriority( x ) ) );
+			.collect( toMap( Map.Entry::getKey, Map.Entry::getValue ) );
 
-		addRegistration( componentClass, cm );
-	}
+		if( mc.isEmpty() ) {
+			L.warning( format( "Abandoned registration of %s", componentClass.getName() ) );
 
-	void addRegistration( Class<?> componentClass, Map<Class<?>, Integer> contracts )
-	{
-		this.registrations.put( componentClass, contracts );
-	}
+			return false;
+		}
 
-	void addInstance( Object instance )
-	{
-		this.instances.add( instance );
+		this.registrations.put( componentClass, mc );
+
+		return true;
 	}
 }
