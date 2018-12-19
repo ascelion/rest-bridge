@@ -1,9 +1,10 @@
 
-package org.eclipse.microprofile.rest.client.spi;
+package ascelion.rest.micro.tests;
 
 import ascelion.rest.bridge.tests.api.util.RestClientTrace;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
+import org.eclipse.microprofile.rest.client.spi.RestClientBuilderListener;
 
 public class ClientTraceBuilderListener implements RestClientBuilderListener
 {

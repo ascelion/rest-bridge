@@ -32,13 +32,6 @@ public class JsonPProvider implements MessageBodyReader<JsonStructure>, MessageB
 		return isJsonP( type );
 	}
 
-	private boolean isJsonP( Class<?> type )
-	{
-		return JsonStructure.class.isAssignableFrom( type )
-			|| JsonObject.class.isAssignableFrom( type )
-			|| JsonArray.class.isAssignableFrom( type );
-	}
-
 	@Override
 	public void writeTo( JsonStructure t, Class<?> type, Type gType, Annotation[] annotations, MediaType mType, MultivaluedMap<String, Object> headers, OutputStream os ) throws IOException, WebApplicationException
 	{
@@ -59,6 +52,13 @@ public class JsonPProvider implements MessageBodyReader<JsonStructure>, MessageB
 		try( JsonReader r = Json.createReader( is ) ) {
 			return r.read();
 		}
+	}
+
+	private boolean isJsonP( Class<?> type )
+	{
+		return JsonStructure.class.isAssignableFrom( type )
+			|| JsonObject.class.isAssignableFrom( type )
+			|| JsonArray.class.isAssignableFrom( type );
 	}
 
 }
