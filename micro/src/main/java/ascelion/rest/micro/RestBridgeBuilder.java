@@ -23,18 +23,17 @@ import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
 import org.eclipse.microprofile.rest.client.spi.RestClientListener;
 
-public class RestBridgeBuilder implements RestClientBuilder
+final class RestBridgeBuilder implements RestClientBuilder
 {
 
 	private final RestBridgeConfiguration configuration = new RestBridgeConfiguration();
-	private final ClientBuilder builder;
 	private RestClient restClient;
 	private URL baseUrl;
-
-	RestBridgeBuilder( ClientBuilder builder )
-	{
-		this.builder = builder;
-	}
+	private long connectTimeout = 0;
+	private TimeUnit connectTimeoutUnit = TimeUnit.MILLISECONDS;
+	private long readTimeout = 0;
+	private TimeUnit readTimeoutUnit = TimeUnit.MILLISECONDS;
+	private ExecutorService executorService;
 
 	@Override
 	public Configuration getConfiguration()
@@ -142,7 +141,8 @@ public class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder connectTimeout( long timeout, TimeUnit unit )
 	{
-		this.builder.connectTimeout( timeout, unit );
+		this.connectTimeout = timeout;
+		this.connectTimeoutUnit = unit;
 
 		return this;
 	}
@@ -150,7 +150,8 @@ public class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder readTimeout( long timeout, TimeUnit unit )
 	{
-		this.builder.readTimeout( timeout, unit );
+		this.readTimeout = timeout;
+		this.readTimeoutUnit = unit;
 
 		return this;
 	}
@@ -158,7 +159,7 @@ public class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder executorService( ExecutorService executor )
 	{
-		this.builder.executorService( executor );
+		this.executorService = executor;
 
 		return this;
 	}
@@ -202,7 +203,16 @@ public class RestBridgeBuilder implements RestClientBuilder
 				throw new IllegalStateException( "Base URL hasn't been set" );
 			}
 
-			final Client client = this.builder.withConfig( this.configuration ).build();
+			final ClientBuilder bld = ClientBuilder.newBuilder()
+				.withConfig( this.configuration )
+				.connectTimeout( this.connectTimeout, this.connectTimeoutUnit )
+				.readTimeout( this.readTimeout, this.readTimeoutUnit );
+
+			if( this.executorService != null ) {
+				bld.executorService( this.executorService );
+			}
+
+			final Client client = bld.build();
 
 			this.restClient = new RestClient( client, this.baseUrl.toURI() );
 		}

@@ -36,6 +36,7 @@ dependencies {
 	compile project( ':client' )
 
 	testCompile sourceSets.api.output
+	testCompile project( ':tests:api' )
 	testCompile 'javax.ws.rs:javax.ws.rs-api'
 	testCompile 'javax.annotation:javax.annotation-api'
 	testCompile 'javax.validation:validation-api'
@@ -58,6 +59,7 @@ dependencies {
 	testCompile 'com.beust:jcommander'
 
 	testRuntime 'org.apache.geronimo.config:geronimo-config-impl'
+	testRuntime 'org.glassfish:javax.json'
 
 	testRuntime 'ch.qos.logback:logback-classic'
 	testRuntime 'org.glassfish.jersey.core:jersey-client'
