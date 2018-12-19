@@ -75,6 +75,7 @@ dependencies {
 	testRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
 	testRuntime 'com.fasterxml.jackson.core:jackson-annotations'
 	testRuntime 'com.fasterxml.jackson.core:jackson-databind'
+	testRuntime 'org.jboss:jandex'
 
 	testRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
 	testRuntime 'org.jboss.arquillian.container:arquillian-jetty-embedded-9'
@@ -83,7 +84,7 @@ dependencies {
 	testRuntime 'org.eclipse.jetty:jetty-annotations'
 }
 
-// XXX: Gradle or TestNG doesn't run tests from other source set than 'test'
+// XXX: Gradle+TestNG don't run tests from other source set than 'test'
 test {
 	enabled = false
 }

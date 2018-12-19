@@ -1,5 +1,5 @@
 
-package ascelion.rest.micro.cdi;
+package ascelion.rest.micro;
 
 import java.util.Optional;
 
@@ -8,10 +8,10 @@ import static java.lang.String.format;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
-final class MP
+public final class MP
 {
 
-	static Optional<String> getConfig( Class<?> type, String what )
+	static public Optional<String> getConfig( Class<?> type, String what )
 	{
 		return getConfig( format( "%s/mp-rest/%s", type.getName(), what ) );
 	}

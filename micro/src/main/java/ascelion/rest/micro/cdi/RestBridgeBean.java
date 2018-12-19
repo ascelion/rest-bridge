@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import javax.enterprise.context.Dependent;
@@ -20,6 +19,8 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
+
+import ascelion.rest.micro.MP;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
@@ -76,22 +77,6 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 			catch( final MalformedURLException e ) {
 				throw new IllegalStateException( format( "%s: unable to parse base URL from configuration", this.type.getName() ), e );
 			}
-		}
-
-		try {
-			MP.getConfig( this.type, "connectTimeout" )
-				.ifPresent( t -> bld.connectTimeout( Integer.parseInt( t ), TimeUnit.MILLISECONDS ) );
-		}
-		catch( final NumberFormatException e ) {
-			throw new IllegalStateException( format( "%s: unable to parse connectTimeout from configuration", this.type.getName() ), e );
-		}
-
-		try {
-			MP.getConfig( this.type, "readTimeout" )
-				.ifPresent( t -> bld.readTimeout( Integer.parseInt( t ), TimeUnit.MILLISECONDS ) );
-		}
-		catch( final NumberFormatException e ) {
-			throw new IllegalStateException( format( "%s: unable to parse readTimeout from configuration", this.type.getName() ), e );
 		}
 
 		return bld.build( this.type );
