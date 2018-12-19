@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import javax.enterprise.context.Dependent;
@@ -61,7 +62,7 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 		final String url = MP.getConfig( this.type, "url" ).orElse( null );
 
 		if( uri == null && url == null ) {
-			throw new IllegalStateException( "Unable to determine base URI/URL from configuration" );
+			throw new IllegalStateException( format( "%s: unable to determine base URI/URL from configuration", this.type.getName() ) );
 		}
 
 		if( uri != null ) {
@@ -72,8 +73,24 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 				bld.baseUrl( new URL( url ) );
 			}
 			catch( final MalformedURLException e ) {
-				throw new IllegalStateException( "Unable to parse base URL from configuration", e );
+				throw new IllegalStateException( format( "%s: unable to parse base URL from configuration", this.type.getName() ), e );
 			}
+		}
+
+		try {
+			MP.getConfig( this.type, "connectTimeout" )
+				.ifPresent( t -> bld.connectTimeout( Integer.parseInt( t ), TimeUnit.MILLISECONDS ) );
+		}
+		catch( final NumberFormatException e ) {
+			throw new IllegalStateException( format( "%s: unable to parse connectTimeout from configuration", this.type.getName() ), e );
+		}
+
+		try {
+			MP.getConfig( this.type, "readTimeout" )
+				.ifPresent( t -> bld.readTimeout( Integer.parseInt( t ), TimeUnit.MILLISECONDS ) );
+		}
+		catch( final NumberFormatException e ) {
+			throw new IllegalStateException( format( "%s: unable to parse readTimeout from configuration", this.type.getName() ), e );
 		}
 
 		return bld.build( this.type );
