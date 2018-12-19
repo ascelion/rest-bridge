@@ -3,13 +3,21 @@
 <suite name="MPRestClientTCK1.1">
 	<test name="All tests except Executor Service Test">
 		<packages>
-			<package name="ascelion.rest.micro.tests"/>
-			<package name="org.eclipse.microprofile.rest.client.tck">
-				<exclude name="org.eclipse.microprofile.rest.client.tck.InvokeWithJsonBProviderTest" />
-			</package>
+			<package name="ascelion.rest.micro.tests" />
+			<package name="org.eclipse.microprofile.rest.client.tck" />
 			<package name="org.eclipse.microprofile.rest.client.tck.cditests" />
 		</packages>
 		<classes>
+			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithJsonBProviderTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
+			<class name="org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
 			<class name="org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeSimpleGetOperationTest" />
 			<class name="org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest">
 				<methods>
