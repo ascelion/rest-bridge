@@ -7,12 +7,15 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.time.LocalDate;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
@@ -29,6 +32,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -179,6 +183,43 @@ public class RestClientTest
 		rc.setTarget( t2 );
 
 		assertThat( api.get(), equalTo( "t2" ) );
+	}
+
+	@Test( expected = ProcessingException.class )
+	public void exception()
+	{
+		final RuntimeException ex = new RuntimeException( "thrown" );
+		final ClientRequestFilter flt = requestContext -> {
+			ex.fillInStackTrace();
+			throw ex;
+		};
+
+		this.client.register( flt, Integer.MIN_VALUE );
+
+		final RestClient rc = new RestClient( this.client, this.target );
+		final Interface api = rc.getInterface( Interface.class );
+
+		try {
+			api.get();
+		}
+		catch( final ProcessingException e ) {
+			assertThat( e.getCause(), sameInstance( ex ) );
+
+			throw e;
+		}
+	}
+
+	@Test( expected = ProcessingException.class )
+	public void timeout()
+	{
+		final Client clt = ClientBuilder.newBuilder()
+			.connectTimeout( 2, TimeUnit.SECONDS )
+			.build();
+
+		final RestClient rc = new RestClient( clt, URI.create( "http://ascelion.com:1234" ) );
+		final Interface api = rc.getInterface( Interface.class );
+
+		api.get();
 	}
 
 	@Test
