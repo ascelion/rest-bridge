@@ -24,7 +24,7 @@ import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.ClassUtils.getAllInterfaces;
 
-public class RestBridgeConfiguration implements Configuration
+final class RestBridgeConfiguration implements Configuration
 {
 
 	private static final Logger L = Logger.getLogger( "ascelion.rest.micro.configuration" );
@@ -73,7 +73,7 @@ public class RestBridgeConfiguration implements Configuration
 	@Override
 	public boolean isEnabled( Class<? extends Feature> featureClass )
 	{
-		return this.registrations.keySet().stream().anyMatch( featureClass::isAssignableFrom );
+		return false;
 	}
 
 	@Override
@@ -104,6 +104,17 @@ public class RestBridgeConfiguration implements Configuration
 	public Set<Object> getInstances()
 	{
 		return unmodifiableSet( this.instances );
+	}
+
+	Configuration copy()
+	{
+		final RestBridgeConfiguration clone = new RestBridgeConfiguration();
+
+		clone.instances.addAll( this.instances );
+		clone.properties.putAll( this.properties );
+		clone.registrations.putAll( this.registrations );
+
+		return clone;
 	}
 
 	void property( String name, Object value )
@@ -170,7 +181,7 @@ public class RestBridgeConfiguration implements Configuration
 		this.instances.add( instance );
 	}
 
-	boolean doRegistration( Class<?> componentClass, Map<Class<?>, Integer> contracts )
+	private boolean doRegistration( Class<?> componentClass, Map<Class<?>, Integer> contracts )
 	{
 		final Map<Class<?>, Integer> mc = contracts.entrySet().stream()
 			.filter( e -> {

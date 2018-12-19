@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -19,13 +20,13 @@ import static java.lang.String.format;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.eclipse.microprofile.rest.client.spi.RestClientListener;
 
 final class RestBridgeBuilder implements RestClientBuilder
 {
 
 	private final RestBridgeConfiguration configuration = new RestBridgeConfiguration();
-	private volatile RestClient restClient;
 	private URL baseUrl;
 	private long connectTimeout = 0;
 	private TimeUnit connectTimeoutUnit = TimeUnit.MILLISECONDS;
@@ -124,15 +125,6 @@ final class RestBridgeBuilder implements RestClientBuilder
 	{
 		this.baseUrl = url;
 
-		if( this.restClient != null ) {
-			try {
-				this.restClient.setTarget( url.toURI() );
-			}
-			catch( final URISyntaxException e ) {
-				throw new IllegalArgumentException( e );
-			}
-		}
-
 		return this;
 	}
 
@@ -165,38 +157,15 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public <T> T build( Class<T> clazz )
 	{
-		ServiceLoader.load( RestClientListener.class )
-			.forEach( l -> l.onNewClient( clazz, this ) );
-
-		if( this.restClient == null ) {
-			synchronized( this ) {
-				if( this.restClient == null ) {
-					this.restClient = createRestClient();
-				}
-			}
-		}
-
-		final T clt;
-
-		try {
-			clt = this.restClient.getInterface( clazz );
-		}
-		catch( final RestClientMethodException e ) {
-			throw new RestClientDefinitionException( format( "%s in method %s.%s", e.getMessage(),
-				e.getMethod().getDeclaringClass().getName(), e.getMethod().getName() ) );
-		}
-
-		return clt;
-	}
-
-	private RestClient createRestClient()
-	{
 		if( this.baseUrl == null ) {
 			throw new IllegalStateException( "Base URL hasn't been set" );
 		}
 
+		ServiceLoader.load( RestClientListener.class )
+			.forEach( l -> l.onNewClient( clazz, this ) );
+
 		final ClientBuilder bld = ClientBuilder.newBuilder()
-			.withConfig( this.configuration )
+			.withConfig( this.configuration.copy() )
 			.connectTimeout( this.connectTimeout, this.connectTimeoutUnit )
 			.readTimeout( this.readTimeout, this.readTimeoutUnit );
 
@@ -206,11 +175,24 @@ final class RestBridgeBuilder implements RestClientBuilder
 
 		final Client client = bld.build();
 
+		Stream.of( clazz.getAnnotationsByType( RegisterProvider.class ) )
+			.forEach( a -> client.register( a.value() ) );
+
+		RestClient rc;
+
 		try {
-			return new RestClient( client, this.baseUrl.toURI() );
+			rc = new RestClient( client, this.baseUrl.toURI() );
 		}
 		catch( final URISyntaxException e ) {
 			throw new RestClientDefinitionException( e );
+		}
+
+		try {
+			return rc.getInterface( clazz );
+		}
+		catch( final RestClientMethodException e ) {
+			throw new RestClientDefinitionException( format( "%s in method %s.%s", e.getMessage(),
+				e.getMethod().getDeclaringClass().getName(), e.getMethod().getName() ) );
 		}
 	}
 }
