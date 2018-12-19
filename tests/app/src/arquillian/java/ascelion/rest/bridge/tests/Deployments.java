@@ -4,6 +4,7 @@ package ascelion.rest.bridge.tests;
 import java.io.IOException;
 import java.net.URI;
 
+import ascelion.rest.bridge.tests.api.util.SLF4JHandler;
 import ascelion.rest.bridge.tests.arquillian.ArquillianUnit;
 
 import org.jboss.arquillian.container.test.api.Deployment;

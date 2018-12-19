@@ -1,5 +1,5 @@
 
-package ascelion.rest.bridge.tests;
+package ascelion.rest.bridge.tests.api.util;
 
 import java.text.MessageFormat;
 import java.util.MissingResourceException;

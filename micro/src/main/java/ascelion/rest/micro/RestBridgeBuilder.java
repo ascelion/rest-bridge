@@ -1,8 +1,6 @@
 
 package ascelion.rest.micro;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Proxy;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
@@ -27,7 +25,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 {
 
 	private final RestBridgeConfiguration configuration = new RestBridgeConfiguration();
-	private RestClient restClient;
+	private volatile RestClient restClient;
 	private URL baseUrl;
 	private long connectTimeout = 0;
 	private TimeUnit connectTimeoutUnit = TimeUnit.MILLISECONDS;
@@ -170,11 +168,12 @@ final class RestBridgeBuilder implements RestClientBuilder
 		ServiceLoader.load( RestClientListener.class )
 			.forEach( l -> l.onNewClient( clazz, this ) );
 
-		try {
-			ensureClientBuilt();
-		}
-		catch( final URISyntaxException e ) {
-			throw new RestClientDefinitionException( e );
+		if( this.restClient == null ) {
+			synchronized( this ) {
+				if( this.restClient == null ) {
+					this.restClient = createRestClient();
+				}
+			}
 		}
 
 		final T clt;
@@ -187,34 +186,31 @@ final class RestBridgeBuilder implements RestClientBuilder
 				e.getMethod().getDeclaringClass().getName(), e.getMethod().getName() ) );
 		}
 
-		final InvocationHandler ivh = ( proxy, method, args ) -> {
-			ClientMethodProvider.METHOD.set( method );
-
-			return method.invoke( clt, args );
-		};
-
-		return (T) Proxy.newProxyInstance( Thread.currentThread().getContextClassLoader(), new Class[] { clazz }, ivh );
+		return clt;
 	}
 
-	private void ensureClientBuilt() throws URISyntaxException
+	private RestClient createRestClient()
 	{
-		if( this.restClient == null ) {
-			if( this.baseUrl == null ) {
-				throw new IllegalStateException( "Base URL hasn't been set" );
-			}
+		if( this.baseUrl == null ) {
+			throw new IllegalStateException( "Base URL hasn't been set" );
+		}
 
-			final ClientBuilder bld = ClientBuilder.newBuilder()
-				.withConfig( this.configuration )
-				.connectTimeout( this.connectTimeout, this.connectTimeoutUnit )
-				.readTimeout( this.readTimeout, this.readTimeoutUnit );
+		final ClientBuilder bld = ClientBuilder.newBuilder()
+			.withConfig( this.configuration )
+			.connectTimeout( this.connectTimeout, this.connectTimeoutUnit )
+			.readTimeout( this.readTimeout, this.readTimeoutUnit );
 
-			if( this.executorService != null ) {
-				bld.executorService( this.executorService );
-			}
+		if( this.executorService != null ) {
+			bld.executorService( this.executorService );
+		}
 
-			final Client client = bld.build();
+		final Client client = bld.build();
 
-			this.restClient = new RestClient( client, this.baseUrl.toURI() );
+		try {
+			return new RestClient( client, this.baseUrl.toURI() );
+		}
+		catch( final URISyntaxException e ) {
+			throw new RestClientDefinitionException( e );
 		}
 	}
 }
