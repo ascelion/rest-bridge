@@ -1,6 +1,7 @@
 
 package ascelion.rest.bridge.client;
 
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.function.Supplier;
 
@@ -14,6 +15,13 @@ public final class RestClient
 {
 
 	static public final String INSTANTIATOR_PROPERTY = "ascelion.rest.bridge.client.instantiator";
+
+	static final ThreadLocal<Method> METHOD = new ThreadLocal<>();
+
+	static public Method invokedMethod()
+	{
+		return METHOD.get();
+	}
 
 	private final Client client;
 	private final ConvertersFactory cvsf;

@@ -97,7 +97,14 @@ final class RestClientIH
 			throw new UnsupportedOperationException( "Could not handle method " + method );
 		}
 
-		return met.request( proxy, arguments ).call();
+		RestClient.METHOD.set( method );
+
+		try {
+			return met.request( proxy, arguments ).call();
+		}
+		finally {
+			RestClient.METHOD.remove();
+		}
 	}
 
 }

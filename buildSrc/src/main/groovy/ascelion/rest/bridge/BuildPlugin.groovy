@@ -22,7 +22,12 @@ class BuildPlugin implements Plugin<Project> {
 
 		ClosureBackedAction.execute(target) {
 			eclipse {
-				project { name = "${rootProject.name}${target.path.replace(':', '-')}" }
+				project {
+					name = "${rootProject.name}${target.path.replace(':', '-')}"
+
+					natures 'org.eclipse.buildship.core.gradleprojectnature'
+					buildCommand 'org.eclipse.buildship.core.gradleprojectbuilder'
+				}
 
 				classpath {
 					defaultOutputDir target.file("build/eclipse")
