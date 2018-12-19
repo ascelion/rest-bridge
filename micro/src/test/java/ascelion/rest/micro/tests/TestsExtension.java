@@ -1,11 +1,17 @@
 
 package ascelion.rest.micro.tests;
 
+import ascelion.rest.bridge.tests.api.util.SLF4JHandler;
+
 import org.jboss.arquillian.container.test.spi.client.deployment.ApplicationArchiveProcessor;
 import org.jboss.arquillian.core.spi.LoadableExtension;
 
 public class TestsExtension implements LoadableExtension
 {
+
+	static {
+		SLF4JHandler.install();
+	}
 
 	@Override
 	public void register( ExtensionBuilder bld )

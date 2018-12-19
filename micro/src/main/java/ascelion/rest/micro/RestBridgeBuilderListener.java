@@ -11,6 +11,7 @@ public class RestBridgeBuilderListener implements RestClientBuilderListener
 	public void onNewBuilder( RestClientBuilder bld )
 	{
 		bld.register( new ClientMethodProvider(), Integer.MIN_VALUE );
+		bld.register( new JsonBProvider(), Integer.MAX_VALUE );
 		bld.register( new JsonPProvider(), Integer.MAX_VALUE );
 	}
 
