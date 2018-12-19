@@ -29,9 +29,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 	private final RestBridgeConfiguration configuration = new RestBridgeConfiguration();
 	private URL baseUrl;
 	private long connectTimeout = 0;
-	private TimeUnit connectTimeoutUnit = TimeUnit.MILLISECONDS;
 	private long readTimeout = 0;
-	private TimeUnit readTimeoutUnit = TimeUnit.MILLISECONDS;
 	private ExecutorService executorService;
 
 	@Override
@@ -131,8 +129,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder connectTimeout( long timeout, TimeUnit unit )
 	{
-		this.connectTimeout = timeout;
-		this.connectTimeoutUnit = unit;
+		this.connectTimeout = unit.toMillis( timeout );
 
 		return this;
 	}
@@ -140,8 +137,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder readTimeout( long timeout, TimeUnit unit )
 	{
-		this.readTimeout = timeout;
-		this.readTimeoutUnit = unit;
+		this.readTimeout = unit.toMillis( timeout );
 
 		return this;
 	}
@@ -165,9 +161,29 @@ final class RestBridgeBuilder implements RestClientBuilder
 			.forEach( l -> l.onNewClient( clazz, this ) );
 
 		final ClientBuilder bld = ClientBuilder.newBuilder()
-			.withConfig( this.configuration.copy() )
-			.connectTimeout( this.connectTimeout, this.connectTimeoutUnit )
-			.readTimeout( this.readTimeout, this.readTimeoutUnit );
+			.withConfig( this.configuration.copy() );
+
+		try {
+			final long to = MP.getConfig( clazz, "connectTimeout" )
+				.map( Long::parseLong )
+				.orElse( this.connectTimeout );
+
+			bld.connectTimeout( to, TimeUnit.MILLISECONDS );
+		}
+		catch( final NumberFormatException e ) {
+			throw new IllegalStateException( format( "%s: unable to parse connectTimeout from configuration", clazz.getName() ), e );
+		}
+
+		try {
+			final long to = MP.getConfig( clazz, "readTimeout" )
+				.map( Long::parseLong )
+				.orElse( this.readTimeout );
+
+			bld.readTimeout( to, TimeUnit.MILLISECONDS );
+		}
+		catch( final NumberFormatException e ) {
+			throw new IllegalStateException( format( "%s: unable to parse readTimeout from configuration", clazz.getName() ), e );
+		}
 
 		if( this.executorService != null ) {
 			bld.executorService( this.executorService );
