@@ -25,11 +25,11 @@ import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.eclipse.microprofile.rest.client.spi.RestClientBuilderResolver;
 
 class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 {
@@ -57,8 +57,9 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 	@Override
 	public T create( CreationalContext<T> creationalContext )
 	{
-		final RestClientBuilder bld = RestClientBuilderResolver.instance().newBuilder();
-		final String uri = MP.getConfig( this.type, "uri" ).orElse( this.type.getAnnotation( RegisterRestClient.class ).baseUri() );
+		final RestClientBuilder bld = RestClientBuilder.newBuilder();
+		final String uri0 = trimToNull( this.type.getAnnotation( RegisterRestClient.class ).baseUri() );
+		final String uri = MP.getConfig( this.type, "uri" ).orElse( uri0 );
 		final String url = MP.getConfig( this.type, "url" ).orElse( null );
 
 		if( uri == null && url == null ) {

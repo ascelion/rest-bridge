@@ -28,8 +28,10 @@ dependencies {
 	compileOnly 'javax.annotation:javax.annotation-api'
 	compileOnly 'javax.json:javax.json-api'
 	compileOnly 'javax.enterprise:cdi-api'
+	compileOnly 'javax.json.bind:javax.json.bind-api'
 	compileOnly 'org.eclipse.microprofile.config:microprofile-config-api'
 //	compileOnly 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+	compileOnly 'org.eclipse:yasson'
 
 	compileOnly sourceSets.api.output
 
@@ -60,6 +62,7 @@ dependencies {
 
 	testRuntime 'org.apache.geronimo.config:geronimo-config-impl'
 	testRuntime 'org.glassfish:javax.json'
+	testRuntime 'org.eclipse:yasson'
 
 	testRuntime 'ch.qos.logback:logback-classic'
 	testRuntime 'org.glassfish.jersey.core:jersey-client'
