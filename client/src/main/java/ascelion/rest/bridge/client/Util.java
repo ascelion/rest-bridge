@@ -5,6 +5,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -12,12 +15,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
 
+import static java.lang.Thread.currentThread;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.reflect.MethodUtils.getOverrideHierarchy;
 
@@ -25,6 +29,31 @@ import org.apache.commons.lang3.ClassUtils.Interfaces;
 
 public final class Util
 {
+
+	static public ClassLoader threadClassLoader()
+	{
+		return AccessController.doPrivileged( (PrivilegedAction<ClassLoader>) () -> currentThread().getContextClassLoader() );
+	}
+
+	static public <T> Class<T> safeLoadClass( String name )
+	{
+		try {
+			return (Class<T>) threadClassLoader().loadClass( name.trim() );
+		}
+		catch( final ClassNotFoundException e ) {
+			return null;
+		}
+	}
+
+	static public <T> Class<T> rtLoadClass( String name )
+	{
+		try {
+			return (Class<T>) threadClassLoader().loadClass( name.trim() );
+		}
+		catch( final ClassNotFoundException e ) {
+			throw new IllegalArgumentException( "Cannot load class " + name.trim() );
+		}
+	}
 
 	static boolean isCDI()
 	{
@@ -64,7 +93,7 @@ public final class Util
 		}
 	}
 
-	public static <T> Collection<T> providers( Configuration cf, Class<T> type )
+	static public <T> Collection<T> providers( Configuration cf, Class<T> type )
 	{
 		final Stream<T> si = cf
 			.getInstances()
@@ -79,8 +108,23 @@ public final class Util
 			.map( type::cast );
 
 		return Stream.concat( si, sc )
-			.sorted( Util::byPriority )
+			.sorted( ( o1, o2 ) -> comparePriority( cf, o1.getClass(), o2.getClass(), type ) )
 			.collect( toList() );
+	}
+
+	static private int comparePriority( Configuration cf, Class<?> c1, Class<?> c2, Class<?> type )
+	{
+		if( Proxy.isProxyClass( c1 ) ) {
+			c1 = c1.getSuperclass();
+		}
+		if( Proxy.isProxyClass( c2 ) ) {
+			c2 = c2.getSuperclass();
+		}
+
+		final int p1 = cf.getContracts( c1 ).getOrDefault( type, Priorities.USER );
+		final int p2 = cf.getContracts( c2 ).getOrDefault( type, Priorities.USER );
+
+		return Integer.compare( p1, p2 );
 	}
 
 	static WebTarget addPathFromAnnotation( AnnotatedElement ae, WebTarget target )
@@ -128,16 +172,6 @@ public final class Util
 		final HttpMethod a = element.getAnnotation( HttpMethod.class );
 
 		return a != null ? a.value() : null;
-	}
-
-	static int byPriority( Object o1, Object o2 )
-	{
-		final Class c1 = o1 instanceof Class ? (Class) o1 : o1.getClass();
-		final Class c2 = o2 instanceof Class ? (Class) o2 : o2.getClass();
-		final int p1 = findAnnotation( Priority.class, c1 ).map( Priority::value ).orElse( 0 );
-		final int p2 = findAnnotation( Priority.class, c2 ).map( Priority::value ).orElse( 0 );
-
-		return Integer.compare( p1, p2 );
 	}
 
 	static <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Class<?> cls )

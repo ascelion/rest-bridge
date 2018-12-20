@@ -79,7 +79,7 @@ final class RestMethod
 		for( int q = 0, z = params.length; q < z; q++ ) {
 			final int index = q;
 			final Annotation[] annotations = params[index].getAnnotations();
-			final Function<Object, String> cvt = rbt.cvsf.getConverter( params[index].getType(), annotations );
+			final Function<Object, String> cvt = (Function) rbt.cvsf.getConverter( params[index].getType(), annotations );
 			final ActionParam p = new ActionParam( index, params[index].getType(), annotations, req -> req.arguments[index], cvt );
 			final boolean entityCandidate = collectActions( annotations, p );
 

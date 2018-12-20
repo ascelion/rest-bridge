@@ -37,6 +37,7 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -72,10 +73,10 @@ public class RestClientTest
 		this.client.register( RestClientTrace.class );
 
 		when( this.conv.toString( any( String.class ) ) ).then( ic -> {
-			return "X" + ic.getArgument( 0 );
+			return "S" + ic.getArgument( 0 );
 		} );
-		when( this.conv.toString( any() ) ).then( ic -> {
-			return "X" + ic.getArgument( 0 );
+		when( this.conv.toString( any( LocalDate.class ) ) ).then( ic -> {
+			return "D" + ic.getArgument( 0 );
 		} );
 
 		this.prov = new PCP( this.conv );
@@ -133,13 +134,23 @@ public class RestClientTest
 	}
 
 	@Test
-	public void findConverter()
+	public void findStringConverter()
 	{
-		final ConvertersFactory cvsf = new ConvertersFactory( this.client.getConfiguration() );
-		final Function<Object, String> cv = cvsf.getConverter( String.class, new Annotation[0] );
+		final ConvertersFactory cvsf = new ConvertersFactory( this.client );
+		final Function<String, String> cv = cvsf.getConverter( String.class, new Annotation[0] );
 
 		assertThat( cv, notNullValue() );
-		assertThat( "XHIHI", is( equalTo( this.conv.toString( "HIHI" ) ) ) );
+		assertThat( "SHIHI", is( equalTo( this.conv.toString( "HIHI" ) ) ) );
+	}
+
+	@Test
+	public void findLocalDateConverter()
+	{
+		final ConvertersFactory cvsf = new ConvertersFactory( this.client );
+		final Function<LocalDate, String> cv = cvsf.getConverter( LocalDate.class, new Annotation[0] );
+
+		assertThat( cv, notNullValue() );
+		assertThat( "SHIHI", is( equalTo( this.conv.toString( "HIHI" ) ) ) );
 	}
 
 	@Test
@@ -156,8 +167,66 @@ public class RestClientTest
 
 		assertThat( ct.format( now ), equalTo( now.toString() ) );
 
-		verify( this.conv, times( 1 ) ).toString( any() );
-		verify( this.conv, times( 0 ) ).toString( any( String.class ) );
+		verify( this.conv, times( 1 ) ).toString( any( LocalDate.class ) );
+		verifyNoMoreInteractions( this.conv );
+	}
+
+	@Test
+	public void dateFormatDefault() throws Exception
+	{
+		final RestClient rc = new RestClient( this.client, this.target );
+		final Interface ct = rc.getInterface( Interface.class );
+
+		assertThat( ct, notNullValue() );
+
+		final LocalDate def = LocalDate.of( 1643, 1, 4 );
+
+		stubFormat( def );
+
+		assertThat( ct.format( null ), equalTo( def.toString() ) );
+
+		verify( this.conv, times( 1 ) ).toString( any( String.class ) );
+		verifyNoMoreInteractions( this.conv );
+	}
+
+	@Test
+	public void parseDate() throws Exception
+	{
+		this.client.register( LocalDateBodyReader.class );
+
+		final RestClient rc = new RestClient( this.client, this.target );
+		final Interface ct = rc.getInterface( Interface.class );
+
+		assertThat( ct, notNullValue() );
+
+		final LocalDate now = LocalDate.now();
+
+		stubParse( now );
+
+		assertThat( ct.parse( now.toString() ), equalTo( now ) );
+
+		verify( this.conv, times( 1 ) ).toString( any( String.class ) );
+		verifyNoMoreInteractions( this.conv );
+	}
+
+	@Test
+	public void parseDateDefault() throws Exception
+	{
+		this.client.register( LocalDateBodyReader.class );
+
+		final RestClient rc = new RestClient( this.client, this.target );
+		final Interface ct = rc.getInterface( Interface.class );
+
+		assertThat( ct, notNullValue() );
+
+		final LocalDate def = LocalDate.of( 1643, 1, 4 );
+
+		stubParse( def );
+
+		assertThat( ct.parse( null ), equalTo( def ) );
+
+		verify( this.conv, times( 1 ) ).toString( any( String.class ) );
+		verifyNoMoreInteractions( this.conv );
 	}
 
 	@Test
@@ -220,64 +289,6 @@ public class RestClientTest
 		final Interface api = rc.getInterface( Interface.class );
 
 		api.get();
-	}
-
-	@Test
-	public void dateFormatDefault() throws Exception
-	{
-		final RestClient rc = new RestClient( this.client, this.target );
-		final Interface ct = rc.getInterface( Interface.class );
-
-		assertThat( ct, notNullValue() );
-
-		final LocalDate def = LocalDate.of( 1643, 1, 4 );
-
-		stubFormat( def );
-
-		assertThat( ct.format( null ), equalTo( def.toString() ) );
-
-		verify( this.conv, times( 0 ) ).toString( any() );
-		verify( this.conv, times( 0 ) ).toString( any( String.class ) );
-	}
-
-	@Test
-	public void parseFormat() throws Exception
-	{
-		this.client.register( LocalDateBodyReader.class );
-
-		final RestClient rc = new RestClient( this.client, this.target );
-		final Interface ct = rc.getInterface( Interface.class );
-
-		assertThat( ct, notNullValue() );
-
-		final LocalDate now = LocalDate.now();
-
-		stubParse( now );
-
-		assertThat( ct.parse( now.toString() ), equalTo( now ) );
-
-		verify( this.conv, times( 0 ) ).toString( any() );
-		verify( this.conv, times( 0 ) ).toString( any( String.class ) );
-	}
-
-	@Test
-	public void parseFormatDefault() throws Exception
-	{
-		this.client.register( LocalDateBodyReader.class );
-
-		final RestClient rc = new RestClient( this.client, this.target );
-		final Interface ct = rc.getInterface( Interface.class );
-
-		assertThat( ct, notNullValue() );
-
-		final LocalDate def = LocalDate.of( 1643, 1, 4 );
-
-		stubParse( def );
-
-		assertThat( ct.parse( null ), equalTo( def ) );
-
-		verify( this.conv, times( 0 ) ).toString( any() );
-		verify( this.conv, times( 0 ) ).toString( any( String.class ) );
 	}
 
 	@Test

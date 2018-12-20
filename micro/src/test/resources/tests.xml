@@ -1,7 +1,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="MPRestClientTCK1.1">
-	<test name="All tests except Executor Service Test">
+<suite name="MPRestClientTCK1.2">
+	<test name="All Tests">
 		<packages>
 			<package name="ascelion.rest.micro.tests" />
 			<package name="org.eclipse.microprofile.rest.client.tck" />
@@ -11,26 +11,6 @@
 			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithJsonBProviderTest">
 				<methods>
 					<exclude name=".+" />
-				</methods>
-			</class>
-			<class name="org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest">
-				<methods>
-					<exclude name=".+" />
-				</methods>
-			</class>
-			<class name="org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeSimpleGetOperationTest" />
-			<class name="org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest">
-				<methods>
-					<exclude name="testExecutorService" />
-				</methods>
-			</class>
-		</classes>
-	</test>
-	<test name="Solo Executor Service Test">
-		<classes>
-			<class name="org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest">
-				<methods>
-					<include name="testExecutorService" />
 				</methods>
 			</class>
 		</classes>

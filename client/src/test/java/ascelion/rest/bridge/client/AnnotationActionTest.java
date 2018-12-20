@@ -61,7 +61,7 @@ public class AnnotationActionTest
 	@Before
 	public void setUp() throws NoSuchMethodException, SecurityException, IllegalArgumentException, IllegalAccessException
 	{
-		final ConvertersFactory cvsf = new ConvertersFactory( this.mc.configuration );
+		final ConvertersFactory cvsf = new ConvertersFactory( this.mc.client );
 		final RestBridgeType rbt = new RestBridgeType( Interface.class, this.mc.configuration, cvsf, ResponseHandler.NONE, () -> this.mc.methodTarget );
 
 		this.met = new RestMethod( rbt, Interface.class.getMethod( "get" ) );

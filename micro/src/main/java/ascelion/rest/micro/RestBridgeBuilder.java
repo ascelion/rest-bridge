@@ -4,6 +4,7 @@ package ascelion.rest.micro;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
+import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +16,7 @@ import javax.ws.rs.core.Configuration;
 
 import ascelion.rest.bridge.client.RestClient;
 import ascelion.rest.bridge.client.RestClientMethodException;
+import ascelion.rest.bridge.client.Util;
 
 import static java.lang.String.format;
 
@@ -208,16 +210,11 @@ final class RestBridgeBuilder implements RestClientBuilder
 			.forEach( a -> clt.register( a.value() ) );
 
 		MP.getConfig( type, "providers" )
-			.map( s -> s.split( "," ) )
-			.ifPresent( names -> {
-				for( final String n : names ) {
-					try {
-						clt.register( loadClass( n ) );
-					}
-					catch( final ClassNotFoundException e ) {
-					}
-				}
-			} );
+			.map( s -> Stream.of( s.split( "," ) ) )
+			.orElse( Stream.empty() )
+			.map( Util::safeLoadClass )
+			.filter( Objects::nonNull )
+			.forEach( clt::register );
 	}
 
 	private <T> void configureTimeouts( ClientBuilder bld, Class<T> type )
@@ -250,10 +247,5 @@ final class RestBridgeBuilder implements RestClientBuilder
 		if( this.executorService != null ) {
 			bld.executorService( this.executorService );
 		}
-	}
-
-	private Class<?> loadClass( final String name ) throws ClassNotFoundException
-	{
-		return Thread.currentThread().getContextClassLoader().loadClass( name.trim() );
 	}
 }
