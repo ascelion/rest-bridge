@@ -10,7 +10,7 @@
 	</appender>
 
 
-	<logger name="org.glassfish.jersey" level="INFO" />
+	<logger name="org.glassfish.jersey" level="ALL" />
 	<logger name="org.glassfish.jersey.process.internal" level="WARN" />
 	<logger name="org.glassfish.jersey.client.internal" level="WARN" />
 	<logger name="org.glassfish.jersey.internal.util" level="WARN" />

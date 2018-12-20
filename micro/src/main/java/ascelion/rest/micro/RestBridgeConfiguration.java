@@ -70,7 +70,7 @@ final class RestBridgeConfiguration implements Configuration
 	@Override
 	public boolean isEnabled( Feature feature )
 	{
-		return isEnabled( feature.getClass() );
+		return false;
 	}
 
 	@Override

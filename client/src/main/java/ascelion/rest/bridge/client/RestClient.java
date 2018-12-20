@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.function.Supplier;
 
+import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
@@ -13,6 +14,14 @@ import lombok.Setter;
 
 public final class RestClient
 {
+
+	@Path( "" )
+	interface Fake
+	{
+
+		@Path( "" )
+		String options();
+	}
 
 	static final ThreadLocal<Method> METHOD = new ThreadLocal<>();
 
@@ -43,7 +52,19 @@ public final class RestClient
 			this.target = UriBuilder.fromUri( target ).path( base ).build();
 		}
 
-		this.cvsf = new ConvertersFactory( client.getConfiguration() );
+		try {
+			METHOD.set( Fake.class.getMethod( "options" ) );
+
+			// XXX how to force client initialisation & feature processing?
+			client.target( "" ).request().options();
+		}
+		catch( final Exception e ) {
+		}
+		finally {
+			METHOD.remove();
+		}
+
+		this.cvsf = new ConvertersFactory( client );
 	}
 
 	public <X> X getInterface( Class<X> type )
