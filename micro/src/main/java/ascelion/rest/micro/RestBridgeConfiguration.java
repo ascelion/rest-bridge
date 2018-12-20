@@ -3,7 +3,6 @@ package ascelion.rest.micro;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -19,10 +18,13 @@ import javax.ws.rs.core.Feature;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.ClassUtils.getAllInterfaces;
+
+import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 
 final class RestBridgeConfiguration implements Configuration
 {
@@ -37,7 +39,8 @@ final class RestBridgeConfiguration implements Configuration
 	}
 
 	private final Map<String, Object> properties = new HashMap<>();
-	private final Set<Object> instances = new HashSet<>();
+	private final Set<Class<?>> classes = newSetFromMap( new IdentityHashMap<>() );
+	private final Set<Object> instances = newSetFromMap( new IdentityHashMap<>() );
 	private final Map<Class<?>, Map<Class<?>, Integer>> registrations = new IdentityHashMap<>();
 
 	@Override
@@ -97,7 +100,7 @@ final class RestBridgeConfiguration implements Configuration
 	@Override
 	public Set<Class<?>> getClasses()
 	{
-		return this.registrations.keySet();
+		return unmodifiableSet( this.classes );
 	}
 
 	@Override
@@ -106,13 +109,21 @@ final class RestBridgeConfiguration implements Configuration
 		return unmodifiableSet( this.instances );
 	}
 
-	Configuration copy()
+	Configuration forClient()
 	{
 		final RestBridgeConfiguration clone = new RestBridgeConfiguration();
 
-		clone.instances.addAll( this.instances );
 		clone.properties.putAll( this.properties );
-		clone.registrations.putAll( this.registrations );
+
+		this.classes.stream()
+			.filter( t -> !ResponseExceptionMapper.class.isAssignableFrom( t ) )
+			.forEach( clone.classes::add );
+		this.instances.stream()
+			.filter( t -> !ResponseExceptionMapper.class.isInstance( t ) )
+			.forEach( clone.instances::add );
+		this.registrations.entrySet().stream()
+			.filter( e -> !ResponseExceptionMapper.class.isAssignableFrom( e.getKey() ) )
+			.forEach( e -> clone.registrations.put( e.getKey(), e.getValue() ) );
 
 		return clone;
 	}
@@ -174,6 +185,11 @@ final class RestBridgeConfiguration implements Configuration
 		}
 
 		return doRegistration( componentClass, contracts );
+	}
+
+	void addClass( Class<?> type )
+	{
+		this.classes.add( type );
 	}
 
 	void addInstance( Object instance )

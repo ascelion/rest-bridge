@@ -5,22 +5,83 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Configuration;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.reflect.MethodUtils.getOverrideHierarchy;
 
 import org.apache.commons.lang3.ClassUtils.Interfaces;
 
-final class Util
+public final class Util
 {
+
+	static boolean isCDI()
+	{
+		try {
+			javax.enterprise.inject.spi.CDI.current();
+
+			return true;
+		}
+		catch( final NoClassDefFoundError e ) {
+			return false;
+		}
+		catch( final IllegalStateException e ) {
+			return false;
+		}
+	}
+
+	static <T> T newInstance( Class<T> type )
+	{
+		try {
+			return javax.enterprise.inject.spi.CDI.current().select( type ).get();
+		}
+		catch( final NoClassDefFoundError e ) {
+			;
+		}
+		catch( final IllegalStateException e ) {
+			;
+		}
+		catch( final RuntimeException e ) {
+			;
+		}
+
+		try {
+			return type.newInstance();
+		}
+		catch( InstantiationException | IllegalAccessException e ) {
+			throw new RestClientException( "Cannot instantiate type " + type.getName() );
+		}
+	}
+
+	public static <T> Collection<T> providers( Configuration cf, Class<T> type )
+	{
+		final Stream<T> si = cf
+			.getInstances()
+			.stream()
+			.filter( type::isInstance )
+			.map( type::cast );
+		final Stream<T> sc = cf
+			.getClasses()
+			.stream()
+			.filter( type::isAssignableFrom )
+			.map( Util::newInstance )
+			.map( type::cast );
+
+		return Stream.concat( si, sc )
+			.sorted( Util::byPriority )
+			.collect( toList() );
+	}
 
 	static WebTarget addPathFromAnnotation( AnnotatedElement ae, WebTarget target )
 	{
@@ -81,7 +142,7 @@ final class Util
 
 	static <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Class<?> cls )
 	{
-		if( type == null || (Class) type == Object.class ) {
+		if( cls == null || cls == Object.class ) {
 			return Optional.empty();
 		}
 

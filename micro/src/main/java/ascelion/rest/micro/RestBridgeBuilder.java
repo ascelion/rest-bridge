@@ -49,7 +49,9 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Class<?> componentClass )
 	{
-		this.configuration.addRegistration( componentClass );
+		if( this.configuration.addRegistration( componentClass ) ) {
+			this.configuration.addClass( componentClass );
+		}
 
 		return this;
 	}
@@ -57,7 +59,9 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Class<?> componentClass, int priority )
 	{
-		this.configuration.addRegistration( componentClass, priority );
+		if( this.configuration.addRegistration( componentClass, priority ) ) {
+			this.configuration.addClass( componentClass );
+		}
 
 		return this;
 	}
@@ -65,7 +69,9 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Class<?> componentClass, Class<?>... contracts )
 	{
-		this.configuration.addRegistration( componentClass, contracts );
+		if( this.configuration.addRegistration( componentClass, contracts ) ) {
+			this.configuration.addClass( componentClass );
+		}
 
 		return this;
 	}
@@ -73,7 +79,9 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Class<?> componentClass, Map<Class<?>, Integer> contracts )
 	{
-		this.configuration.addRegistration( componentClass, contracts );
+		if( this.configuration.addRegistration( componentClass, contracts ) ) {
+			this.configuration.addClass( componentClass );
+		}
 
 		return this;
 	}
@@ -145,54 +153,34 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder executorService( ExecutorService executor )
 	{
+		if( executor == null ) {
+			throw new IllegalArgumentException( "Executor service cannot be null" );
+		}
+
 		this.executorService = executor;
 
 		return this;
 	}
 
 	@Override
-	public <T> T build( Class<T> clazz )
+	public <T> T build( Class<T> type )
 	{
 		if( this.baseUrl == null ) {
 			throw new IllegalStateException( "Base URL hasn't been set" );
 		}
 
 		ServiceLoader.load( RestClientListener.class )
-			.forEach( l -> l.onNewClient( clazz, this ) );
+			.forEach( l -> l.onNewClient( type, this ) );
 
 		final ClientBuilder bld = ClientBuilder.newBuilder()
-			.withConfig( this.configuration.copy() );
+			.withConfig( this.configuration.forClient() );
 
-		try {
-			final long to = MP.getConfig( clazz, "connectTimeout" )
-				.map( Long::parseLong )
-				.orElse( this.connectTimeout );
-
-			bld.connectTimeout( to, TimeUnit.MILLISECONDS );
-		}
-		catch( final NumberFormatException e ) {
-			throw new IllegalStateException( format( "%s: unable to parse connectTimeout from configuration", clazz.getName() ), e );
-		}
-
-		try {
-			final long to = MP.getConfig( clazz, "readTimeout" )
-				.map( Long::parseLong )
-				.orElse( this.readTimeout );
-
-			bld.readTimeout( to, TimeUnit.MILLISECONDS );
-		}
-		catch( final NumberFormatException e ) {
-			throw new IllegalStateException( format( "%s: unable to parse readTimeout from configuration", clazz.getName() ), e );
-		}
-
-		if( this.executorService != null ) {
-			bld.executorService( this.executorService );
-		}
+		configureTimeouts( bld, type );
+		configureExecutor( bld );
 
 		final Client client = bld.build();
 
-		Stream.of( clazz.getAnnotationsByType( RegisterProvider.class ) )
-			.forEach( a -> client.register( a.value() ) );
+		configureProviders( client, type );
 
 		RestClient rc;
 
@@ -203,12 +191,69 @@ final class RestBridgeBuilder implements RestClientBuilder
 			throw new RestClientDefinitionException( e );
 		}
 
+		rc.setResponseHandler( new MPResponseHandler( this.configuration ) );
+
 		try {
-			return rc.getInterface( clazz );
+			return rc.getInterface( type );
 		}
 		catch( final RestClientMethodException e ) {
 			throw new RestClientDefinitionException( format( "%s in method %s.%s", e.getMessage(),
 				e.getMethod().getDeclaringClass().getName(), e.getMethod().getName() ) );
 		}
+	}
+
+	private <T> void configureProviders( Client clt, Class<T> type )
+	{
+		Stream.of( type.getAnnotationsByType( RegisterProvider.class ) )
+			.forEach( a -> clt.register( a.value() ) );
+
+		MP.getConfig( type, "providers" )
+			.map( s -> s.split( "," ) )
+			.ifPresent( names -> {
+				for( final String n : names ) {
+					try {
+						clt.register( loadClass( n ) );
+					}
+					catch( final ClassNotFoundException e ) {
+					}
+				}
+			} );
+	}
+
+	private <T> void configureTimeouts( ClientBuilder bld, Class<T> type )
+	{
+		try {
+			final long to = MP.getConfig( type, "connectTimeout" )
+				.map( Long::parseLong )
+				.orElse( this.connectTimeout );
+
+			bld.connectTimeout( to, TimeUnit.MILLISECONDS );
+		}
+		catch( final NumberFormatException e ) {
+			throw new IllegalStateException( format( "%s: unable to parse connectTimeout from configuration", type.getName() ), e );
+		}
+
+		try {
+			final long to = MP.getConfig( type, "readTimeout" )
+				.map( Long::parseLong )
+				.orElse( this.readTimeout );
+
+			bld.readTimeout( to, TimeUnit.MILLISECONDS );
+		}
+		catch( final NumberFormatException e ) {
+			throw new IllegalStateException( format( "%s: unable to parse readTimeout from configuration", type.getName() ), e );
+		}
+	}
+
+	private void configureExecutor( final ClientBuilder bld )
+	{
+		if( this.executorService != null ) {
+			bld.executorService( this.executorService );
+		}
+	}
+
+	private Class<?> loadClass( final String name ) throws ClassNotFoundException
+	{
+		return Thread.currentThread().getContextClassLoader().loadClass( name.trim() );
 	}
 }

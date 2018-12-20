@@ -16,7 +16,7 @@ public final class MP
 		return getConfig( format( "%s/mp-rest/%s", type.getName(), what ) );
 	}
 
-	static private Optional<String> getConfig( String name )
+	static public Optional<String> getConfig( String name )
 	{
 		return getConfig().map( c -> c.getOptionalValue( name, String.class ) ).orElse( Optional.empty() );
 	}

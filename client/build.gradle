@@ -4,6 +4,7 @@ dependencies {
 	compileOnly 'javax.annotation:javax.annotation-api'
 	compileOnly 'javax.validation:validation-api'
 	compileOnly 'javax.enterprise:cdi-api'
+	compileOnly 'org.eclipse.microprofile.config:microprofile-config-api'
 
 	compile 'io.leangen.geantyref:geantyref'
 	compile 'org.apache.commons:commons-lang3'

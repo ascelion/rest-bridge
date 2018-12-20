@@ -2,7 +2,6 @@
 package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,7 +20,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -64,9 +62,9 @@ public class AnnotationActionTest
 	public void setUp() throws NoSuchMethodException, SecurityException, IllegalArgumentException, IllegalAccessException
 	{
 		final ConvertersFactory cvsf = new ConvertersFactory( this.mc.configuration );
+		final RestBridgeType rbt = new RestBridgeType( Interface.class, this.mc.configuration, cvsf, ResponseHandler.NONE, () -> this.mc.methodTarget );
 
-		final Method m = Interface.class.getMethod( "get" );
-		this.met = new RestMethod( cvsf, Interface.class, m, () -> this.mc.methodTarget );
+		this.met = new RestMethod( rbt, Interface.class.getMethod( "get" ) );
 		this.actions = (List<Action>) readDeclaredField( this.met, "actions", true );
 
 		this.actions.clear();
@@ -81,12 +79,13 @@ public class AnnotationActionTest
 		createAction( FormParam.class, FormParamAction::new );
 		addAction( new ConsumesAction( ann, -1 ) );
 
-		final Object[] arguments = new Object[3];
+		final Object[] arguments = new Object[2];
 
-		when( this.mc.bld.method( any( String.class ), any( Entity.class ), any( GenericType.class ) ) )
+		when( this.mc.bld.method( any( String.class ), any( Entity.class ) ) )
 			.then( ic -> {
-				System.arraycopy( ic.getArguments(), 0, arguments, 0, 3 );
-				return null;
+				System.arraycopy( ic.getArguments(), 0, arguments, 0, arguments.length );
+
+				return this.mc.rsp;
 			} );
 
 		callMock();
@@ -119,12 +118,13 @@ public class AnnotationActionTest
 	{
 		createAction( FormParam.class, FormParamAction::new );
 
-		final Object[] arguments = new Object[3];
+		final Object[] arguments = new Object[2];
 
-		when( this.mc.bld.method( any( String.class ), any( Entity.class ), any( GenericType.class ) ) )
+		when( this.mc.bld.method( any( String.class ), any( Entity.class ) ) )
 			.then( ic -> {
-				System.arraycopy( ic.getArguments(), 0, arguments, 0, 3 );
-				return null;
+				System.arraycopy( ic.getArguments(), 0, arguments, 0, arguments.length );
+
+				return this.mc.rsp;
 			} );
 
 		callMock();

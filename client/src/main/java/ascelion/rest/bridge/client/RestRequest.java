@@ -15,14 +15,19 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
+import lombok.Getter;
 
 final class RestRequest implements Callable<Object>
 {
 
+	private final RestBridgeType rbt;
 	final Object proxy;
 	final Object[] arguments;
 	private final String httpMethod;
-	WebTarget target;
+	@Getter
+	private WebTarget target;
 	private final GenericType<?> returnType;
 
 	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
@@ -31,8 +36,9 @@ final class RestRequest implements Callable<Object>
 	private String contentType;
 	private Object entity;
 
-	RestRequest( Object proxy, String httpMethod, WebTarget target, Type returnType, Object... arguments )
+	RestRequest( RestBridgeType rbt, Object proxy, String httpMethod, WebTarget target, Type returnType, Object... arguments )
 	{
+		this.rbt = rbt;
 		this.proxy = proxy;
 		this.httpMethod = httpMethod;
 		this.returnType = new GenericType<>( returnType );
@@ -108,7 +114,7 @@ final class RestRequest implements Callable<Object>
 	}
 
 	@Override
-	public Object call()
+	public Object call() throws Exception
 	{
 		final Invocation.Builder b = this.target.request();
 
@@ -119,6 +125,8 @@ final class RestRequest implements Callable<Object>
 		}
 
 		this.cookies.forEach( b::cookie );
+
+		final Response rsp;
 
 		if( this.entity != null ) {
 			if( this.contentType == null ) {
@@ -132,7 +140,7 @@ final class RestRequest implements Callable<Object>
 
 			final Entity<?> e = Entity.entity( this.entity, this.contentType );
 
-			return b.method( this.httpMethod, e, this.returnType );
+			rsp = b.method( this.httpMethod, e );
 		}
 		else {
 			// to keep TCK happy
@@ -140,7 +148,11 @@ final class RestRequest implements Callable<Object>
 				b.header( "Content-Type", this.contentType );
 			}
 
-			return b.method( this.httpMethod, this.returnType );
+			rsp = b.method( this.httpMethod );
 		}
+
+		this.rbt.rsph.handleResponse( rsp );
+
+		return this.returnType.getRawType() == Response.class ? rsp : rsp.readEntity( this.returnType );
 	}
 }
