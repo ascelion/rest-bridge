@@ -14,8 +14,6 @@ import lombok.Setter;
 public final class RestClient
 {
 
-	static public final String INSTANTIATOR_PROPERTY = "ascelion.rest.bridge.client.instantiator";
-
 	static final ThreadLocal<Method> METHOD = new ThreadLocal<>();
 
 	static public Method invokedMethod()
@@ -24,9 +22,10 @@ public final class RestClient
 	}
 
 	private final Client client;
-	private final ConvertersFactory cvsf;
 	@Setter
 	private URI target;
+	private final ConvertersFactory cvsf;
+	private ResponseHandler rsph = ResponseHandler.NONE;
 
 	public RestClient( Client client, URI target )
 	{
@@ -47,11 +46,17 @@ public final class RestClient
 		this.cvsf = new ConvertersFactory( client.getConfiguration() );
 	}
 
-	public <X> X getInterface( Class<X> cls )
+	public <X> X getInterface( Class<X> type )
 	{
-		final Supplier<WebTarget> sup = () -> Util.addPathFromAnnotation( cls, this.client.target( this.target ) );
-		final RestClientIH ih = new RestClientIH( cls, this.cvsf, sup );
+		final Supplier<WebTarget> sup = () -> Util.addPathFromAnnotation( type, this.client.target( this.target ) );
+		final RestBridgeType rbt = new RestBridgeType( type, this.client.getConfiguration(), this.cvsf, this.rsph, sup );
+		final RestClientIH ih = new RestClientIH( rbt );
 
 		return ih.newProxy();
+	}
+
+	public void setResponseHandler( ResponseHandler rsph )
+	{
+		this.rsph = rsph;
 	}
 }

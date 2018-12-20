@@ -164,7 +164,7 @@ public class ValidationActionTest
 	private void runTest( String methodName, Object... arguments )
 	{
 		final Method method = findMethod( methodName );
-		final RestRequest req = new RestRequest( this.client, "GET", this.target, Object.class, arguments );
+		final RestRequest req = new RestRequest( null, this.client, "GET", this.target, Object.class, arguments );
 		final ValidationAction action = new ValidationAction( method );
 
 		action.execute( req );

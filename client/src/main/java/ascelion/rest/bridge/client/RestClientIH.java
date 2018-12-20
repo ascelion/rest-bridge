@@ -7,9 +7,6 @@ import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
-
-import javax.ws.rs.client.WebTarget;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -21,17 +18,12 @@ final class RestClientIH
 
 	static private final Collection<Method> O_METHODS = asList( Object.class.getMethods() );
 
-	private final Class<?> type;
-	private final ConvertersFactory cvsf;
-	private final Supplier<WebTarget> target;
-
+	private final RestBridgeType rbt;
 	private final Map<Method, RestMethod> methods = new HashMap<>();
 
-	RestClientIH( Class<?> type, ConvertersFactory cvsf, Supplier<WebTarget> target )
+	RestClientIH( RestBridgeType rbt )
 	{
-		this.type = type;
-		this.cvsf = cvsf;
-		this.target = target;
+		this.rbt = rbt;
 
 		initMethods();
 	}
@@ -39,19 +31,19 @@ final class RestClientIH
 	@Override
 	public String toString()
 	{
-		return String.format( "%s -> %s", this.type.getName(), this.target );
+		return String.format( "%s -> %s", this.rbt.type.getName(), this.rbt.tsup.get() );
 	}
 
 	<X> X newProxy()
 	{
-		if( this.type.isInterface() ) {
-			return (X) Proxy.newProxyInstance( this.type.getClassLoader(), new Class[] { this.type }, this::invoke );
+		if( this.rbt.type.isInterface() ) {
+			return (X) Proxy.newProxyInstance( this.rbt.type.getClassLoader(), new Class[] { this.rbt.type }, this::invoke );
 		}
 		else {
 			final ProxyFactory pf = new ProxyFactory();
 
 			try {
-				pf.setSuperclass( this.type );
+				pf.setSuperclass( this.rbt.type );
 
 				return (X) pf.create( new Class[0], new Object[0], ( self, thisMethod, proceed, args ) -> invoke( self, proceed, args ) );
 			}
@@ -59,10 +51,10 @@ final class RestClientIH
 				throw e;
 			}
 			catch( final InvocationTargetException e ) {
-				throw new RuntimeException( format( "Cannot proxy class %s", this.type.getName() ), e.getCause() );
+				throw new RuntimeException( format( "Cannot proxy class %s", this.rbt.type.getName() ), e.getCause() );
 			}
 			catch( final NoSuchMethodException | InstantiationException | IllegalAccessException e ) {
-				throw new RuntimeException( format( "Cannot proxy class %s", this.type.getName() ), e );
+				throw new RuntimeException( format( "Cannot proxy class %s", this.rbt.type.getName() ), e );
 			}
 		}
 
@@ -70,7 +62,7 @@ final class RestClientIH
 
 	private void initMethods()
 	{
-		for( final Method m : this.type.getMethods() ) {
+		for( final Method m : this.rbt.type.getMethods() ) {
 			if( O_METHODS.contains( m ) ) {
 				continue;
 			}
@@ -81,7 +73,7 @@ final class RestClientIH
 
 	private void addMethod( Method m )
 	{
-		this.methods.put( m, new RestMethod( this.cvsf, this.type, m, this.target ) );
+		this.methods.put( m, new RestMethod( this.rbt, m ) );
 	}
 
 	private Object invoke( Object proxy, Method method, Object[] arguments ) throws Throwable

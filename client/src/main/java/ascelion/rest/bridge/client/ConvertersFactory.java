@@ -14,7 +14,6 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import lombok.EqualsAndHashCode;
@@ -61,27 +60,7 @@ class ConvertersFactory
 
 	ConvertersFactory( Configuration cf )
 	{
-		Function<Class, Object> bld = (Function<Class, Object>) cf.getProperties().get( RestClient.INSTANTIATOR_PROPERTY );
-
-		if( bld == null ) {
-			bld = this::newInstance;
-		}
-
-		final Stream<ParamConverterProvider> si = cf
-			.getInstances()
-			.stream()
-			.filter( ParamConverterProvider.class::isInstance )
-			.map( ParamConverterProvider.class::cast );
-		final Stream<ParamConverterProvider> sc = cf
-			.getClasses()
-			.stream()
-			.filter( ParamConverterProvider.class::isAssignableFrom )
-			.map( bld::apply )
-			.map( ParamConverterProvider.class::cast );
-
-		this.providers = Stream.concat( si, sc )
-			.sorted( Util::byPriority )
-			.collect( toList() );
+		this.providers = Util.providers( cf, ParamConverterProvider.class );
 		this.providers.add( new ParamConverterProvider()
 		{
 
@@ -116,16 +95,5 @@ class ConvertersFactory
 
 			return trimToNull( c.toString( v ) );
 		};
-	}
-
-	private Object newInstance( Class type )
-	{
-		try {
-			return type.newInstance();
-		}
-		catch( InstantiationException | IllegalAccessException e ) {
-			// TODO define exception
-			throw new RuntimeException( e );
-		}
 	}
 }

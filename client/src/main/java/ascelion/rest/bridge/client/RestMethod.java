@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.ws.rs.*;
@@ -51,23 +50,21 @@ final class RestMethod
 
 	//	static private final Logger L = LoggerFactory.getLogger( RestMethod.class );
 
-	private final Class<?> type;
+	private final RestBridgeType rbt;
 	private final Method javaMethod;
-	private final Supplier<WebTarget> target;
 	private final String httpMethod;
 	private final List<Action> actions = new ArrayList<>( 8 );
 	private final Type returnType;
 	private final Map<String, Boolean> pathElements = new LinkedHashMap<>();
 
-	RestMethod( ConvertersFactory cvsf, Class<?> type, Method method, Supplier<WebTarget> target )
+	RestMethod( RestBridgeType rbt, Method method )
 	{
-		this.type = type;
+		this.rbt = rbt;
 		this.javaMethod = method;
 		this.httpMethod = Util.getHttpMethod( method );
-		this.target = target;
-		this.returnType = GenericTypeReflector.getExactReturnType( this.javaMethod, type );
+		this.returnType = GenericTypeReflector.getExactReturnType( this.javaMethod, rbt.type );
 
-		final String paths = Stream.of( method.getAnnotation( Path.class ), type.getAnnotation( Path.class ) )
+		final String paths = Stream.of( method.getAnnotation( Path.class ), rbt.type.getAnnotation( Path.class ) )
 			.filter( Objects::nonNull )
 			.map( Path::value )
 			.collect( joining() );
@@ -75,7 +72,6 @@ final class RestMethod
 		Util.pathElements( paths ).forEach( p -> this.pathElements.put( p, false ) );
 
 		final Parameter[] params = method.getParameters();
-
 		final boolean hasEntity = false;
 
 		this.actions.add( new ValidationAction( method ) );
@@ -83,7 +79,7 @@ final class RestMethod
 		for( int q = 0, z = params.length; q < z; q++ ) {
 			final int index = q;
 			final Annotation[] annotations = params[index].getAnnotations();
-			final Function<Object, String> cvt = cvsf.getConverter( params[index].getType(), annotations );
+			final Function<Object, String> cvt = rbt.cvsf.getConverter( params[index].getType(), annotations );
 			final ActionParam p = new ActionParam( index, params[index].getType(), annotations, req -> req.arguments[index], cvt );
 			final boolean entityCandidate = collectActions( annotations, p );
 
@@ -93,11 +89,16 @@ final class RestMethod
 					throw new RuntimeException( "already has entity" );
 				}
 
-				final Type entityType = GenericTypeReflector.getExactParameterTypes( method, type )[index];
+				final Type entityType = GenericTypeReflector.getExactParameterTypes( method, rbt.type )[index];
 
 				this.actions.add( new EntityAction( p, entityType ) );
 			}
 		}
+
+		Util.findAnnotation( Produces.class, method, rbt.type )
+			.ifPresent( a -> this.actions.add( new ProducesAction( a, this.actions.size() ) ) );
+		Util.findAnnotation( Consumes.class, method, rbt.type )
+			.ifPresent( a -> this.actions.add( new ConsumesAction( a, this.actions.size() ) ) );
 
 		this.pathElements.entrySet().stream()
 			.filter( e -> !e.getValue() )
@@ -105,15 +106,10 @@ final class RestMethod
 				throw new RestClientMethodException( format( "Missing @PathParam for element %s", e.getKey() ), method );
 			} );
 
-		Util.findAnnotation( Produces.class, method, type )
-			.ifPresent( a -> this.actions.add( new ProducesAction( a, this.actions.size() ) ) );
-		Util.findAnnotation( Consumes.class, method, type )
-			.ifPresent( a -> this.actions.add( new ConsumesAction( a, this.actions.size() ) ) );
-
 		if( this.httpMethod == null ) {
 //			resource methods that have a @Path annotation,
 //			but no HTTP method are considered sub-resource locators.
-			this.actions.add( new SubresourceAction( this.actions.size(), (Class) this.returnType, cvsf ) );
+			this.actions.add( new SubresourceAction( this.actions.size(), (Class) this.returnType, rbt ) );
 		}
 
 		Collections.sort( this.actions );
@@ -200,7 +196,8 @@ final class RestMethod
 
 	Callable<?> request( Object proxy, Object... arguments ) throws URISyntaxException
 	{
-		final RestRequest req = new RestRequest( proxy, this.httpMethod, actualTarget(), this.returnType, arguments );
+		final WebTarget actualTarget = Util.addPathFromAnnotation( this.javaMethod, this.rbt.tsup.get() );
+		final RestRequest req = new RestRequest( this.rbt, proxy, this.httpMethod, actualTarget, this.returnType, arguments );
 		Callable<?> res = null;
 
 		for( final Action a : this.actions ) {
@@ -208,10 +205,5 @@ final class RestMethod
 		}
 
 		return res;
-	}
-
-	private WebTarget actualTarget()
-	{
-		return Util.addPathFromAnnotation( this.javaMethod, this.target.get() );
 	}
 }
