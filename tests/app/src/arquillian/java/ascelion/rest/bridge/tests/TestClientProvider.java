@@ -37,9 +37,9 @@ public abstract class TestClientProvider<B extends ClientBuilder>
 	{
 		this.builder = builder;
 
+		builder.register( JacksonFeature.class );
 		builder.register( JerseyTrace.class );
 		builder.register( RestClientTrace.class );
-		builder.register( JacksonFeature.class );
 	}
 
 	public abstract <T> T createClient( URI target, Class<T> cls );

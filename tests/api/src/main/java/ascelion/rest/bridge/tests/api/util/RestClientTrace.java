@@ -76,7 +76,7 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 	static private final String REQ_PREFIX = ">";
 	static private final String RSP_PREFIX = "<";
 
-	static private final Logger L = Logger.getLogger( "ascelion.bridge.REST" );
+	static private final Logger L = Logger.getLogger( "ascelion.bridge.tests.CLIENT" );
 	static private final AtomicLong ID = new AtomicLong();
 
 	private final Logger log;

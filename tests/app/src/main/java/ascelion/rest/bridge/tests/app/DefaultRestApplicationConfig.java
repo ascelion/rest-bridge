@@ -36,7 +36,7 @@ public class DefaultRestApplicationConfig implements RestApplicationConfig
 
 		classes.add( GenericExceptionMapper.class );
 
-		final Logger logger = Logger.getLogger( "ascelion.bridge.REST" );
+		final Logger logger = Logger.getLogger( "ascelion.bridge.tests.SERVER" );
 
 		singletons.add( new LoggingFeature( logger, Level.INFO, Verbosity.PAYLOAD_TEXT, null ) );
 

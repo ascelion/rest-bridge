@@ -3,6 +3,7 @@ package ascelion.rest.bridge.tests;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 import ascelion.rest.bridge.tests.api.util.SLF4JHandler;
 import ascelion.rest.bridge.tests.arquillian.ArquillianUnit;
@@ -13,6 +14,8 @@ import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.gradle.archive.importer.embedded.EmbeddedGradleImporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.Rule;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 @RunWith( ArquillianUnit.class )
@@ -34,6 +37,9 @@ public abstract class Deployments
 
 		return web;
 	}
+
+	@Rule
+	public final Timeout timeout = new Timeout( 15, TimeUnit.SECONDS );
 
 	@ArquillianResource
 	protected URI target;

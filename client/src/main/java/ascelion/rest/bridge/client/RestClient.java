@@ -52,7 +52,7 @@ public final class RestClient
 			this.target = UriBuilder.fromUri( target ).path( base ).build();
 		}
 
-		if( Util.safeLoadClass( "org.glassfish.jersey.client.JerseyClient" ) != null ) {
+		if( client.getClass().getName().contains( "jersey" ) ) {
 			forceJerseyClientInitialisation();
 		}
 
