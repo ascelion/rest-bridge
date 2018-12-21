@@ -23,5 +23,6 @@ dependencies {
 	testRuntime 'org.glassfish:javax.el'
 	testRuntime 'org.glassfish.jersey.core:jersey-client'
 	testRuntime 'org.glassfish.jersey.inject:jersey-hk2'
+	testRuntime 'commons-logging:commons-logging'
 }
 
