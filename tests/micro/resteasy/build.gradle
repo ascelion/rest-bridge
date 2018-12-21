@@ -1,0 +1,88 @@
+plugins {
+	id 'com.williamhill.wiremock' version '0.4.1'
+}
+
+def tckDir = rootProject.file 'eclipse/tck/src/main/java'
+
+sourceSets {
+	test {
+		java {
+			srcDir tckDir
+		}
+	}
+}
+
+dependencies
+{
+	testCompile project( path: ':micro', configuration: 'testRuntime' )
+	testCompile project( ':tests:api' )
+
+	testCompile 'javax.ws.rs:javax.ws.rs-api'
+	testCompile 'javax.annotation:javax.annotation-api'
+	testCompile 'javax.validation:validation-api'
+	testCompile 'javax.annotation:javax.annotation-api'
+	testCompile 'javax.json:javax.json-api'
+	testCompile 'javax.json.bind:javax.json.bind-api'
+	testCompile 'javax.enterprise:cdi-api'
+	testCompile 'org.testng:testng'
+
+	testCompile 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+
+	testCompile 'org.jboss.arquillian.test:arquillian-test-api'
+	testRuntime 'org.jboss.arquillian.container:arquillian-container-test-api'
+	testRuntime 'org.jboss.arquillian.testng:arquillian-testng-container'
+
+	testRuntime 'org.jboss.shrinkwrap:shrinkwrap-api'
+	testRuntime 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-gradle-embedded-archive'
+	testRuntime 'com.github.tomakehurst:wiremock'
+	testCompile 'com.github.tomakehurst:wiremock-standalone'
+	testRuntime 'com.beust:jcommander'
+
+	testRuntime 'org.apache.geronimo.config:geronimo-config-impl'
+	testRuntime 'org.glassfish:javax.json'
+	testRuntime 'org.eclipse:yasson'
+
+	testRuntime 'ch.qos.logback:logback-classic'
+	testRuntime 'org.jboss.weld.servlet:weld-servlet-core'
+	testRuntime 'org.jboss:jandex'
+	testRuntime 'org.glassfish.jersey.core:jersey-server'
+	testRuntime 'org.glassfish.jersey.containers:jersey-container-servlet'
+	testRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
+	testRuntime 'org.glassfish.jersey.inject:jersey-hk2'
+	testRuntime 'org.glassfish.jersey.connectors:jersey-grizzly-connector'
+	testRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
+	testRuntime 'com.fasterxml.jackson.core:jackson-annotations'
+	testRuntime 'com.fasterxml.jackson.core:jackson-databind'
+
+	testRuntime 'org.jboss.resteasy:resteasy-client'
+
+	testRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
+	testRuntime 'org.jboss.arquillian.container:arquillian-jetty-embedded-9'
+	testRuntime 'org.eclipse.jetty:jetty-server'
+	testRuntime 'org.eclipse.jetty:jetty-deploy'
+	testRuntime 'org.eclipse.jetty:jetty-annotations'
+}
+
+// XXX: Gradle+TestNG don't run tests from other source set than 'test'
+test {
+	enabled = false
+}
+
+task arquillian( type: Test ) {
+	useTestNG() {
+		scanForTestClasses = false
+		useDefaultListeners = true
+
+		suites 'src/test/resources/tests.xml'
+	}
+
+//	runWithWiremock = true
+}
+
+check {
+	dependsOn arquillian
+}
+
+wiremock {
+	params "--port=8765"
+}

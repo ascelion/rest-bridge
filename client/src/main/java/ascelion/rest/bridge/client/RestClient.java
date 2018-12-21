@@ -52,19 +52,26 @@ public final class RestClient
 			this.target = UriBuilder.fromUri( target ).path( base ).build();
 		}
 
+		if( Util.safeLoadClass( "org.glassfish.jersey.client.JerseyClient" ) != null ) {
+			forceJerseyClientInitialisation();
+		}
+
+		this.cvsf = new ConvertersFactory( client );
+	}
+
+	private void forceJerseyClientInitialisation()
+	{
 		try {
 			METHOD.set( Fake.class.getMethod( "options" ) );
 
-			// XXX how to force client initialisation & feature processing?
-			client.target( "" ).request().options();
+			// XXX how to force jersey client initialisation & feature processing?
+			this.client.target( "" ).request().options();
 		}
 		catch( final Exception e ) {
 		}
 		finally {
 			METHOD.remove();
 		}
-
-		this.cvsf = new ConvertersFactory( client );
 	}
 
 	public <X> X getInterface( Class<X> type )

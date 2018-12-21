@@ -1,7 +1,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="MPRestClientTCK1.2">
-	<test name="All Tests">
+	<test name="Resteasy Tests">
 		<packages>
 			<package name="ascelion.rest.micro.tests" />
 			<package name="org.eclipse.microprofile.rest.client.tck" />
