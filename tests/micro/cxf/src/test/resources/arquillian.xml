@@ -7,10 +7,12 @@
 
 	<defaultProtocol type="Servlet 3.0" />
 
+	<!-- 
 	<engine>
 		<property name="deploymentExportExploded">true</property>
 		<property name="deploymentExportPath">build/deployments</property>
 	</engine>
+	-->
 
 	<container qualifier="jetty" default="true">
 		<configuration>

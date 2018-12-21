@@ -30,7 +30,7 @@ class BuildPlugin implements Plugin<Project> {
 				}
 
 				classpath {
-					defaultOutputDir target.file("build/eclipse")
+					defaultOutputDir file("build/eclipse")
 
 					file {
 						whenMerged {

@@ -153,6 +153,15 @@ final class RestRequest implements Callable<Object>
 
 		this.rbt.rsph.handleResponse( rsp );
 
-		return this.returnType.getRawType() == Response.class ? rsp : rsp.readEntity( this.returnType );
+		if( this.returnType.getRawType() == Response.class ) {
+			return rsp;
+		}
+
+		try {
+			return rsp.readEntity( this.returnType );
+		}
+		finally {
+			rsp.close();
+		}
 	}
 }
