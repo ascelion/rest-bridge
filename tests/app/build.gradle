@@ -27,8 +27,8 @@ sourceSets {
 }
 
 dependencies {
-	arquillianCompile project(':client')
-	arquillianCompile project(':tests:api')
+	arquillianCompile project(':client').sourceSets.main.output
+	arquillianCompile project(':tests:api').sourceSets.main.output
 
 	arquillianCompile 'junit:junit'
 	arquillianCompile 'org.hamcrest:hamcrest-core'
@@ -48,7 +48,7 @@ dependencies {
 	arquillianCompile 'org.glassfish.jersey.ext:jersey-proxy-client'
 	arquillianCompile 'org.jboss.resteasy:resteasy-client'
 	arquillianCompile 'org.apache.cxf:cxf-rt-rs-client'
-	arquillianCompile 'commons-logging:commons-logging'
+	arquillianRuntime 'commons-logging:commons-logging'
 
 	arquillianRuntime 'javax.servlet:javax.servlet-api'
 	arquillianRuntime 'ch.qos.logback:logback-classic'

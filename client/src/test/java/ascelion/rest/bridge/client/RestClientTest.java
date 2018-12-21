@@ -54,6 +54,11 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class RestClientTest
 {
 
+//	static {
+//		Stream.of( System.getProperty( "java.class.path", "" ).split( ":" ) )
+//			.sorted().forEach( System.out::println );
+//	}
+
 	@Rule
 	public final WireMockRule rule = new WireMockRule();
 
