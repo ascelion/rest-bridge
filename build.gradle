@@ -10,11 +10,6 @@ buildscript {
 apply plugin: 'pl.allegro.tech.build.axion-release'
 apply plugin: 'eclipse'
 
-task publishLocal {
-	doLast {
-		println 'no publishing defined yet'
-	}
-}
 task publish {
 	doLast {
 		println 'no publishing defined yet'
@@ -32,7 +27,7 @@ allprojects {
 	defaultTasks 'test'
 }
 
-subprojects {
+subprojects { sub ->
 	apply plugin: ascelion.rest.bridge.BuildPlugin
 	apply from: rootProject.file( 'dependencies.gradle' )
 
@@ -41,6 +36,10 @@ subprojects {
 
 	sourceCompatibility = JavaVersion.VERSION_1_8
 	targetCompatibility = JavaVersion.VERSION_1_8
+
+	sourceSets.all { src ->
+		src.compileClasspath += src.annotationProcessorPath
+	}
 
 	tasks.withType( Test ) {
 		group = 'verification'
@@ -82,5 +81,9 @@ subprojects {
 				}
 			}
 		}
+	}
+	
+	plugins.withType( MavenPublishPlugin ) {
+		sub.apply from: rootProject.file( 'publish.gradle' )
 	}
 }

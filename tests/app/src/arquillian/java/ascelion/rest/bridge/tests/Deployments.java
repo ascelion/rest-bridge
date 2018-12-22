@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
-import ascelion.rest.bridge.tests.api.util.SLF4JHandler;
 import ascelion.rest.bridge.tests.arquillian.ArquillianUnit;
+import ascelion.rest.micro.tests.shared.SLF4JHandler;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.test.api.ArquillianResource;

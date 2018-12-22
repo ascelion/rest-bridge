@@ -1,7 +1,5 @@
 
-package ascelion.rest.micro.tests;
-
-import ascelion.rest.bridge.tests.api.util.SLF4JHandler;
+package ascelion.rest.micro.tests.shared;
 
 import org.jboss.arquillian.container.test.spi.client.deployment.ApplicationArchiveProcessor;
 import org.jboss.arquillian.core.spi.LoadableExtension;

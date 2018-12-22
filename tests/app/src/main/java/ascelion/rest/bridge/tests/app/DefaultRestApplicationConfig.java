@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import ascelion.rest.bridge.tests.api.util.JSR310ParamConverters;
+import ascelion.rest.micro.tests.shared.JSR310ParamConverters;
 
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.logging.LoggingFeature;

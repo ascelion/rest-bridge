@@ -14,7 +14,7 @@ class BuildPlugin implements Plugin<Project> {
 	@Override
 	public void apply( Project target ) {
 		target.plugins.apply( 'eclipse' )
-		target.plugins.apply( 'java' )
+		target.plugins.apply( 'java-library' )
 
 		target.sourceSets.all { SourceSet set ->
 			set.output.resourcesDir = set.output.classesDirs.singleFile
@@ -31,6 +31,10 @@ class BuildPlugin implements Plugin<Project> {
 
 				classpath {
 					defaultOutputDir file("build/eclipse")
+
+					sourceSets.all { SourceSet set ->
+						plusConfigurations += [configurations.getByName( set.annotationProcessorConfigurationName )]
+					}
 
 					file {
 						whenMerged {

@@ -9,4 +9,5 @@ include 'tests:app'
 include 'tests:micro:jersey'
 include 'tests:micro:resteasy'
 include 'tests:micro:cxf'
+include 'tests:shared'
 

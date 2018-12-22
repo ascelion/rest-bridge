@@ -24,7 +24,7 @@ import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Provider;
 
-import ascelion.rest.bridge.tests.api.util.RestClientTrace;
+import ascelion.rest.micro.tests.shared.RestClientTrace;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;

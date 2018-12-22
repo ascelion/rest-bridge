@@ -1,5 +1,5 @@
 
-package ascelion.rest.micro.tests;
+package ascelion.rest.micro.tests.shared;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.jboss.arquillian.container.spi.event.StartContainer;
