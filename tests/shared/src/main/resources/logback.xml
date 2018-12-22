@@ -19,8 +19,6 @@
 	<logger name="fish.payara.arquillian.jersey.process.internal" level="WARN" />
 	<logger name="fish.payara.arquillian.jersey.client.internal" level="WARN" />
 
-	<logger name="org.jboss.resteasy" level="ALL" />
-
 	<root level="INFO">
 		<appender-ref ref="CONSOLE" />
 	</root>

@@ -1,5 +1,5 @@
 
-package ascelion.rest.bridge.tests.api.util;
+package ascelion.rest.micro.tests.shared;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

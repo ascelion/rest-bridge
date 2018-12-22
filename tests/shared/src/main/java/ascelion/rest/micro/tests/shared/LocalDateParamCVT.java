@@ -1,11 +1,11 @@
 
-package ascelion.rest.bridge.tests.api.util;
+package ascelion.rest.micro.tests.shared;
 
 import java.time.LocalDate;
 
 import javax.ws.rs.ext.ParamConverter;
 
-import static ascelion.rest.bridge.tests.api.util.JSR310ParamConverters.DATE_FORMAT;
+import static ascelion.rest.micro.tests.shared.JSR310ParamConverters.DATE_FORMAT;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 final class LocalDateParamCVT implements ParamConverter<LocalDate>

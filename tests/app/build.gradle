@@ -6,19 +6,20 @@ war.archiveName = "${project.name}.war"
 war.dependsOn jar
 
 dependencies {
-	compile project( ':tests:api' )
+	implementation project( ':tests:api' )
+	implementation project( ':tests:shared' )
 
-	compileOnly 'javax.servlet:javax.servlet-api'
-	compileOnly 'javax.validation:validation-api'
-	compileOnly 'javax.xml.bind:jaxb-api'
-	compileOnly 'javax.ws.rs:javax.ws.rs-api'
-	compileOnly 'javax.inject:javax.inject'
-	compileOnly 'javax.enterprise:cdi-api'
+	implementation 'javax.servlet:javax.servlet-api'
+	implementation 'javax.validation:validation-api'
+	implementation 'javax.xml.bind:jaxb-api'
+	implementation 'javax.ws.rs:javax.ws.rs-api'
+	implementation 'javax.inject:javax.inject'
+	implementation 'javax.enterprise:cdi-api'
 
-	compileOnly 'org.glassfish.jersey.core:jersey-server'
-	compileOnly 'com.fasterxml.jackson.core:jackson-annotations'
-	compileOnly 'com.fasterxml.jackson.core:jackson-databind'
-	compileOnly 'org.glassfish.jersey.media:jersey-media-json-jackson'
+	implementation 'org.glassfish.jersey.core:jersey-server'
+	implementation 'com.fasterxml.jackson.core:jackson-annotations'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'org.glassfish.jersey.media:jersey-media-json-jackson'
 }
 
 // testing
@@ -27,27 +28,30 @@ sourceSets {
 }
 
 dependencies {
-	arquillianCompile project(':client').sourceSets.main.output
-	arquillianCompile project(':tests:api').sourceSets.main.output
+	arquillianImplementation project( ':client' ).sourceSets.main.output
+	arquillianImplementation project( ':tests:api' ).sourceSets.main.output
+	arquillianImplementation project( ':tests:shared' ).sourceSets.main.output
 
-	arquillianCompile 'junit:junit'
-	arquillianCompile 'org.hamcrest:hamcrest-core'
-	arquillianCompile 'org.hamcrest:hamcrest-library'
-	arquillianCompile 'org.slf4j:slf4j-api'
-	arquillianCompile 'io.leangen.geantyref:geantyref'
-	arquillianCompile 'org.apache.commons:commons-text'
-	arquillianCompile 'org.jboss.arquillian.test:arquillian-test-api'
-	arquillianCompile 'org.jboss.arquillian.junit:arquillian-junit-core'
-	arquillianCompile 'org.jboss.arquillian.container:arquillian-container-test-api'
-	arquillianCompile 'org.jboss.shrinkwrap:shrinkwrap-api'
-	arquillianCompile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-gradle-embedded-archive'
-	arquillianCompile 'org.glassfish.jersey.media:jersey-media-json-jackson'
-	arquillianCompile 'org.glassfish.jersey.core:jersey-server'
+	arquillianImplementation 'junit:junit'
+	arquillianImplementation 'org.hamcrest:hamcrest-core'
+	arquillianImplementation 'org.hamcrest:hamcrest-library'
+	arquillianImplementation 'org.slf4j:slf4j-api'
+	arquillianImplementation 'io.leangen.geantyref:geantyref'
+	arquillianImplementation 'org.apache.commons:commons-text'
+	arquillianImplementation 'org.jboss.arquillian.test:arquillian-test-api'
+	arquillianImplementation 'org.jboss.arquillian.junit:arquillian-junit-core'
+	arquillianImplementation 'org.jboss.arquillian.container:arquillian-container-test-api'
+	arquillianImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
+	arquillianImplementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-gradle-embedded-archive'
+	arquillianImplementation 'org.glassfish.jersey.media:jersey-media-json-jackson'
+	arquillianImplementation 'org.glassfish.jersey.core:jersey-server'
 
-	arquillianCompile 'org.glassfish.jersey.core:jersey-client'
-	arquillianCompile 'org.glassfish.jersey.ext:jersey-proxy-client'
-	arquillianCompile 'org.jboss.resteasy:resteasy-client'
-	arquillianCompile 'org.apache.cxf:cxf-rt-rs-client'
+	arquillianImplementation 'com.github.tomakehurst:wiremock-standalone'
+
+	arquillianImplementation 'org.glassfish.jersey.core:jersey-client'
+	arquillianImplementation 'org.glassfish.jersey.ext:jersey-proxy-client'
+	arquillianImplementation 'org.jboss.resteasy:resteasy-client'
+	arquillianImplementation 'org.apache.cxf:cxf-rt-rs-client'
 	arquillianRuntime 'commons-logging:commons-logging'
 
 	arquillianRuntime 'javax.servlet:javax.servlet-api'
@@ -58,7 +62,7 @@ dependencies {
 	arquillianRuntime 'com.fasterxml.jackson.core:jackson-annotations'
 	arquillianRuntime 'com.fasterxml.jackson.core:jackson-databind'
 
-	arquillianCompile 'org.glassfish.jersey.containers:jersey-container-servlet'
+	arquillianImplementation 'org.glassfish.jersey.containers:jersey-container-servlet'
 	arquillianRuntime 'org.jboss.weld.servlet:weld-servlet-core'
 	arquillianRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
 	arquillianRuntime 'org.jboss:jandex'

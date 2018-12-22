@@ -1,3 +1,4 @@
+apply plugin: 'maven-publish'
 
 dependencies {
 	compileOnly 'javax.ws.rs:javax.ws.rs-api'
@@ -6,18 +7,22 @@ dependencies {
 	compileOnly 'javax.enterprise:cdi-api'
 	compileOnly 'org.eclipse.microprofile.config:microprofile-config-api'
 
-	compile 'io.leangen.geantyref:geantyref'
-	compile 'org.apache.commons:commons-lang3'
-	compile 'org.javassist:javassist'
+	implementation 'io.leangen.geantyref:geantyref'
+	implementation 'org.apache.commons:commons-lang3'
+	implementation 'org.javassist:javassist'
 
-	testCompile project( ':tests:api' )
+	testImplementation project( ':tests:api' )
+	testImplementation project( ':tests:shared' )
 
-	testCompile 'javax.ws.rs:javax.ws.rs-api'
-	testCompile 'javax.validation:validation-api'
-	testCompile 'com.github.tomakehurst:wiremock'
+	testImplementation 'javax.ws.rs:javax.ws.rs-api'
+	testImplementation 'javax.validation:validation-api'
+	testImplementation 'com.github.tomakehurst:wiremock'
+	testImplementation 'org.apache.commons:commons-io'
 
-	testCompile 'junit:junit'
-	testCompile 'org.mockito:mockito-core'
+	testImplementation 'junit:junit'
+	testImplementation 'org.hamcrest:hamcrest-core'
+	testImplementation 'org.hamcrest:hamcrest-library'
+	testImplementation 'org.mockito:mockito-core'
 
 	testRuntime 'org.hibernate:hibernate-validator'
 	testRuntime 'org.glassfish:javax.el'
@@ -25,4 +30,3 @@ dependencies {
 	testRuntime 'org.glassfish.jersey.inject:jersey-hk2'
 	testRuntime 'commons-logging:commons-logging'
 }
-

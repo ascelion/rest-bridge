@@ -1,63 +1,26 @@
+apply plugin: 'maven-publish'
 
 dependencies {
-	compileOnly 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+	api project( ':client' )
 
+	compileOnly 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 	compileOnly 'javax.ws.rs:javax.ws.rs-api'
 	compileOnly 'javax.annotation:javax.annotation-api'
 	compileOnly 'javax.json:javax.json-api'
 	compileOnly 'javax.enterprise:cdi-api'
 	compileOnly 'javax.json.bind:javax.json.bind-api'
 	compileOnly 'org.eclipse.microprofile.config:microprofile-config-api'
-	compileOnly 'org.eclipse:yasson'
 
-	compile project( ':client' )
+	implementation 'org.eclipse:yasson'
+	implementation 'org.apache.commons:commons-lang3'
 
-	testCompile project( ':tests:api' )
-	testCompile 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
-	testCompile 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
-	testCompile 'javax.ws.rs:javax.ws.rs-api'
-	testCompile 'javax.json.bind:javax.json.bind-api'
-//	testCompile 'javax.annotation:javax.annotation-api'
-//	testCompile 'javax.validation:validation-api'
-//	testCompile 'javax.annotation:javax.annotation-api'
-//	testCompile 'javax.json:javax.json-api'
-//	testCompile 'javax.enterprise:cdi-api'
-//	testCompile 'org.testng:testng'
-
-//	testCompile 'org.jboss.arquillian.test:arquillian-test-api'
-//	testCompile 'org.jboss.arquillian.container:arquillian-container-test-api'
-//	testCompile 'org.jboss.arquillian.testng:arquillian-testng-container'
-
-//	testCompile 'org.jboss.shrinkwrap:shrinkwrap-api'
-//	testCompile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-gradle-embedded-archive'
-//	testCompile 'com.github.tomakehurst:wiremock'
-//	testCompile 'com.github.tomakehurst:wiremock-standalone'
-//	testCompile 'com.beust:jcommander'
-
-/*
-	testRuntime 'org.apache.geronimo.config:geronimo-config-impl'
-	testRuntime 'org.glassfish:javax.json'
-	testRuntime 'org.eclipse:yasson'
-
-	testRuntime 'ch.qos.logback:logback-classic'
-	testRuntime 'org.glassfish.jersey.core:jersey-client'
-	testRuntime 'org.glassfish.jersey.core:jersey-server'
-	testRuntime 'org.glassfish.jersey.containers:jersey-container-servlet'
-	testRuntime 'org.jboss.weld.servlet:weld-servlet-core'
-	testRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
-	testRuntime 'org.glassfish.jersey.inject:jersey-hk2'
-	testRuntime 'org.glassfish.jersey.connectors:jersey-grizzly-connector'
-	testRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
-	testRuntime 'com.fasterxml.jackson.core:jackson-annotations'
-	testRuntime 'com.fasterxml.jackson.core:jackson-databind'
-	testRuntime 'org.jboss:jandex'
-
-	testRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
-	testRuntime 'org.jboss.arquillian.container:arquillian-jetty-embedded-9'
-	testRuntime 'org.eclipse.jetty:jetty-server'
-	testRuntime 'org.eclipse.jetty:jetty-deploy'
-	testRuntime 'org.eclipse.jetty:jetty-annotations'
-*/
+	testImplementation project( ':tests:api' )
+	testImplementation project( ':tests:shared' )
+	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
+	testImplementation 'javax.ws.rs:javax.ws.rs-api'
+	testImplementation 'javax.json.bind:javax.json.bind-api'
+	testImplementation 'org.apache.commons:commons-lang3'
 }
 
 test {

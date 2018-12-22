@@ -1,0 +1,13 @@
+dependencies {
+	implementation 'javax.ws.rs:javax.ws.rs-api'
+	implementation 'javax.annotation:javax.annotation-api'
+	implementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+
+	implementation 'org.apache.commons:commons-lang3'
+	implementation 'org.apache.commons:commons-io'
+	implementation 'org.jboss.arquillian.test:arquillian-test-api'
+	implementation 'org.jboss.arquillian.container:arquillian-container-test-api'
+	implementation 'org.jboss.arquillian.container:arquillian-container-test-spi'
+	implementation 'com.github.tomakehurst:wiremock-standalone'
+	implementation 'com.beust:jcommander'
+}

@@ -1,5 +1,5 @@
 
-package ascelion.rest.micro.tests;
+package ascelion.rest.micro.tests.shared;
 
 public class WiremockArchiveProcessor extends PackageArchiveProcessor
 {

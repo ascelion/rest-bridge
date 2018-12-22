@@ -1,5 +1,5 @@
 
-package ascelion.rest.micro.tests;
+package ascelion.rest.micro.tests.shared;
 
 import java.util.Collection;
 import java.util.HashSet;

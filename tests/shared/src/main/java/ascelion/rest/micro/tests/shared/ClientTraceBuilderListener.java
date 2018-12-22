@@ -1,7 +1,5 @@
 
-package ascelion.rest.micro.tests;
-
-import ascelion.rest.bridge.tests.api.util.RestClientTrace;
+package ascelion.rest.micro.tests.shared;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.spi.RestClientBuilderListener;

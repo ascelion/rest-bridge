@@ -8,9 +8,9 @@ import javax.ws.rs.core.Response;
 
 import ascelion.rest.bridge.tests.api.API;
 import ascelion.rest.bridge.tests.api.Convert;
-import ascelion.rest.bridge.tests.api.util.JSR310ParamConverters;
+import ascelion.rest.micro.tests.shared.JSR310ParamConverters;
 
-import static ascelion.rest.bridge.tests.api.util.JSR310ParamConverters.DATE_FORMAT;
+import static ascelion.rest.micro.tests.shared.JSR310ParamConverters.DATE_FORMAT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 

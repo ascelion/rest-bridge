@@ -14,35 +14,36 @@ sourceSets {
 
 dependencies
 {
-	testCompile project( ':micro' ).sourceSets.main.output
-	testCompile project( ':tests:api' ).sourceSets.main.output
+	testImplementation project( ':micro' )
+	testImplementation project( ':tests:api' )
+	testImplementation project( ':tests:shared' )
 
-	testRuntime project( ':micro' ).sourceSets.test.output
+	testImplementation 'javax.ws.rs:javax.ws.rs-api'
+	testImplementation 'javax.annotation:javax.annotation-api'
+	testImplementation 'javax.validation:validation-api'
+	testImplementation 'javax.annotation:javax.annotation-api'
+	testImplementation 'javax.json:javax.json-api'
+	testImplementation 'javax.json.bind:javax.json.bind-api'
+	testImplementation 'javax.enterprise:cdi-api'
+	testImplementation 'org.testng:testng'
+	testImplementation 'junit:junit'
+	testImplementation 'org.apache.commons:commons-lang3'
 
-	testCompile 'javax.ws.rs:javax.ws.rs-api'
-	testCompile 'javax.annotation:javax.annotation-api'
-	testCompile 'javax.validation:validation-api'
-	testCompile 'javax.annotation:javax.annotation-api'
-	testCompile 'javax.json:javax.json-api'
-	testCompile 'javax.json.bind:javax.json.bind-api'
-	testCompile 'javax.enterprise:cdi-api'
-	testCompile 'org.testng:testng'
+	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 
-	testCompile 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
-
-	testCompile 'org.jboss.arquillian.test:arquillian-test-api'
-	testRuntime 'org.jboss.arquillian.container:arquillian-container-test-api'
-	testRuntime 'org.jboss.arquillian.testng:arquillian-testng-container'
-
-	testRuntime 'org.jboss.shrinkwrap:shrinkwrap-api'
-	testRuntime 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-gradle-embedded-archive'
+	testImplementation 'org.jboss.arquillian.test:arquillian-test-api'
+	testImplementation 'org.jboss.arquillian.container:arquillian-container-test-api'
+	testImplementation 'org.jboss.arquillian.testng:arquillian-testng-container'
+	testImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
 	testRuntime 'com.github.tomakehurst:wiremock'
-	testCompile 'com.github.tomakehurst:wiremock-standalone'
+	testImplementation 'com.github.tomakehurst:wiremock-standalone'
 	testRuntime 'com.beust:jcommander'
 
 	testRuntime 'org.apache.geronimo.config:geronimo-config-impl'
 	testRuntime 'org.glassfish:javax.json'
 	testRuntime 'org.eclipse:yasson'
+
+	testRuntime 'org.apache.cxf:cxf-rt-rs-client'
 
 	testRuntime 'ch.qos.logback:logback-classic'
 	testRuntime 'org.jboss.weld.servlet:weld-servlet-core'
@@ -55,8 +56,6 @@ dependencies
 	testRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
 	testRuntime 'com.fasterxml.jackson.core:jackson-annotations'
 	testRuntime 'com.fasterxml.jackson.core:jackson-databind'
-
-	testRuntime 'org.apache.cxf:cxf-rt-rs-client'
 	testRuntime 'commons-logging:commons-logging'
 
 	testRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'

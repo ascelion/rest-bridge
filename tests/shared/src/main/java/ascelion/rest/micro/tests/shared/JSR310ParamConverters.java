@@ -1,5 +1,5 @@
 
-package ascelion.rest.bridge.tests.api.util;
+package ascelion.rest.micro.tests.shared;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
