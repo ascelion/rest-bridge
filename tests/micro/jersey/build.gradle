@@ -74,9 +74,10 @@ test {
 task arquillian( type: Test ) {
 	useTestNG() {
 		scanForTestClasses = false
-		useDefaultListeners = true
+		useDefaultListeners = false
 
-		suites 'src/test/resources/tests.xml'
+		listeners << 'org.testng.reporters.XMLReporter'
+		suiteXmlFiles << file( 'src/test/resources/tests.xml' )
 	}
 
 //	runWithWiremock = true

@@ -21,8 +21,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-@Produces( { "application/json", "application/*+json" } )
-@Consumes( { "application/json", "application/*+json" } )
+@Produces( { "*/json", "*/*+json" } )
+@Consumes( { "*/json", "*/*+json" } )
 public class JsonPProvider implements MessageBodyReader<JsonStructure>, MessageBodyWriter<JsonStructure>
 {
 

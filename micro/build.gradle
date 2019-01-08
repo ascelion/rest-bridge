@@ -13,6 +13,7 @@ dependencies {
 
 	implementation 'org.eclipse:yasson'
 	implementation 'org.apache.commons:commons-lang3'
+	implementation 'org.apache.commons:commons-io'
 
 	testImplementation project( ':tests:api' )
 	testImplementation project( ':tests:shared' )

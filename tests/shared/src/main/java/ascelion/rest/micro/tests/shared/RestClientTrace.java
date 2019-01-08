@@ -196,7 +196,7 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 		}
 	}
 
-	private Charset charset( MediaType mt )
+	static public Charset charset( MediaType mt )
 	{
 		final String chs = mt.getParameters().get( "charset" );
 
