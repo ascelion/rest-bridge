@@ -1,18 +1,11 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="MPRestClientTCK1.2">
-	<test name="Resteasy Tests">
+<suite name="CxfMPRestClientTCK1.2">
+	<test name="AllTests">
 		<packages>
 			<package name="ascelion.rest.micro.tests" />
 			<package name="org.eclipse.microprofile.rest.client.tck" />
 			<package name="org.eclipse.microprofile.rest.client.tck.cditests" />
 		</packages>
-		<classes>
-			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithJsonBProviderTest">
-				<methods>
-					<exclude name=".+" />
-				</methods>
-			</class>
-		</classes>
 	</test>
 </suite>

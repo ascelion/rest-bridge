@@ -18,9 +18,16 @@ task publish {
 
 allprojects {
 	repositories {
-		jcenter()
+		mavenLocal()
+		mavenCentral()
 		maven {
 			url = 'https://repo.gradle.org/gradle/libs-releases'
+		}
+		maven {
+			url = 'https://repository.apache.org/content/repositories/snapshots'
+			content {
+				includeGroup 'org.apache.cxf'
+			}
 		}
 	}
 

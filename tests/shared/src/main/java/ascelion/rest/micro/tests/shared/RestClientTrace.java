@@ -18,6 +18,7 @@ import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
@@ -25,9 +26,11 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.io.IOUtils.readLines;
 import static org.apache.commons.io.IOUtils.toByteArray;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import lombok.RequiredArgsConstructor;
 
@@ -39,6 +42,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RestClientTrace implements ClientRequestFilter, ClientResponseFilter, WriterInterceptor
 {
+
+	static private final String REQ_ST_PROP = "ascelion.rest.micro.tests.shared.trace.request.stream";
+	static private final String REQ_MT_PROP = "ascelion.rest.micro.tests.shared.trace.request.mediaType";
 
 	@RequiredArgsConstructor
 	static class OLogStream extends OutputStream
@@ -102,11 +108,16 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 		printLine( fmt, REQ_PREFIX, "%s %s", reqx.getMethod(), reqx.getUri() );
 		printHeaders( fmt, REQ_PREFIX, reqx.getStringHeaders() );
 
-		if( reqx.hasEntity() && isText( reqx.getMediaType() ) ) {
-			final OutputStream st = new OLogStream( reqx.getEntityStream(), fmt );
+		if( reqx.hasEntity() ) {
+			final MediaType mt = mediaType( reqx.getHeaderString( "Content-Type" ), reqx.getConfiguration() );
 
-			reqx.setEntityStream( st );
-			reqx.setProperty( getClass().getName(), st );
+			if( isTextContent( mt ) ) {
+				final OutputStream st = new OLogStream( reqx.getEntityStream(), fmt );
+
+				reqx.setEntityStream( st );
+				reqx.setProperty( REQ_ST_PROP, st );
+				reqx.setProperty( REQ_MT_PROP, mt );
+			}
 		}
 		else {
 			doLog( fmt );
@@ -120,10 +131,10 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 			wcx.proceed();
 		}
 		finally {
-			final OLogStream out = (OLogStream) wcx.getProperty( getClass().getName() );
+			final OLogStream out = (OLogStream) wcx.getProperty( REQ_ST_PROP );
 
 			if( out != null ) {
-				printBody( out.fmt, REQ_PREFIX, out.buf.toByteArray(), wcx.getMediaType() );
+				printBody( out.fmt, REQ_PREFIX, out.buf.toByteArray(), (MediaType) wcx.getProperty( REQ_MT_PROP ) );
 
 				doLog( out.fmt );
 			}
@@ -139,12 +150,16 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 		printLine( fmt, RSP_PREFIX, "%03d %s", rspx.getStatus(), rspx.getStatusInfo().getReasonPhrase() );
 		printHeaders( fmt, RSP_PREFIX, rspx.getHeaders() );
 
-		if( rspx.hasEntity() && isText( rspx.getMediaType() ) ) {
-			final byte[] body = toByteArray( rspx.getEntityStream() );
+		if( rspx.hasEntity() ) {
+			final MediaType mt = mediaType( rspx.getHeaderString( "Content-Type" ), reqx.getConfiguration() );
 
-			printBody( fmt, RSP_PREFIX, body, rspx.getMediaType() );
+			if( isTextContent( mt ) ) {
+				final byte[] body = toByteArray( rspx.getEntityStream() );
 
-			rspx.setEntityStream( new ByteArrayInputStream( body ) );
+				printBody( fmt, RSP_PREFIX, body, mt );
+
+				rspx.setEntityStream( new ByteArrayInputStream( body ) );
+			}
 		}
 
 		doLog( fmt );
@@ -177,7 +192,7 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 				.forEach( line -> printLine( fmt, prefix, "%s", line ) );
 		}
 		catch( final IOException e ) {
-			e.printStackTrace();
+			printLine( fmt, prefix, "cannot print body: %s", e );
 		}
 	}
 
@@ -188,15 +203,26 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 		return chs != null ? Charset.forName( chs ) : Charset.forName( "UTF-8" );
 	}
 
-	private boolean isText( MediaType ct )
+	private MediaType mediaType( String ct, Configuration cf )
 	{
-		if( ct == null ) {
-			return false;
+		if( isBlank( ct ) ) {
+			ct = ofNullable( cf.getProperty( TestsBuilderListener.DEFAULT_CONTENT_TYPE ) ).map( Object::toString ).orElse( null );
 		}
 
-		return ct.getType().equals( "text" )
-			|| ct.getSubtype().contains( "xml" )
-			|| ct.getSubtype().contains( "json" );
+		try {
+			return MediaType.valueOf( ct );
+		}
+		catch( final IllegalArgumentException e ) {
+			return null;
+		}
+	}
+
+	private boolean isTextContent( MediaType mt )
+	{
+		return ( mt != null ) &&
+			( mt.getType().equals( "text" )
+				|| mt.getSubtype().contains( "xml" )
+				|| mt.getSubtype().contains( "json" ) );
 	}
 
 }

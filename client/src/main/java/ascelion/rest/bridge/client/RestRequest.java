@@ -17,6 +17,8 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import static java.util.Optional.ofNullable;
+
 import lombok.Getter;
 
 final class RestRequest implements Callable<Object>
@@ -134,7 +136,7 @@ final class RestRequest implements Callable<Object>
 					this.contentType = MediaType.APPLICATION_FORM_URLENCODED;
 				}
 				else {
-					this.contentType = MediaType.APPLICATION_OCTET_STREAM;
+					this.contentType = defaultContentType();
 				}
 			}
 
@@ -163,5 +165,12 @@ final class RestRequest implements Callable<Object>
 		finally {
 			rsp.close();
 		}
+	}
+
+	private String defaultContentType()
+	{
+		return ofNullable( this.rbt.conf.getProperty( RestClientProperties.DEFAULT_CONTENT_TYPE ) )
+			.map( Object::toString )
+			.orElse( MediaType.APPLICATION_OCTET_STREAM );
 	}
 }

@@ -64,7 +64,7 @@ public final class RestClient
 		try {
 			METHOD.set( Fake.class.getMethod( "options" ) );
 
-			// XXX how to force jersey client initialisation & feature processing?
+			// XXX how else to force Jersey client initialisation & feature processing?
 			this.client.target( "" ).request().options();
 		}
 		catch( final Exception e ) {
