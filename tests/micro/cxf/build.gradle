@@ -7,6 +7,7 @@ def tckDir = rootProject.file 'eclipse/tck/src/main/java'
 sourceSets {
 	test {
 		java {
+			srcDir project( ':micro' ).sourceSets.test.java.srcDirs
 			srcDir tckDir
 		}
 	}
@@ -14,7 +15,9 @@ sourceSets {
 
 dependencies
 {
-	testImplementation project( ':micro' )
+	testRuntime project( ':micro' )
+//	testRuntime 'org.apache.cxf:cxf-rt-rs-mp-client:3.3.0-SNAPSHOT'
+
 	testImplementation project( ':tests:api' )
 	testImplementation project( ':tests:shared' )
 

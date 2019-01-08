@@ -8,7 +8,7 @@ def versions = [
 
 configurations.all { cf ->
 	dependencies {
-		add cf.name, platform( 'org.apache.cxf:cxf-parent:3.2.7')
+		add cf.name, platform( 'org.apache.cxf:cxf-parent:3.3.0-SNAPSHOT')
 		add cf.name, platform( 'org.glassfish.jersey:jersey-bom:2.27' )
 		add cf.name, platform( 'org.jboss.resteasy:resteasy-bom:3.6.2.Final' )
 		add cf.name, platform( 'org.jboss.arquillian:arquillian-bom:1.4.1.Final' )
