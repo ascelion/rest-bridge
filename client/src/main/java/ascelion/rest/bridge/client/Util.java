@@ -6,6 +6,7 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.nio.charset.Charset;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Collection;
@@ -20,8 +21,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.MediaType;
 
 import static java.lang.Thread.currentThread;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.reflect.MethodUtils.getOverrideHierarchy;
 
@@ -110,6 +113,16 @@ public final class Util
 		return Stream.concat( si, sc )
 			.sorted( ( o1, o2 ) -> comparePriority( cf, o1.getClass(), o2.getClass(), type ) )
 			.collect( toList() );
+	}
+
+	static public Charset charset( MediaType mt )
+	{
+		final String cs = ofNullable( mt )
+			.map( MediaType::getParameters )
+			.map( m -> m.get( "charset" ) )
+			.orElse( "UTF-8" );
+
+		return Charset.forName( cs );
 	}
 
 	static private int comparePriority( Configuration cf, Class<?> c1, Class<?> c2, Class<?> type )

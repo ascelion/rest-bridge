@@ -26,8 +26,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import org.eclipse.yasson.YassonProperties;
 
-@Produces( { "application/json", "application/*+json" } )
-@Consumes( { "application/json", "application/*+json" } )
+@Produces( { "*/json", "*/*+json" } )
+@Consumes( { "*/json", "*/*+json" } )
 public class JsonBProvider implements MessageBodyReader<Object>, MessageBodyWriter<Object>
 {
 
