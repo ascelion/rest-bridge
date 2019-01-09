@@ -29,7 +29,7 @@ import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 final class RestBridgeConfiguration implements Configuration
 {
 
-	private static final Logger L = Logger.getLogger( "ascelion.rest.micro.configuration" );
+	private static final Logger L = Logger.getLogger( "ascelion.rest.bridge.micro.CONFIG" );
 
 	static private int getPriority( Class<?> cls )
 	{

@@ -5,9 +5,12 @@ import java.util.Optional;
 
 import static java.lang.String.format;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
+@NoArgsConstructor( access = AccessLevel.PRIVATE )
 public final class MP
 {
 
@@ -21,7 +24,7 @@ public final class MP
 		return getConfig().map( c -> c.getOptionalValue( name, String.class ) ).orElse( Optional.empty() );
 	}
 
-	static private Optional<Config> getConfig()
+	static public Optional<Config> getConfig()
 	{
 		try {
 			return Optional.of( ConfigProvider.getConfig() );
@@ -29,9 +32,5 @@ public final class MP
 		catch( NoClassDefFoundError | ExceptionInInitializerError e ) {
 			return Optional.empty();
 		}
-	}
-
-	private MP()
-	{
 	}
 }

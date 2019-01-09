@@ -60,9 +60,11 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 	public T create( CreationalContext<T> creationalContext )
 	{
 		final RestClientBuilder bld = RestClientBuilder.newBuilder();
-		final String uri0 = trimToNull( this.type.getAnnotation( RegisterRestClient.class ).baseUri() );
-		final String uri = MP.getConfig( this.type, "uri" ).orElse( uri0 );
-		final String url = MP.getConfig( this.type, "url" ).orElse( null );
+		final String uriA = trimToNull( this.type.getAnnotation( RegisterRestClient.class ).baseUri() );
+		final String uriW = MP.getConfig( "*/mp-rest/uri" ).orElse( uriA );
+		final String urlW = MP.getConfig( "*/mp-rest/url" ).orElse( null );
+		final String uri = MP.getConfig( this.type, "uri" ).orElse( uriW );
+		final String url = MP.getConfig( this.type, "url" ).orElse( urlW );
 
 		if( uri == null && url == null ) {
 			throw new IllegalStateException( format( "%s: unable to determine base URI/URL from configuration", this.type.getName() ) );
