@@ -1,12 +1,10 @@
 
-package ascelion.rest.micro.tests.shared;
+package ascelion.rest.bridge.etc;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.util.Formatter;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -25,18 +23,19 @@ import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
+import ascelion.rest.bridge.client.Util;
+
+import static ascelion.rest.bridge.client.RestClientProperties.DEFAULT_CONTENT_TYPE;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
+import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static org.apache.commons.io.IOUtils.readLines;
 import static org.apache.commons.io.IOUtils.toByteArray;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import lombok.RequiredArgsConstructor;
 
-/**
- * Resteasy client do not run pre-matched filters like {@link org.glassfish.jersey.logging.ClientLoggingFilter}, so we need our own logger.
- */
 @Provider
 @Priority( Integer.MAX_VALUE )
 @RequiredArgsConstructor
@@ -69,21 +68,21 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 		}
 	}
 
-	static class ILogStream extends ByteArrayInputStream
-	{
-
-		ILogStream( InputStream in, Formatter fmt ) throws IOException
-		{
-			super( toByteArray( in ) );
-		}
-	}
-
 	static private final String INI_PREFIX = "*";
 	static private final String REQ_PREFIX = ">";
 	static private final String RSP_PREFIX = "<";
 
 	static private final Logger L = Logger.getLogger( "ascelion.bridge.tests.CLIENT" );
 	static private final AtomicLong ID = new AtomicLong();
+
+	static private boolean isTextContent( MediaType mt )
+	{
+		return ( mt != null ) &&
+			( mt.getType().equals( "text" )
+				|| mt.equals( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
+				|| mt.getSubtype().contains( "xml" )
+				|| mt.getSubtype().contains( "json" ) );
+	}
 
 	private final Logger log;
 	private final Level lev;
@@ -109,9 +108,9 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 		printHeaders( fmt, REQ_PREFIX, reqx.getStringHeaders() );
 
 		if( reqx.hasEntity() ) {
-			final MediaType mt = mediaType( reqx.getHeaderString( "Content-Type" ), reqx.getConfiguration() );
+			final MediaType mt = mediaType( reqx.getHeaderString( CONTENT_TYPE ), reqx.getConfiguration() );
 
-			if( isTextContent( mt ) ) {
+			if( RestClientTrace.isTextContent( mt ) ) {
 				final OutputStream st = new OLogStream( reqx.getEntityStream(), fmt );
 
 				reqx.setEntityStream( st );
@@ -151,9 +150,9 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 		printHeaders( fmt, RSP_PREFIX, rspx.getHeaders() );
 
 		if( rspx.hasEntity() ) {
-			final MediaType mt = mediaType( rspx.getHeaderString( "Content-Type" ), reqx.getConfiguration() );
+			final MediaType mt = mediaType( rspx.getHeaderString( CONTENT_TYPE ), reqx.getConfiguration() );
 
-			if( isTextContent( mt ) ) {
+			if( RestClientTrace.isTextContent( mt ) ) {
 				final byte[] body = toByteArray( rspx.getEntityStream() );
 
 				printBody( fmt, RSP_PREFIX, body, mt );
@@ -188,7 +187,7 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 	private void printBody( Formatter fmt, String prefix, byte[] body, MediaType mt )
 	{
 		try {
-			readLines( new ByteArrayInputStream( body ), charset( mt ) )
+			readLines( new ByteArrayInputStream( body ), Util.charset( mt ) )
 				.forEach( line -> printLine( fmt, prefix, "%s", line ) );
 		}
 		catch( final IOException e ) {
@@ -196,17 +195,12 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 		}
 	}
 
-	static public Charset charset( MediaType mt )
-	{
-		final String chs = mt.getParameters().get( "charset" );
-
-		return chs != null ? Charset.forName( chs ) : Charset.forName( "UTF-8" );
-	}
-
 	private MediaType mediaType( String ct, Configuration cf )
 	{
 		if( isBlank( ct ) ) {
-			ct = ofNullable( cf.getProperty( TestsBuilderListener.DEFAULT_CONTENT_TYPE ) ).map( Object::toString ).orElse( null );
+			ct = ofNullable( cf.getProperty( DEFAULT_CONTENT_TYPE ) )
+				.map( Object::toString )
+				.orElse( MediaType.TEXT_PLAIN );
 		}
 
 		try {
@@ -215,14 +209,6 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 		catch( final IllegalArgumentException e ) {
 			return null;
 		}
-	}
-
-	private boolean isTextContent( MediaType mt )
-	{
-		return ( mt != null ) &&
-			( mt.getType().equals( "text" )
-				|| mt.getSubtype().contains( "xml" )
-				|| mt.getSubtype().contains( "json" ) );
 	}
 
 }

@@ -7,6 +7,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -21,10 +24,13 @@ import javax.ws.rs.*;
 import javax.ws.rs.client.WebTarget;
 
 import static java.lang.String.format;
+import static java.security.AccessController.doPrivileged;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.reflect.FieldUtils.getAllFieldsList;
+import static org.apache.commons.lang3.reflect.FieldUtils.readField;
 
 import io.leangen.geantyref.GenericTypeReflector;
+import lombok.SneakyThrows;
 
 final class RestMethod
 {
@@ -72,7 +78,6 @@ final class RestMethod
 		Util.pathElements( paths ).forEach( p -> this.pathElements.put( p, false ) );
 
 		final Parameter[] params = method.getParameters();
-		final boolean hasEntity = false;
 
 		this.actions.add( new ValidationAction( method ) );
 
@@ -81,17 +86,18 @@ final class RestMethod
 			final Annotation[] annotations = params[index].getAnnotations();
 			final Function<Object, String> cvt = (Function) rbt.cvsf.getConverter( params[index].getType(), annotations );
 			final ActionParam p = new ActionParam( index, params[index].getType(), annotations, req -> req.arguments[index], cvt );
-			final boolean entityCandidate = collectActions( annotations, p );
 
-			if( entityCandidate ) {
-				if( hasEntity ) {
-					// TODO
-					throw new RuntimeException( "already has entity" );
-				}
+			if( collectActions( annotations, p ) ) {
+				this.actions.stream()
+					.filter( EntityAction.class::isInstance )
+					.forEach( a -> {
+						throw new RestClientMethodException( "An entity is already present at parameter " + a.param.index, this.javaMethod );
+					} );
 
-				final Type entityType = GenericTypeReflector.getExactParameterTypes( method, rbt.type )[index];
+				final Type entityType = GenericTypeReflector.getExactParameterTypes( this.javaMethod, this.rbt.type )[index];
+				final EntityAction entityAction = new EntityAction( p, entityType );
 
-				this.actions.add( new EntityAction( p, entityType ) );
+				this.actions.add( entityAction );
 			}
 		}
 
@@ -128,25 +134,25 @@ final class RestMethod
 		return entityCandidate;
 	}
 
-	private boolean collectActions( Annotation a, ActionParam p )
+	private boolean collectActions( Annotation annot, ActionParam param )
 	{
-		if( CookieParam.class.isInstance( a ) ) {
-			this.actions.add( new CookieParamAction( (CookieParam) a, p ) );
+		if( CookieParam.class.isInstance( annot ) ) {
+			this.actions.add( new CookieParamAction( (CookieParam) annot, param ) );
 
 			return false;
 		}
-		if( FormParam.class.isInstance( a ) ) {
-			this.actions.add( new FormParamAction( (FormParam) a, p ) );
+		if( FormParam.class.isInstance( annot ) ) {
+			this.actions.add( new FormParamAction( (FormParam) annot, param ) );
 
 			return false;
 		}
-		if( MatrixParam.class.isInstance( a ) ) {
-			this.actions.add( new MatrixParamAction( (MatrixParam) a, p ) );
+		if( MatrixParam.class.isInstance( annot ) ) {
+			this.actions.add( new MatrixParamAction( (MatrixParam) annot, param ) );
 
 			return false;
 		}
-		if( PathParam.class.isInstance( a ) ) {
-			final PathParam v = (PathParam) a;
+		if( PathParam.class.isInstance( annot ) ) {
+			final PathParam v = (PathParam) annot;
 
 			if( this.pathElements.containsKey( v.value() ) ) {
 				this.pathElements.put( v.value(), true );
@@ -155,43 +161,47 @@ final class RestMethod
 				throw new RestClientMethodException( format( "Unknown path element %s", v.value() ), this.javaMethod );
 			}
 
-			this.actions.add( new PathParamAction( v, p ) );
+			this.actions.add( new PathParamAction( v, param ) );
 
 			return false;
 		}
-		if( QueryParam.class.isInstance( a ) ) {
-			this.actions.add( new QueryParamAction( (QueryParam) a, p ) );
+		if( QueryParam.class.isInstance( annot ) ) {
+			this.actions.add( new QueryParamAction( (QueryParam) annot, param ) );
 
 			return false;
 		}
-		if( HeaderParam.class.isInstance( a ) ) {
-			this.actions.add( new HeaderParamAction( (HeaderParam) a, p ) );
+		if( HeaderParam.class.isInstance( annot ) ) {
+			this.actions.add( new HeaderParamAction( (HeaderParam) annot, param ) );
 
 			return false;
 		}
-		if( BeanParam.class.isInstance( a ) ) {
-			final Iterable<Field> fields = getAllFieldsList( p.type );
+		if( BeanParam.class.isInstance( annot ) ) {
+			final Iterable<Field> fields = doPrivileged( (PrivilegedAction<Iterable<Field>>) () -> getAllFieldsList( param.type ) );
+			boolean entityCandidate = true;
 
 			for( final Field field : fields ) {
-				field.setAccessible( true );
+				final Function<RestRequest, Object> sup = req -> readFieldValue( req, param, field );
 
-				final Function<RestRequest, Object> sup = req -> {
-					try {
-						return field.get( p.currentValue( req ) );
-					}
-					catch( IllegalArgumentException | IllegalAccessException e ) {
-						// TODO
-						throw new RuntimeException( e );
-					}
-				};
-
-				collectActions( field.getAnnotations(), new ActionParam( p.index, field.getType(), field.getAnnotations(), sup, p.converter ) );
+				if( !collectActions( field.getAnnotations(), new ActionParam( param.index, field.getType(), field.getAnnotations(), sup, param.converter ) ) ) {
+					entityCandidate = false;
+				}
 			}
 
-			return false;
+			return entityCandidate;
 		}
 
 		return true;
+	}
+
+	@SneakyThrows
+	private Object readFieldValue( RestRequest request, ActionParam param, Field field )
+	{
+		try {
+			return doPrivileged( (PrivilegedExceptionAction) () -> readField( field, param.currentValue( request ), true ) );
+		}
+		catch( final PrivilegedActionException e ) {
+			throw e.getCause();
+		}
 	}
 
 	Callable<?> request( Object proxy, Object... arguments ) throws URISyntaxException

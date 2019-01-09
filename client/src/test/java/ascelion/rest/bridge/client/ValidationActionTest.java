@@ -21,10 +21,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class ValidationActionTest
 {
 
-	static {
-//		asList( System.getProperty( "java.class.path", "" ).split( ":" ) ).forEach( System.out::println );
-	}
-
 	static private final Object NULL = null;
 
 	@Mock

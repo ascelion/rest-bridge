@@ -24,7 +24,7 @@ import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Provider;
 
-import ascelion.rest.micro.tests.shared.RestClientTrace;
+import ascelion.rest.bridge.etc.RestClientTrace;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
@@ -54,17 +54,13 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class RestClientTest
 {
 
-//	static {
-//		Stream.of( System.getProperty( "java.class.path", "" ).split( ":" ) )
-//			.sorted().forEach( System.out::println );
-//	}
-
 	@Rule
 	public final WireMockRule rule = new WireMockRule();
 
 	private Client client;
 	private URI target;
 
+	@SuppressWarnings( "rawtypes" )
 	@Mock( lenient = true )
 	private ParamConverter conv;
 	private PCP prov;

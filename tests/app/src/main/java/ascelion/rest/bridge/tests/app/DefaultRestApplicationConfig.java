@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import ascelion.rest.micro.tests.shared.JSR310ParamConverters;
+import ascelion.rest.micro.tests.shared.LocalDateConverterProvider;
 
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.logging.LoggingFeature;
@@ -30,7 +30,7 @@ public class DefaultRestApplicationConfig implements RestApplicationConfig
 		classes.add( ConvertImpl.class );
 		classes.add( UsersImpl.class );
 
-		classes.add( JSR310ParamConverters.class );
+		classes.add( LocalDateConverterProvider.class );
 
 		classes.add( JacksonResolver.class );
 

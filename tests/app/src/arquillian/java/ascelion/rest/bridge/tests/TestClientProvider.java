@@ -5,8 +5,8 @@ import java.net.URI;
 
 import javax.ws.rs.client.ClientBuilder;
 
+import ascelion.rest.bridge.etc.RestClientTrace;
 import ascelion.rest.bridge.tests.providers.JerseyBridgeProvider;
-import ascelion.rest.micro.tests.shared.RestClientTrace;
 
 import lombok.Getter;
 import org.glassfish.jersey.jackson.JacksonFeature;

@@ -1,4 +1,6 @@
 dependencies {
+	implementation project( ':client' )
+
 	implementation 'javax.ws.rs:javax.ws.rs-api'
 	implementation 'javax.annotation:javax.annotation-api'
 	implementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'

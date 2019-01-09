@@ -7,7 +7,6 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.nio.charset.Charset;
-import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -24,18 +23,22 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 
 import static java.lang.Thread.currentThread;
+import static java.security.AccessController.doPrivileged;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.reflect.MethodUtils.getOverrideHierarchy;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.ClassUtils.Interfaces;
 
+@NoArgsConstructor( access = AccessLevel.PRIVATE )
 public final class Util
 {
 
 	static public ClassLoader threadClassLoader()
 	{
-		return AccessController.doPrivileged( (PrivilegedAction<ClassLoader>) () -> currentThread().getContextClassLoader() );
+		return doPrivileged( (PrivilegedAction<ClassLoader>) () -> currentThread().getContextClassLoader() );
 	}
 
 	static public <T> Class<T> safeLoadClass( String name )
@@ -233,9 +236,5 @@ public final class Util
 		}
 
 		return elements;
-	}
-
-	private Util()
-	{
 	}
 }
