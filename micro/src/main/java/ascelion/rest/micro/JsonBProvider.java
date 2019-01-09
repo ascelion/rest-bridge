@@ -22,7 +22,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import ascelion.rest.bridge.client.Util;
 
 import org.eclipse.yasson.YassonProperties;
 
@@ -57,14 +57,7 @@ public class JsonBProvider implements MessageBodyReader<Object>, MessageBodyWrit
 			cf.setProperty( YassonProperties.FAIL_ON_UNKNOWN_PROPERTIES, false );
 
 			cf.withPropertyVisibilityStrategy( new AnyAccessStrategy() );
-
-			if( mt != null ) {
-				final String charset = mt.getParameters().get( "charset" );
-
-				if( isNotBlank( charset ) ) {
-					cf.withEncoding( charset );
-				}
-			}
+			cf.withEncoding( Util.charset( mt ).name() );
 
 			return JsonbBuilder.newBuilder()
 				.withConfig( cf )

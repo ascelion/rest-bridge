@@ -1,6 +1,8 @@
 
 package ascelion.rest.micro;
 
+import ascelion.rest.bridge.etc.JSR310ParamConverters;
+
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.spi.RestClientBuilderListener;
 
@@ -11,6 +13,7 @@ public class RestBridgeBuilderListener implements RestClientBuilderListener
 	public void onNewBuilder( RestClientBuilder bld )
 	{
 		bld.register( new ClientMethodProvider(), Integer.MIN_VALUE );
+		bld.register( new JSR310ParamConverters(), Integer.MAX_VALUE );
 		bld.register( new JsonBProvider(), Integer.MAX_VALUE );
 		bld.register( new JsonPProvider(), Integer.MAX_VALUE );
 		bld.register( new MBRWString(), Integer.MAX_VALUE );

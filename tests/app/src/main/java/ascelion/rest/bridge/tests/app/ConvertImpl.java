@@ -7,7 +7,7 @@ import javax.enterprise.context.ApplicationScoped;
 
 import ascelion.rest.bridge.tests.api.Convert;
 
-import static ascelion.rest.micro.tests.shared.JSR310ParamConverters.DATE_FORMAT;
+import static ascelion.rest.micro.tests.shared.LocalDateConverterProvider.DATE_FORMAT;
 
 @ApplicationScoped
 public class ConvertImpl implements Convert

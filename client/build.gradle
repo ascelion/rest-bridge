@@ -9,10 +9,10 @@ dependencies {
 
 	implementation 'io.leangen.geantyref:geantyref'
 	implementation 'org.apache.commons:commons-lang3'
+	implementation 'org.apache.commons:commons-io'
 	implementation 'org.javassist:javassist'
 
 	testImplementation project( ':tests:api' )
-	testImplementation project( ':tests:shared' )
 
 	testImplementation 'javax.ws.rs:javax.ws.rs-api'
 	testImplementation 'javax.validation:validation-api'

@@ -2,7 +2,6 @@
 package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
-import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -40,8 +39,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.leangen.geantyref.AnnotationFormatException;
 import io.leangen.geantyref.TypeFactory;
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,7 +58,8 @@ public class AnnotationActionTest
 	private List<Action> actions;
 
 	@Before
-	public void setUp() throws NoSuchMethodException, SecurityException, IllegalArgumentException, IllegalAccessException
+	@SneakyThrows
+	public void setUp()
 	{
 		final ConvertersFactory cvsf = new ConvertersFactory( this.mc.client );
 		final RestBridgeType rbt = new RestBridgeType( Interface.class, this.mc.configuration, cvsf, ResponseHandler.NONE, () -> this.mc.methodTarget );
@@ -71,7 +71,8 @@ public class AnnotationActionTest
 	}
 
 	@Test
-	public void consumes() throws Exception
+	@SneakyThrows
+	public void consumes()
 	{
 		final Map<String, Object> map = singletonMap( PARAM_VALUE, new String[] { "type/subtype" } );
 		final Consumes ann = TypeFactory.annotation( Consumes.class, map );
@@ -98,7 +99,8 @@ public class AnnotationActionTest
 	}
 
 	@Test
-	public void cookieParam() throws Exception
+	@SneakyThrows
+	public void cookieParam()
 	{
 		createAction( CookieParam.class, CookieParamAction::new );
 
@@ -114,7 +116,7 @@ public class AnnotationActionTest
 	}
 
 	@Test
-	public void formParam() throws Exception
+	public void formParam()
 	{
 		createAction( FormParam.class, FormParamAction::new );
 
@@ -141,7 +143,8 @@ public class AnnotationActionTest
 	}
 
 	@Test
-	public void headerParam() throws Exception
+	@SneakyThrows
+	public void headerParam()
 	{
 		createAction( HeaderParam.class, HeaderParamAction::new );
 
@@ -153,7 +156,7 @@ public class AnnotationActionTest
 	}
 
 	@Test
-	public void pathParam() throws Exception
+	public void pathParam()
 	{
 		createAction( PathParam.class, PathParamAction::new );
 
@@ -165,7 +168,8 @@ public class AnnotationActionTest
 	}
 
 	@Test
-	public void produces() throws Exception
+	@SneakyThrows
+	public void produces()
 	{
 		final Map<String, Object> map = singletonMap( PARAM_VALUE, new String[] { ANNOTATION_VALUE } );
 		final Produces ann = TypeFactory.annotation( Produces.class, map );
@@ -187,7 +191,7 @@ public class AnnotationActionTest
 	}
 
 	@Test
-	public void queryParam() throws Exception
+	public void queryParam()
 	{
 		createAction( QueryParam.class, QueryParamAction::new );
 
@@ -198,7 +202,8 @@ public class AnnotationActionTest
 		verify( this.mc.methodTarget, times( 1 ) ).queryParam( eq( ANNOTATION_VALUE ), eq( PARAM_VALUE ) );
 	}
 
-	private Object callMock() throws URISyntaxException, Exception
+	@SneakyThrows
+	private Object callMock()
 	{
 		final Callable<?> req = this.met.request( mock( Interface.class ) );
 
@@ -207,7 +212,8 @@ public class AnnotationActionTest
 		return req;
 	}
 
-	private <A extends Annotation, X extends Action> void createAction( Class<A> annoType, BiFunction<A, ActionParam, X> create ) throws AnnotationFormatException
+	@SneakyThrows
+	private <A extends Annotation, X extends Action> void createAction( Class<A> annoType, BiFunction<A, ActionParam, X> create )
 	{
 		final Map<String, Object> map = singletonMap( PARAM_VALUE, ANNOTATION_VALUE );
 		final A ann = TypeFactory.annotation( annoType, map );
