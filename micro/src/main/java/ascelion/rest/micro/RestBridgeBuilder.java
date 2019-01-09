@@ -19,6 +19,7 @@ import ascelion.rest.bridge.client.RestClientMethodException;
 import ascelion.rest.bridge.client.Util;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
@@ -215,6 +216,34 @@ final class RestBridgeBuilder implements RestClientBuilder
 			.map( Util::safeLoadClass )
 			.filter( Objects::nonNull )
 			.forEach( clt::register );
+
+		final String prefix = format( "%s/mp-rest/providers/", type.getName() );
+		final Iterable<String> names = MP.getConfig().map( c -> c.getPropertyNames() ).orElse( emptyList() );
+
+		for( final String name : names ) {
+			if( !name.startsWith( prefix ) ) {
+				continue;
+			}
+
+			final String[] vec = name.substring( prefix.length() ).split( "/" );
+
+			if( vec.length != 2 ) {
+				continue;
+			}
+			if( !vec[1].equals( "priority" ) ) {
+				continue;
+			}
+
+			final Class<?> prov = Util.safeLoadClass( vec[0] );
+
+			if( prov == null ) {
+				continue;
+			}
+
+			final int priority = Integer.valueOf( MP.getConfig( name ).get() );
+
+			clt.register( prov, priority );
+		}
 	}
 
 	private <T> void configureTimeouts( ClientBuilder bld, Class<T> type )

@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.Formatter;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -23,6 +24,7 @@ import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
+import ascelion.rest.bridge.client.RestClient;
 import ascelion.rest.bridge.client.Util;
 
 import static ascelion.rest.bridge.client.RestClientProperties.DEFAULT_CONTENT_TYPE;
@@ -72,7 +74,7 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 	static private final String REQ_PREFIX = ">";
 	static private final String RSP_PREFIX = "<";
 
-	static private final Logger L = Logger.getLogger( "ascelion.bridge.tests.CLIENT" );
+	static private final Logger L = Logger.getLogger( "ascelion.rest.bridge.TRAFFIC" );
 	static private final AtomicLong ID = new AtomicLong();
 
 	static private boolean isTextContent( MediaType mt )
@@ -99,11 +101,20 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 			return;
 		}
 
+		final Method method = RestClient.invokedMethod();
+
+		if( method != null && method.getDeclaringClass().getName().contains( "JerseyClientInitialisation" ) ) {
+			return;
+		}
+
 		ID.incrementAndGet();
 
 		final Formatter fmt = new Formatter();
 
 		printLine( fmt, INI_PREFIX, "==================================" );
+		if( method != null ) {
+			printLine( fmt, INI_PREFIX, "%s", method );
+		}
 		printLine( fmt, REQ_PREFIX, "%s %s", reqx.getMethod(), reqx.getUri() );
 		printHeaders( fmt, REQ_PREFIX, reqx.getStringHeaders() );
 
