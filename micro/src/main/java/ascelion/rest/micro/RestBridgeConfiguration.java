@@ -5,16 +5,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import javax.annotation.Priority;
-import javax.ws.rs.Priorities;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
+
+import ascelion.rest.bridge.client.Util;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
@@ -26,17 +25,10 @@ import static org.apache.commons.lang3.ClassUtils.getAllInterfaces;
 
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 
-final class RestBridgeConfiguration implements Configuration
+public final class RestBridgeConfiguration implements Configuration
 {
 
 	private static final Logger L = Logger.getLogger( "ascelion.rest.bridge.micro.CONFIG" );
-
-	static private int getPriority( Class<?> cls )
-	{
-		return Optional.ofNullable( cls.getAnnotation( Priority.class ) )
-			.map( Priority::value )
-			.orElse( Priorities.USER );
-	}
 
 	private final Map<String, Object> properties = new HashMap<>();
 	private final Set<Class<?>> classes = newSetFromMap( new IdentityHashMap<>() );
@@ -86,15 +78,15 @@ final class RestBridgeConfiguration implements Configuration
 	}
 
 	@Override
-	public boolean isRegistered( Class<?> componentClass )
+	public boolean isRegistered( Class<?> type )
 	{
-		return this.registrations.containsKey( componentClass );
+		return this.registrations.containsKey( type );
 	}
 
 	@Override
-	public Map<Class<?>, Integer> getContracts( Class<?> componentClass )
+	public Map<Class<?>, Integer> getContracts( Class<?> type )
 	{
-		return this.registrations.getOrDefault( componentClass, emptyMap() );
+		return this.registrations.getOrDefault( type, emptyMap() );
 	}
 
 	@Override
@@ -109,7 +101,7 @@ final class RestBridgeConfiguration implements Configuration
 		return unmodifiableSet( this.instances );
 	}
 
-	Configuration forClient()
+	RestBridgeConfiguration forClient()
 	{
 		final RestBridgeConfiguration clone = new RestBridgeConfiguration();
 
@@ -133,93 +125,79 @@ final class RestBridgeConfiguration implements Configuration
 		this.properties.put( name, value );
 	}
 
-	boolean addRegistration( Class<?> componentClass )
+	void register( Class<?> type, int priority )
 	{
-		if( this.registrations.containsKey( componentClass ) ) {
-			L.warning( format( "Component %s has been already registered", componentClass.getName() ) );
-
-			return false;
-		}
-
-		final int priority = getPriority( componentClass );
-		final Map<Class<?>, Integer> cm = getAllInterfaces( componentClass ).stream()
-			.collect( toMap( x -> x, x -> priority ) );
-
-		return doRegistration( componentClass, cm );
+		addClass( type, false );
+		addRegistration( type, priority );
 	}
 
-	boolean addRegistration( Class<?> componentClass, int priority )
+	void addRegistration( Class<?> type )
 	{
-		if( this.registrations.containsKey( componentClass ) ) {
-			L.warning( format( "Component %s has been already registered", componentClass.getName() ) );
-
-			return false;
-		}
-
-		final Map<Class<?>, Integer> cm = getAllInterfaces( componentClass ).stream()
+		final int priority = Util.getPriority( type );
+		final Map<Class<?>, Integer> cm = getAllInterfaces( type ).stream()
 			.collect( toMap( x -> x, x -> priority ) );
 
-		return doRegistration( componentClass, cm );
+		addRegistration( type, cm );
 	}
 
-	boolean addRegistration( Class<?> componentClass, Class<?>[] contracts )
+	void addRegistration( Class<?> type, int priority )
 	{
-		if( this.registrations.containsKey( componentClass ) ) {
-			L.warning( format( "Component %s has been already registered", componentClass.getName() ) );
+		final Map<Class<?>, Integer> cm = getAllInterfaces( type ).stream()
+			.collect( toMap( x -> x, x -> priority ) );
 
-			return false;
-		}
+		addRegistration( type, cm );
+	}
 
+	void addRegistration( Class<?> type, Class<?>[] contracts )
+	{
 		final Map<Class<?>, Integer> cm = Stream.of( contracts )
-			.collect( toMap( x -> x, x -> getPriority( x ) ) );
+			.collect( toMap( x -> x, x -> Util.getPriority( x ) ) );
 
-		return doRegistration( componentClass, cm );
+		addRegistration( type, cm );
 	}
 
-	boolean addRegistration( Class<?> componentClass, Map<Class<?>, Integer> contracts )
+	void addRegistration( Class<?> type, Map<Class<?>, Integer> contracts )
 	{
-		if( this.registrations.containsKey( componentClass ) ) {
-			L.warning( format( "Component %s has been already registered", componentClass.getName() ) );
+		this.registrations.compute( type, ( key, map ) -> {
+			if( map == null ) {
+				map = new IdentityHashMap<>();
+			}
 
-			return false;
-		}
-
-		return doRegistration( componentClass, contracts );
-	}
-
-	void addClass( Class<?> type )
-	{
-		this.classes.add( type );
-	}
-
-	void addInstance( Object instance )
-	{
-		this.instances.add( instance );
-	}
-
-	private boolean doRegistration( Class<?> componentClass, Map<Class<?>, Integer> contracts )
-	{
-		final Map<Class<?>, Integer> mc = contracts.entrySet().stream()
-			.filter( e -> {
+			for( final Map.Entry<Class<?>, Integer> e : contracts.entrySet() ) {
 				final Class<?> c = e.getKey();
 
-				if( c.isAssignableFrom( componentClass ) ) {
-					return true;
+				if( c.isAssignableFrom( type ) ) {
+					L.fine( format( "Settiong priority %d for contract %s of %s", e.getValue(), c.getName(), type.getName() ) );
+
+					map.put( c, e.getValue() );
 				}
+				else {
+					L.warning( format( "Component %s is not assignable from %s", key.getName(), type.getName() ) );
+				}
+			}
 
-				L.warning( format( "Component %s is not assignable from %s", c.getName(), componentClass.getName() ) );
+			return map;
+		} );
+	}
 
-				return false;
-			} )
-			.collect( toMap( Map.Entry::getKey, Map.Entry::getValue ) );
-
-		if( mc.isEmpty() ) {
-			L.warning( format( "Abandoned registration of %s", componentClass.getName() ) );
+	boolean addClass( Class<?> type, boolean warn )
+	{
+		if( !this.classes.add( type ) && warn ) {
+			L.warning( format( "Component %s has been already registered", type.getName() ) );
 
 			return false;
 		}
 
-		this.registrations.put( componentClass, mc );
+		return true;
+	}
+
+	boolean addInstance( Object instance, boolean warn )
+	{
+		if( !this.instances.add( instance ) && warn ) {
+			L.warning( format( "Component %s has been already registered", instance ) );
+
+			return false;
+		}
 
 		return true;
 	}
