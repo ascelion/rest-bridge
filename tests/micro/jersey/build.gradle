@@ -1,7 +1,3 @@
-plugins {
-	id 'com.williamhill.wiremock' version '0.4.1'
-}
-
 def tckDir = rootProject.file 'eclipse/tck/src/main/java'
 
 sourceSets {
@@ -74,19 +70,12 @@ test {
 task arquillian( type: Test ) {
 	useTestNG() {
 		scanForTestClasses = false
-		useDefaultListeners = false
+		useDefaultListeners = true
 
-		listeners << 'org.testng.reporters.XMLReporter'
-		suiteXmlFiles << file( 'src/test/resources/tests.xml' )
+		suites 'src/test/resources/tests.xml'
 	}
-
-//	runWithWiremock = true
 }
 
 check {
 	dependsOn arquillian
-}
-
-wiremock {
-	params "--port=8765"
 }

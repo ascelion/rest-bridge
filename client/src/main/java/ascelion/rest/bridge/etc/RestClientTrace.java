@@ -45,7 +45,6 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 {
 
 	static private final String REQ_ST_PROP = "ascelion.rest.micro.tests.shared.trace.request.stream";
-	static private final String REQ_MT_PROP = "ascelion.rest.micro.tests.shared.trace.request.mediaType";
 
 	@RequiredArgsConstructor
 	static class OLogStream extends OutputStream
@@ -53,7 +52,15 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 
 		final ByteArrayOutputStream buf = new ByteArrayOutputStream();
 		final OutputStream out;
+		final MediaType mt;
 		final Formatter fmt;
+
+		@Override
+		public void write( int b ) throws IOException
+		{
+			this.out.write( b );
+			this.buf.write( b );
+		}
 
 		@Override
 		public void write( byte[] b, int off, int len ) throws IOException
@@ -63,10 +70,17 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 		}
 
 		@Override
-		public void write( int b ) throws IOException
+		public void flush() throws IOException
 		{
-			this.out.write( b );
-			this.buf.write( b );
+			this.out.flush();
+		}
+
+		@Override
+		public void close() throws IOException
+		{
+			try( OutputStream o = this.out ) {
+				this.out.flush();
+			}
 		}
 	}
 
@@ -122,11 +136,10 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 			final MediaType mt = mediaType( reqx.getHeaderString( CONTENT_TYPE ), reqx.getConfiguration() );
 
 			if( RestClientTrace.isTextContent( mt ) ) {
-				final OutputStream st = new OLogStream( reqx.getEntityStream(), fmt );
+				final OutputStream st = new OLogStream( reqx.getEntityStream(), mt, fmt );
 
 				reqx.setEntityStream( st );
 				reqx.setProperty( REQ_ST_PROP, st );
-				reqx.setProperty( REQ_MT_PROP, mt );
 			}
 		}
 		else {
@@ -144,7 +157,7 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 			final OLogStream out = (OLogStream) wcx.getProperty( REQ_ST_PROP );
 
 			if( out != null ) {
-				printBody( out.fmt, REQ_PREFIX, out.buf.toByteArray(), (MediaType) wcx.getProperty( REQ_MT_PROP ) );
+				printBody( out.fmt, REQ_PREFIX, out.buf.toByteArray(), out.mt );
 
 				doLog( out.fmt );
 			}
@@ -209,7 +222,8 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 	private MediaType mediaType( String ct, Configuration cf )
 	{
 		if( isBlank( ct ) ) {
-			ct = ofNullable( cf.getProperty( DEFAULT_CONTENT_TYPE ) )
+			ct = ofNullable( cf )
+				.map( c -> c.getProperty( DEFAULT_CONTENT_TYPE ) )
 				.map( Object::toString )
 				.orElse( MediaType.TEXT_PLAIN );
 		}
