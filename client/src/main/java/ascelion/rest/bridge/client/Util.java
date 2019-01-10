@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.Priorities;
@@ -61,6 +62,47 @@ public final class Util
 		}
 	}
 
+	static public <T> Collection<T> providers( Configuration cf, Class<T> type )
+	{
+		final Stream<T> si = cf
+			.getInstances()
+			.stream()
+			.filter( type::isInstance )
+			.map( type::cast );
+		final Stream<T> sc = cf
+			.getClasses()
+			.stream()
+			.filter( type::isAssignableFrom )
+			.map( Util::newInstance )
+			.map( type::cast );
+
+		return Stream.concat( si, sc )
+			.sorted( ( o1, o2 ) -> comparePriority( cf, o1.getClass(), o2.getClass(), type ) )
+			.collect( toList() );
+	}
+
+	static public Charset charset( MediaType mt )
+	{
+		final String cs = ofNullable( mt )
+			.map( MediaType::getParameters )
+			.map( m -> m.get( "charset" ) )
+			.orElse( "UTF-8" );
+
+		return Charset.forName( cs );
+	}
+
+	static public int getPriority( Class<?> cls )
+	{
+		return Optional.ofNullable( cls.getAnnotation( Priority.class ) )
+			.map( Priority::value )
+			.orElse( Priorities.USER );
+	}
+
+	static public int getPriority( Class<?> value, int priority )
+	{
+		return priority == -1 ? getPriority( value ) : priority;
+	}
+
 	static boolean isCDI()
 	{
 		try {
@@ -99,50 +141,6 @@ public final class Util
 		}
 	}
 
-	static public <T> Collection<T> providers( Configuration cf, Class<T> type )
-	{
-		final Stream<T> si = cf
-			.getInstances()
-			.stream()
-			.filter( type::isInstance )
-			.map( type::cast );
-		final Stream<T> sc = cf
-			.getClasses()
-			.stream()
-			.filter( type::isAssignableFrom )
-			.map( Util::newInstance )
-			.map( type::cast );
-
-		return Stream.concat( si, sc )
-			.sorted( ( o1, o2 ) -> comparePriority( cf, o1.getClass(), o2.getClass(), type ) )
-			.collect( toList() );
-	}
-
-	static public Charset charset( MediaType mt )
-	{
-		final String cs = ofNullable( mt )
-			.map( MediaType::getParameters )
-			.map( m -> m.get( "charset" ) )
-			.orElse( "UTF-8" );
-
-		return Charset.forName( cs );
-	}
-
-	static private int comparePriority( Configuration cf, Class<?> c1, Class<?> c2, Class<?> type )
-	{
-		if( Proxy.isProxyClass( c1 ) ) {
-			c1 = c1.getSuperclass();
-		}
-		if( Proxy.isProxyClass( c2 ) ) {
-			c2 = c2.getSuperclass();
-		}
-
-		final int p1 = cf.getContracts( c1 ).getOrDefault( type, Priorities.USER );
-		final int p2 = cf.getContracts( c2 ).getOrDefault( type, Priorities.USER );
-
-		return Integer.compare( p1, p2 );
-	}
-
 	static WebTarget addPathFromAnnotation( AnnotatedElement ae, WebTarget target )
 	{
 		final Path p = ae.getAnnotation( Path.class );
@@ -154,40 +152,6 @@ public final class Util
 		final String v = p.value().trim();
 
 		return v.isEmpty() || v.equals( "/" ) ? target : target.path( p.value() );
-	}
-
-	static String getHttpMethod( Method method )
-	{
-		return getOverrideHierarchy( method, Interfaces.INCLUDE ).stream()
-			.map( Util::httpMethodOf )
-			.filter( Objects::nonNull )
-			.findFirst()
-			.orElse( null );
-	}
-
-	private static String httpMethodOf( Method method )
-	{
-		String httpMethod = getHttpMethodName( method );
-
-		for( final Annotation ann : method.getAnnotations() ) {
-			final String m = getHttpMethodName( ann.annotationType() );
-
-			if( m != null ) {
-				if( httpMethod != null ) {
-					throw new RestClientMethodException( "Too many HTTP methods", method );
-				}
-
-				httpMethod = m;
-			}
-		}
-		return httpMethod;
-	}
-
-	private static String getHttpMethodName( AnnotatedElement element )
-	{
-		final HttpMethod a = element.getAnnotation( HttpMethod.class );
-
-		return a != null ? a.value() : null;
 	}
 
 	static <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Class<?> cls )
@@ -236,5 +200,54 @@ public final class Util
 		}
 
 		return elements;
+	}
+
+	static String getHttpMethod( Method method )
+	{
+		return getOverrideHierarchy( method, Interfaces.INCLUDE ).stream()
+			.map( Util::httpMethodOf )
+			.filter( Objects::nonNull )
+			.findFirst()
+			.orElse( null );
+	}
+
+	static private int comparePriority( Configuration cf, Class<?> c1, Class<?> c2, Class<?> type )
+	{
+		if( Proxy.isProxyClass( c1 ) ) {
+			c1 = c1.getSuperclass();
+		}
+		if( Proxy.isProxyClass( c2 ) ) {
+			c2 = c2.getSuperclass();
+		}
+
+		final int p1 = cf.getContracts( c1 ).getOrDefault( type, Priorities.USER );
+		final int p2 = cf.getContracts( c2 ).getOrDefault( type, Priorities.USER );
+
+		return Integer.compare( p1, p2 );
+	}
+
+	private static String httpMethodOf( Method method )
+	{
+		String httpMethod = getHttpMethodName( method );
+
+		for( final Annotation ann : method.getAnnotations() ) {
+			final String m = getHttpMethodName( ann.annotationType() );
+
+			if( m != null ) {
+				if( httpMethod != null ) {
+					throw new RestClientMethodException( "Too many HTTP methods", method );
+				}
+
+				httpMethod = m;
+			}
+		}
+		return httpMethod;
+	}
+
+	private static String getHttpMethodName( AnnotatedElement element )
+	{
+		final HttpMethod a = element.getAnnotation( HttpMethod.class );
+
+		return a != null ? a.value() : null;
 	}
 }

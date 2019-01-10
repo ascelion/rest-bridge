@@ -171,6 +171,6 @@ final class RestRequest implements Callable<Object>
 	{
 		return ofNullable( this.rbt.conf.getProperty( RestClientProperties.DEFAULT_CONTENT_TYPE ) )
 			.map( Object::toString )
-			.orElse( MediaType.APPLICATION_OCTET_STREAM );
+			.orElse( MediaType.TEXT_PLAIN );
 	}
 }

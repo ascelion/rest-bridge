@@ -7,5 +7,27 @@
 			<package name="org.eclipse.microprofile.rest.client.tck" />
 			<package name="org.eclipse.microprofile.rest.client.tck.cditests" />
 		</packages>
+		<classes>
+			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithJsonBProviderTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
+			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
+			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
+			<class name="org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
+		</classes>
 	</test>
 </suite>
