@@ -1,10 +1,13 @@
 
 package ascelion.rest.bridge.client;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
@@ -37,13 +40,28 @@ final class RestRequest implements Callable<Object>
 	private String[] accepts;
 	private String contentType;
 	private Object entity;
+	private boolean async;
 
 	RestRequest( RestBridgeType rbt, Object proxy, String httpMethod, WebTarget target, Type returnType, Object... arguments )
 	{
 		this.rbt = rbt;
 		this.proxy = proxy;
 		this.httpMethod = httpMethod;
-		this.returnType = new GenericType<>( returnType );
+
+		GenericType<?> gt = new GenericType<>( returnType );
+
+		if( gt.getRawType() == CompletionStage.class ) {
+			this.async = true;
+
+			gt = new GenericType<>( ( (ParameterizedType) gt.getType() ).getActualTypeArguments()[0] );
+		}
+		else {
+			this.async = false;
+
+			gt = new GenericType<>( returnType );
+		}
+
+		this.returnType = gt;
 		this.target = target;
 		this.arguments = arguments == null ? new Object[0] : arguments;
 	}
@@ -128,28 +146,35 @@ final class RestRequest implements Callable<Object>
 
 		this.cookies.forEach( b::cookie );
 
+		if( this.contentType == null ) {
+			if( this.entity instanceof Form ) {
+				this.contentType = MediaType.APPLICATION_FORM_URLENCODED;
+			}
+			else {
+				this.contentType = defaultContentType();
+			}
+		}
+
+		if( this.async ) {
+			final Object ais = this.rbt.aint.prepare();
+
+			return CompletableFuture.supplyAsync( () -> async( b, ais ), this.rbt.exec );
+		}
+		else {
+			return sync( b );
+		}
+	}
+
+	private Object sync( Invocation.Builder b ) throws Exception
+	{
 		final Response rsp;
 
 		if( this.entity != null ) {
-			if( this.contentType == null ) {
-				if( this.entity instanceof Form ) {
-					this.contentType = MediaType.APPLICATION_FORM_URLENCODED;
-				}
-				else {
-					this.contentType = defaultContentType();
-				}
-			}
-
 			final Entity<?> e = Entity.entity( this.entity, this.contentType );
 
 			rsp = b.method( this.httpMethod, e );
 		}
 		else {
-			// to keep TCK happy
-			if( this.contentType != null ) {
-				b.header( "Content-Type", this.contentType );
-			}
-
 			rsp = b.method( this.httpMethod );
 		}
 
@@ -164,6 +189,38 @@ final class RestRequest implements Callable<Object>
 		}
 		finally {
 			rsp.close();
+		}
+	}
+
+	private Object async( Invocation.Builder b, Object ais )
+	{
+		this.rbt.aint.before( ais );
+
+		try {
+			final Response rsp;
+
+			if( this.entity != null ) {
+				final Entity<?> e = Entity.entity( this.entity, this.contentType );
+
+				rsp = b.method( this.httpMethod, e );
+			}
+			else {
+				rsp = b.method( this.httpMethod );
+			}
+
+			if( this.returnType.getRawType() == Response.class ) {
+				return rsp;
+			}
+
+			try {
+				return rsp.readEntity( this.returnType );
+			}
+			finally {
+				rsp.close();
+			}
+		}
+		finally {
+			this.rbt.aint.after( ais );
 		}
 	}
 

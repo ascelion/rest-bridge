@@ -16,7 +16,7 @@ import ascelion.rest.bridge.client.Util;
 
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 
-public class MPResponseHandler implements ResponseHandler
+final class MPResponseHandler implements ResponseHandler
 {
 
 	static private final String CONFIG_KEY_DISABLE_MAPPER = "microprofile.rest.client.disable.default.mapper";

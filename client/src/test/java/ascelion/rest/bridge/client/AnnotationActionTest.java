@@ -62,7 +62,7 @@ public class AnnotationActionTest
 	public void setUp()
 	{
 		final ConvertersFactory cvsf = new ConvertersFactory( this.mc.client );
-		final RestBridgeType rbt = new RestBridgeType( Interface.class, this.mc.configuration, cvsf, ResponseHandler.NONE, () -> this.mc.methodTarget );
+		final RestBridgeType rbt = new RestBridgeType( Interface.class, this.mc.configuration, cvsf, ResponseHandler.NONE, null, AsyncInterceptor.NONE, () -> this.mc.methodTarget );
 
 		this.met = new RestMethod( rbt, Interface.class.getMethod( "get" ) );
 		this.actions = (List<Action>) readDeclaredField( this.met, "actions", true );

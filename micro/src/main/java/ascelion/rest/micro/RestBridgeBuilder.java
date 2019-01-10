@@ -177,7 +177,6 @@ final class RestBridgeBuilder implements RestClientBuilder
 			.withConfig( cfg );
 
 		configureTimeouts( bld, type );
-		configureExecutor( bld );
 
 		final Client client = bld.build();
 
@@ -190,7 +189,12 @@ final class RestBridgeBuilder implements RestClientBuilder
 			throw new RestClientDefinitionException( e );
 		}
 
+		if( this.executorService != null ) {
+			rc.setExecutor( this.executorService );
+		}
+
 		rc.setResponseHandler( new MPResponseHandler( this.configuration ) );
+		rc.setAsyncInterceptor( new MPAsyncInterceptor( cfg ) );
 
 		try {
 			return rc.getInterface( type );
@@ -264,13 +268,6 @@ final class RestBridgeBuilder implements RestClientBuilder
 		}
 		catch( final NumberFormatException e ) {
 			throw new IllegalStateException( format( "%s: unable to parse readTimeout from configuration", type.getName() ), e );
-		}
-	}
-
-	private void configureExecutor( final ClientBuilder bld )
-	{
-		if( this.executorService != null ) {
-			bld.executorService( this.executorService );
 		}
 	}
 }
