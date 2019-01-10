@@ -6,6 +6,7 @@
 			<package name="ascelion.rest.micro.tests" />
 			<package name="org.eclipse.microprofile.rest.client.tck" />
 			<package name="org.eclipse.microprofile.rest.client.tck.cditests" />
+			<package name="org.eclipse.microprofile.rest.client.tck.asynctests" />
 		</packages>
 		<classes>
 			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithJsonBProviderTest">

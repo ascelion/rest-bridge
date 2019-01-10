@@ -3,6 +3,8 @@ package ascelion.rest.bridge.client;
 
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 import javax.ws.rs.client.Client;
@@ -25,7 +27,12 @@ public final class RestClient
 	@Setter
 	private URI target;
 	private final ConvertersFactory cvsf;
-	private ResponseHandler rsph = ResponseHandler.NONE;
+	@Setter
+	private ResponseHandler responseHandler = ResponseHandler.NONE;
+	@Setter
+	private AsyncInterceptor<?> asyncInterceptor;
+	@Setter
+	private Executor executor = Executors.newCachedThreadPool();
 
 	public RestClient( Client client, URI target )
 	{
@@ -53,14 +60,9 @@ public final class RestClient
 	public <X> X getInterface( Class<X> type )
 	{
 		final Supplier<WebTarget> sup = () -> Util.addPathFromAnnotation( type, this.client.target( this.target ) );
-		final RestBridgeType rbt = new RestBridgeType( type, this.client.getConfiguration(), this.cvsf, this.rsph, sup );
+		final RestBridgeType rbt = new RestBridgeType( type, this.client.getConfiguration(), this.cvsf, this.responseHandler, this.executor, (AsyncInterceptor<Object>) this.asyncInterceptor, sup );
 		final RestClientIH ih = new RestClientIH( rbt );
 
 		return ih.newProxy();
-	}
-
-	public void setResponseHandler( ResponseHandler rsph )
-	{
-		this.rsph = rsph;
 	}
 }
