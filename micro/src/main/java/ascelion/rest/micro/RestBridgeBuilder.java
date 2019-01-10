@@ -52,8 +52,8 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Class<?> componentClass )
 	{
-		if( this.configuration.addRegistration( componentClass ) ) {
-			this.configuration.addClass( componentClass );
+		if( this.configuration.addClass( componentClass, true ) ) {
+			this.configuration.addRegistration( componentClass );
 		}
 
 		return this;
@@ -62,9 +62,8 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Class<?> componentClass, int priority )
 	{
-		if( this.configuration.addRegistration( componentClass, priority ) ) {
-			this.configuration.addClass( componentClass );
-		}
+		this.configuration.addClass( componentClass, false );
+		this.configuration.addRegistration( componentClass, priority );
 
 		return this;
 	}
@@ -72,9 +71,8 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Class<?> componentClass, Class<?>... contracts )
 	{
-		if( this.configuration.addRegistration( componentClass, contracts ) ) {
-			this.configuration.addClass( componentClass );
-		}
+		this.configuration.addClass( componentClass, false );
+		this.configuration.addRegistration( componentClass, contracts );
 
 		return this;
 	}
@@ -82,9 +80,8 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Class<?> componentClass, Map<Class<?>, Integer> contracts )
 	{
-		if( this.configuration.addRegistration( componentClass, contracts ) ) {
-			this.configuration.addClass( componentClass );
-		}
+		this.configuration.addClass( componentClass, false );
+		this.configuration.addRegistration( componentClass, contracts );
 
 		return this;
 	}
@@ -92,8 +89,8 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Object component )
 	{
-		if( this.configuration.addRegistration( component.getClass() ) ) {
-			this.configuration.addInstance( component );
+		if( this.configuration.addInstance( component, true ) ) {
+			this.configuration.addRegistration( component.getClass() );
 		}
 
 		return this;
@@ -102,9 +99,8 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Object component, int priority )
 	{
-		if( this.configuration.addRegistration( component.getClass(), priority ) ) {
-			this.configuration.addInstance( component );
-		}
+		this.configuration.addInstance( component, false );
+		this.configuration.addRegistration( component.getClass(), priority );
 
 		return this;
 	}
@@ -112,9 +108,8 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Object component, Class<?>... contracts )
 	{
-		if( this.configuration.addRegistration( component.getClass(), contracts ) ) {
-			this.configuration.addInstance( component );
-		}
+		this.configuration.addInstance( component, false );
+		this.configuration.addRegistration( component.getClass(), contracts );
 
 		return this;
 	}
@@ -122,9 +117,8 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Object component, Map<Class<?>, Integer> contracts )
 	{
-		if( this.configuration.addRegistration( component.getClass(), contracts ) ) {
-			this.configuration.addInstance( component );
-		}
+		this.configuration.addInstance( component, false );
+		this.configuration.addRegistration( component.getClass(), contracts );
 
 		return this;
 	}
@@ -175,15 +169,17 @@ final class RestBridgeBuilder implements RestClientBuilder
 		ServiceLoader.load( RestClientListener.class )
 			.forEach( l -> l.onNewClient( type, this ) );
 
+		final RestBridgeConfiguration cfg = this.configuration.forClient();
+
+		configureProviders( cfg, type );
+
 		final ClientBuilder bld = ClientBuilder.newBuilder()
-			.withConfig( this.configuration.forClient() );
+			.withConfig( cfg );
 
 		configureTimeouts( bld, type );
 		configureExecutor( bld );
 
 		final Client client = bld.build();
-
-		configureProviders( client, type );
 
 		RestClient rc;
 
@@ -205,17 +201,17 @@ final class RestBridgeBuilder implements RestClientBuilder
 		}
 	}
 
-	private <T> void configureProviders( Client clt, Class<T> type )
+	private <T> void configureProviders( RestBridgeConfiguration cfg, Class<T> type )
 	{
 		Stream.of( type.getAnnotationsByType( RegisterProvider.class ) )
-			.forEach( a -> clt.register( a.value() ) );
+			.forEach( a -> cfg.register( a.value(), Util.getPriority( a.value(), a.priority() ) ) );
 
 		MP.getConfig( type, "providers" )
 			.map( s -> Stream.of( s.split( "," ) ) )
 			.orElse( Stream.empty() )
 			.map( Util::safeLoadClass )
 			.filter( Objects::nonNull )
-			.forEach( clt::register );
+			.forEach( p -> cfg.register( p, Util.getPriority( p ) ) );
 
 		final String prefix = format( "%s/mp-rest/providers/", type.getName() );
 		final Iterable<String> names = MP.getConfig().map( c -> c.getPropertyNames() ).orElse( emptyList() );
@@ -242,7 +238,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 
 			final int priority = Integer.valueOf( MP.getConfig( name ).get() );
 
-			clt.register( prov, priority );
+			cfg.register( prov, priority );
 		}
 	}
 
