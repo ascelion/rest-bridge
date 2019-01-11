@@ -60,7 +60,6 @@ final class RestMethod
 	private final Method javaMethod;
 	private final String httpMethod;
 	private final List<Action> actions = new ArrayList<>( 8 );
-	private final Type returnType;
 	private final Map<String, Boolean> pathElements = new LinkedHashMap<>();
 
 	RestMethod( RestBridgeType rbt, Method method )
@@ -68,7 +67,6 @@ final class RestMethod
 		this.rbt = rbt;
 		this.javaMethod = method;
 		this.httpMethod = Util.getHttpMethod( method );
-		this.returnType = GenericTypeReflector.getExactReturnType( this.javaMethod, rbt.type );
 
 		final String paths = Stream.of( method.getAnnotation( Path.class ), rbt.type.getAnnotation( Path.class ) )
 			.filter( Objects::nonNull )
@@ -115,7 +113,7 @@ final class RestMethod
 		if( this.httpMethod == null ) {
 //			resource methods that have a @Path annotation,
 //			but no HTTP method are considered sub-resource locators.
-			this.actions.add( new SubresourceAction( this.actions.size(), (Class) this.returnType, rbt ) );
+			this.actions.add( new SubresourceAction( this.actions.size(), this.javaMethod.getReturnType(), rbt ) );
 		}
 
 		Collections.sort( this.actions );
@@ -207,7 +205,7 @@ final class RestMethod
 	Callable<?> request( Object proxy, Object... arguments ) throws URISyntaxException
 	{
 		final WebTarget actualTarget = Util.addPathFromAnnotation( this.javaMethod, this.rbt.tsup.get() );
-		final RestRequest<?> req = new RestRequest<>( this.rbt, proxy, this.httpMethod, actualTarget, this.returnType, arguments );
+		final RestRequest<?> req = new RestRequest<>( this.rbt, proxy, this.javaMethod, this.httpMethod, actualTarget, arguments );
 		Callable<?> res = null;
 
 		for( final Action a : this.actions ) {

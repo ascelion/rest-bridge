@@ -10,6 +10,7 @@ import javax.ws.rs.client.WebTarget;
 import ascelion.rest.bridge.tests.api.BeanData;
 import ascelion.rest.bridge.tests.api.Validated;
 
+import lombok.SneakyThrows;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -157,10 +158,12 @@ public class ValidationActionTest
 		this.ex.expect( ConstraintViolationException.class );
 	}
 
+	@SneakyThrows
 	private void runTest( String methodName, Object... arguments )
 	{
 		final Method method = findMethod( methodName );
-		final RestRequest req = new RestRequest( null, this.client, "GET", this.target, Object.class, arguments );
+		final RestBridgeType rbt = new RestBridgeType( Object.class, null, null, null, null, null, null );
+		final RestRequest<?> req = new RestRequest<>( rbt, this.client, Object.class.getMethod( "hashCode" ), "GET", this.target, arguments );
 		final ValidationAction action = new ValidationAction( method );
 
 		action.execute( req );
