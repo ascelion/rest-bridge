@@ -63,10 +63,6 @@ public final class RestClient
 			this.target = UriBuilder.fromUri( target ).path( base ).build();
 		}
 
-		if( client.getClass().getName().contains( "jersey" ) ) {
-			JerseyClientInitialisation.force( client );
-		}
-
 		this.cvsf = new ConvertersFactory( client );
 
 		final Object rh = client.getConfiguration().getProperty( RESPONSE_HANDLER );

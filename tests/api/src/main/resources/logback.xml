@@ -9,8 +9,8 @@
 		</encoder>
 	</appender>
 
-	<logger name="ascelion.rest.bridge.TRAFFIC" level="OFF" />
-	<logger name="ascelion.rest.bridge.tests.SERVER" level="OFF" />
+	<logger name="ascelion.rest.bridge.TRAFFIC" level="ALL" />
+	<logger name="ascelion.rest.bridge.tests.SERVER" level="ALL" />
 
 	<logger name="org.glassfish.jersey" level="WARN" />
 	<logger name="org.glassfish.jersey.process.internal" level="WARN" />

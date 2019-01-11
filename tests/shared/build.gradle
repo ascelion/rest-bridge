@@ -5,6 +5,7 @@ dependencies {
 	implementation 'javax.ws.rs:javax.ws.rs-api'
 	implementation 'javax.annotation:javax.annotation-api'
 	implementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+	implementation 'com.fasterxml.jackson.core:jackson-annotations'
 
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'org.apache.commons:commons-io'
