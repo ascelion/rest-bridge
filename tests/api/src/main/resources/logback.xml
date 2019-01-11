@@ -19,7 +19,7 @@
 	<logger name="org.glassfish.jersey.server.model" level="WARN" />
 	<logger name="org.glassfish.jersey.client.ClientExecutorProvidersConfigurator" level="WARN" />
 
-	<root level="WARN">
+	<root level="INFO">
 		<appender-ref ref="CONSOLE" />
 	</root>
 

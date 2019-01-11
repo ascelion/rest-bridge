@@ -11,12 +11,13 @@ sourceSets {
 
 dependencies
 {
-	testRuntime project( ':micro' )
 //	testRuntime 'org.apache.cxf:cxf-rt-rs-mp-client:3.3.0-SNAPSHOT'
-
+	testRuntime project( ':micro' )
 	testImplementation project( ':tests:api' )
 	testImplementation project( ':tests:shared' )
 
+	testImplementation 'org.testng:testng'
+	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 	testImplementation 'javax.ws.rs:javax.ws.rs-api'
 	testImplementation 'javax.annotation:javax.annotation-api'
 	testImplementation 'javax.validation:validation-api'
@@ -24,44 +25,24 @@ dependencies
 	testImplementation 'javax.json:javax.json-api'
 	testImplementation 'javax.json.bind:javax.json.bind-api'
 	testImplementation 'javax.enterprise:cdi-api'
-	testImplementation 'org.testng:testng'
-	testImplementation 'junit:junit'
 	testImplementation 'org.apache.commons:commons-lang3'
-
-	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 
 	testImplementation 'org.jboss.arquillian.test:arquillian-test-api'
 	testImplementation 'org.jboss.arquillian.container:arquillian-container-test-api'
 	testImplementation 'org.jboss.arquillian.testng:arquillian-testng-container'
 	testImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
-	testRuntime 'com.github.tomakehurst:wiremock'
 	testImplementation 'com.github.tomakehurst:wiremock'
-	testRuntime 'com.beust:jcommander'
 
+	testRuntime 'org.jboss.arquillian.container:arquillian-weld-embedded'
+	testRuntime 'org.jboss.weld.se:weld-se-core'
+	testRuntime 'org.jboss:jandex'
+	testRuntime 'com.beust:jcommander'
 	testRuntime 'org.apache.geronimo.config:geronimo-config-impl'
 	testRuntime 'org.glassfish:javax.json'
 	testRuntime 'org.eclipse:yasson'
-
-	testRuntime 'org.apache.cxf:cxf-rt-rs-client'
-
-	testRuntime 'ch.qos.logback:logback-classic'
-	testRuntime 'org.jboss.weld.servlet:weld-servlet-core'
-	testRuntime 'org.jboss:jandex'
-	testRuntime 'org.glassfish.jersey.core:jersey-server'
-	testRuntime 'org.glassfish.jersey.containers:jersey-container-servlet'
-	testRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
-	testRuntime 'org.glassfish.jersey.inject:jersey-hk2'
-	testRuntime 'org.glassfish.jersey.connectors:jersey-grizzly-connector'
-	testRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
-	testRuntime 'com.fasterxml.jackson.core:jackson-annotations'
-	testRuntime 'com.fasterxml.jackson.core:jackson-databind'
 	testRuntime 'commons-logging:commons-logging'
 
-	testRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
-	testRuntime 'org.jboss.arquillian.container:arquillian-jetty-embedded-9'
-	testRuntime 'org.eclipse.jetty:jetty-server'
-	testRuntime 'org.eclipse.jetty:jetty-deploy'
-	testRuntime 'org.eclipse.jetty:jetty-annotations'
+	testRuntime 'org.apache.cxf:cxf-rt-rs-client'
 }
 
 // XXX: Gradle+TestNG don't run tests from other source set than 'test'
