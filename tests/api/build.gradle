@@ -1,5 +1,8 @@
 
 dependencies {
+	api 'org.slf4j:slf4j-api'
+	api 'ch.qos.logback:logback-classic'
+
 	implementation 'javax.servlet:javax.servlet-api'
 	implementation 'javax.validation:validation-api'
 	implementation 'javax.annotation:javax.annotation-api'
@@ -7,5 +10,4 @@ dependencies {
 	implementation 'javax.ws.rs:javax.ws.rs-api'
 	implementation 'javax.inject:javax.inject'
 	implementation 'com.fasterxml.jackson.core:jackson-annotations'
-	implementation 'org.slf4j:slf4j-api'
 }

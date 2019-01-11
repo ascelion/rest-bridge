@@ -1,5 +1,6 @@
 dependencies {
 	implementation project( ':client' )
+	implementation project( ':tests:api' )
 
 	implementation 'javax.ws.rs:javax.ws.rs-api'
 	implementation 'javax.annotation:javax.annotation-api'
@@ -10,6 +11,6 @@ dependencies {
 	implementation 'org.jboss.arquillian.test:arquillian-test-api'
 	implementation 'org.jboss.arquillian.container:arquillian-container-test-api'
 	implementation 'org.jboss.arquillian.container:arquillian-container-test-spi'
-	implementation 'com.github.tomakehurst:wiremock-standalone'
+	implementation 'com.github.tomakehurst:wiremock'
 	implementation 'com.beust:jcommander'
 }

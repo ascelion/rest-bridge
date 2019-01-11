@@ -33,7 +33,7 @@ dependencies
 	testImplementation 'org.jboss.arquillian.testng:arquillian-testng-container'
 	testImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
 	testRuntime 'com.github.tomakehurst:wiremock'
-	testImplementation 'com.github.tomakehurst:wiremock-standalone'
+	testImplementation 'com.github.tomakehurst:wiremock'
 	testRuntime 'com.beust:jcommander'
 
 	testRuntime 'org.apache.geronimo.config:geronimo-config-impl'
