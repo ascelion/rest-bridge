@@ -19,11 +19,21 @@ import lombok.Setter;
 public final class RestClient
 {
 
-	static final ThreadLocal<Method> METHOD = new ThreadLocal<>();
+	static private final ThreadLocal<Method> METHOD = new ThreadLocal<>();
 
 	static public Method invokedMethod()
 	{
 		return METHOD.get();
+	}
+
+	static void invokedMethod( Method method )
+	{
+		if( method != null ) {
+			METHOD.set( method );
+		}
+		else {
+			METHOD.remove();
+		}
 	}
 
 	private final Client client;

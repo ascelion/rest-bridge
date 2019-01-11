@@ -22,7 +22,7 @@ final class JerseyClientInitialisation
 	static void force( Client client )
 	{
 		try {
-			RestClient.METHOD.set( Init.class.getMethod( "options" ) );
+			RestClient.invokedMethod( Init.class.getMethod( "options" ) );
 
 			// XXX how else to force Jersey client initialisation & feature processing?
 			client.target( "" ).request().options();
@@ -30,7 +30,7 @@ final class JerseyClientInitialisation
 		catch( final Exception e ) {
 		}
 		finally {
-			RestClient.METHOD.remove();
+			RestClient.invokedMethod( null );
 		}
 	}
 }

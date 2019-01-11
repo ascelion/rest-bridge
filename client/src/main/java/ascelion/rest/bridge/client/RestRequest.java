@@ -1,6 +1,7 @@
 
 package ascelion.rest.bridge.client;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import javax.ws.rs.core.Response;
 
 import static java.util.Optional.ofNullable;
 
+import io.leangen.geantyref.GenericTypeReflector;
 import lombok.Getter;
 
 final class RestRequest<T> implements Callable<T>
@@ -31,10 +33,12 @@ final class RestRequest<T> implements Callable<T>
 
 	private final RestBridgeType rbt;
 	final Object proxy;
+	private final Method javaMethod;
 	final Object[] arguments;
 	private final String httpMethod;
 	@Getter
 	private WebTarget target;
+
 	private final GenericType<T> returnType;
 
 	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
@@ -44,13 +48,15 @@ final class RestRequest<T> implements Callable<T>
 	private Object entity;
 	private boolean async;
 
-	RestRequest( RestBridgeType rbt, Object proxy, String httpMethod, WebTarget target, Type returnType, Object... arguments )
+	RestRequest( RestBridgeType rbt, Object proxy, Method javaMethod, String httpMethod, WebTarget target, Object... arguments )
 	{
 		this.rbt = rbt;
 		this.proxy = proxy;
+		this.javaMethod = javaMethod;
 		this.httpMethod = httpMethod;
 
-		GenericType<?> gt = new GenericType<>( returnType );
+		final Type rt = GenericTypeReflector.getExactReturnType( this.javaMethod, rbt.type );
+		GenericType<?> gt = new GenericType<>( rt );
 
 		if( gt.getRawType() == CompletionStage.class ) {
 			this.async = true;
@@ -60,7 +66,7 @@ final class RestRequest<T> implements Callable<T>
 		else {
 			this.async = false;
 
-			gt = new GenericType<>( returnType );
+			gt = new GenericType<>( rt );
 		}
 
 		this.returnType = (GenericType<T>) gt;
@@ -175,6 +181,8 @@ final class RestRequest<T> implements Callable<T>
 	{
 		final Response rsp;
 
+		RestClient.invokedMethod( this.javaMethod );
+
 		try {
 			if( this.entity != null ) {
 				final Entity<?> e = Entity.entity( this.entity, this.contentType );
@@ -199,6 +207,9 @@ final class RestRequest<T> implements Callable<T>
 			else {
 				throw e;
 			}
+		}
+		finally {
+			RestClient.invokedMethod( null );
 		}
 
 		this.rbt.rsph.handleResponse( rsp );

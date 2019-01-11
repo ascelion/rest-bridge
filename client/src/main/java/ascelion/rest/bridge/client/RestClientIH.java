@@ -85,18 +85,10 @@ final class RestClientIH
 		final RestMethod met = this.methods.get( method );
 
 		if( met == null ) {
-			// TODO
-			throw new UnsupportedOperationException( "Could not handle method " + method );
+			throw new RestClientMethodException( "Could not handle method ", method );
 		}
 
-		RestClient.METHOD.set( method );
-
-		try {
-			return met.request( proxy, arguments ).call();
-		}
-		finally {
-			RestClient.METHOD.remove();
-		}
+		return met.request( proxy, arguments ).call();
 	}
 
 }
