@@ -25,6 +25,7 @@ import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Provider;
 
 import ascelion.rest.bridge.etc.RestClientTrace;
+import ascelion.rest.bridge.tests.api.SLF4JHandler;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
@@ -53,6 +54,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith( MockitoJUnitRunner.class )
 public class RestClientTest
 {
+
+	static {
+		SLF4JHandler.install();
+	}
 
 	@Rule
 	public final WireMockRule rule = new WireMockRule();
@@ -258,8 +263,8 @@ public class RestClientTest
 	@Test( expected = ProcessingException.class )
 	public void exception()
 	{
-		final RuntimeException ex = new RuntimeException( "thrown" );
-		final ClientRequestFilter flt = requestContext -> {
+		final IOException ex = new IOException( "thrown" );
+		final ClientRequestFilter flt = cx -> {
 			ex.fillInStackTrace();
 			throw ex;
 		};
@@ -274,6 +279,30 @@ public class RestClientTest
 		}
 		catch( final ProcessingException e ) {
 			assertThat( e.getCause(), sameInstance( ex ) );
+
+			throw e;
+		}
+	}
+
+	@Test( expected = RuntimeException.class )
+	public void rtException()
+	{
+		final RuntimeException ex = new RuntimeException( "thrown" );
+		final ClientRequestFilter flt = cx -> {
+			ex.fillInStackTrace();
+			throw ex;
+		};
+
+		this.client.register( flt, Integer.MIN_VALUE );
+
+		final RestClient rc = new RestClient( this.client, this.target );
+		final Interface api = rc.getInterface( Interface.class );
+
+		try {
+			api.get();
+		}
+		catch( final RuntimeException e ) {
+			assertThat( e, sameInstance( ex ) );
 
 			throw e;
 		}

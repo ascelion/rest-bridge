@@ -105,7 +105,7 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 
 	public RestClientTrace()
 	{
-		this( L, Level.INFO );
+		this( L, Level.FINEST );
 	}
 
 	@Override

@@ -55,7 +55,6 @@ configurations.all { cf ->
 
 			add cf.name, 'org.jboss.arquillian.container:arquillian-jetty-embedded-9:1.0.0.CR3'
 			add cf.name, 'com.github.tomakehurst:wiremock:2.19.0'
-			add cf.name, 'com.github.tomakehurst:wiremock-standalone:2.19.0'
 
 			add cf.name, "org.slf4j:slf4j-api:${versions.slf4j}"
 			add cf.name, 'ch.qos.logback:logback-classic:1.2.3'
@@ -78,4 +77,7 @@ configurations.all { cf ->
 			add cf.name, 'org.projectlombok:lombok'
 		}
 	}
+
+	cf.exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
+	cf.exclude group: 'org.jboss.spec.javax.ws.rs', module: 'jboss-jaxrs-api_2.1_spec'
 }

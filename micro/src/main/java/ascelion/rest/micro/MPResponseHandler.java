@@ -19,7 +19,7 @@ import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 final class MPResponseHandler implements ResponseHandler
 {
 
-	static private final String CONFIG_KEY_DISABLE_MAPPER = "microprofile.rest.client.disable.default.mapper";
+	static private final String CONFIG_KEY_DISABLE_DEFAULT_MAPPER = "microprofile.rest.client.disable.default.mapper";
 
 	private final Collection<ResponseExceptionMapper> providers;
 
@@ -27,10 +27,10 @@ final class MPResponseHandler implements ResponseHandler
 	{
 		this.providers = Util.providers( cf, ResponseExceptionMapper.class );
 
-		final String dem = MP.getConfig( CONFIG_KEY_DISABLE_MAPPER )
-			.orElse( Objects.toString( cf.getProperty( CONFIG_KEY_DISABLE_MAPPER ), null ) );
+		final String dis = MP.getConfig( CONFIG_KEY_DISABLE_DEFAULT_MAPPER )
+			.orElse( Objects.toString( cf.getProperty( CONFIG_KEY_DISABLE_DEFAULT_MAPPER ), "false" ) );
 
-		if( dem == null || !"true".equals( dem ) ) {
+		if( !Boolean.valueOf( dis ) ) {
 			this.providers.add( rsp -> new WebApplicationException( rsp ) );
 		}
 	}

@@ -28,9 +28,14 @@ sourceSets {
 }
 
 dependencies {
-	arquillianImplementation project( ':client' ).sourceSets.main.output
-	arquillianImplementation project( ':tests:api' ).sourceSets.main.output
-	arquillianImplementation project( ':tests:shared' ).sourceSets.main.output
+//	arquillianImplementation project( ':client' ).sourceSets.main.output
+//	arquillianImplementation project( ':tests:api' ).sourceSets.main.output
+//	arquillianImplementation project( ':tests:shared' ).sourceSets.main.output
+	arquillianImplementation project( ':client' )
+	arquillianImplementation project( ':tests:api' )
+	arquillianImplementation project( ':tests:shared' )
+
+	arquillianImplementation 'ch.qos.logback:logback-classic'
 
 	arquillianImplementation 'junit:junit'
 	arquillianImplementation 'org.hamcrest:hamcrest-core'
@@ -46,7 +51,7 @@ dependencies {
 	arquillianImplementation 'org.glassfish.jersey.media:jersey-media-json-jackson'
 	arquillianImplementation 'org.glassfish.jersey.core:jersey-server'
 
-	arquillianImplementation 'com.github.tomakehurst:wiremock-standalone'
+	arquillianImplementation 'com.github.tomakehurst:wiremock'
 
 	arquillianImplementation 'org.glassfish.jersey.core:jersey-client'
 	arquillianImplementation 'org.glassfish.jersey.ext:jersey-proxy-client'
@@ -55,7 +60,6 @@ dependencies {
 	arquillianRuntime 'commons-logging:commons-logging'
 
 	arquillianRuntime 'javax.servlet:javax.servlet-api'
-	arquillianRuntime 'ch.qos.logback:logback-classic'
 	arquillianRuntime 'org.glassfish.jersey.inject:jersey-hk2'
 	arquillianRuntime 'org.glassfish.jersey.connectors:jersey-grizzly-connector'
 	arquillianRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'

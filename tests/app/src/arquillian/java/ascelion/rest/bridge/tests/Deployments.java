@@ -5,9 +5,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
+import ascelion.rest.bridge.tests.api.SLF4JHandler;
 import ascelion.rest.bridge.tests.arquillian.ArquillianUnit;
-import ascelion.rest.micro.tests.shared.SLF4JHandler;
 
+import ch.qos.logback.core.CoreConstants;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.Archive;
@@ -23,6 +24,7 @@ public abstract class Deployments
 {
 
 	static {
+		System.setProperty( CoreConstants.DISABLE_SERVLET_CONTAINER_INITIALIZER_KEY, "true" );
 		SLF4JHandler.install();
 	}
 

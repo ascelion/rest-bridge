@@ -37,9 +37,9 @@ public class DefaultRestApplicationConfig implements RestApplicationConfig
 
 		classes.add( GenericExceptionMapper.class );
 
-		final Logger logger = Logger.getLogger( "ascelion.bridge.tests.SERVER" );
+		final Logger logger = Logger.getLogger( "ascelion.rest.bridge.tests.SERVER" );
 
-		singletons.add( new LoggingFeature( logger, Level.INFO, Verbosity.PAYLOAD_TEXT, null ) );
+		singletons.add( new LoggingFeature( logger, Level.FINEST, Verbosity.PAYLOAD_TEXT, null ) );
 
 		properties.put( ServerProperties.TRACING, "ON_DEMAND" );
 		properties.put( ServerProperties.TRACING_THRESHOLD, "VERBOSE" );
