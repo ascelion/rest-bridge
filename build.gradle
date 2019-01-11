@@ -55,8 +55,6 @@ subprojects { sub ->
 			description = 'Runs all Arquillian checks.'
 		}
 
-		outputs.upToDateWhen { false }
-
 		ignoreFailures = true
 		enableAssertions = true
 		scanForTestClasses = true
@@ -68,6 +66,8 @@ subprojects { sub ->
 		reports {
 			html.enabled = true
 		}
+
+		systemProperty "seed", UUID.randomUUID()
 	}
 
 	tasks.withType( War ) {
