@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 
 import ascelion.rest.bridge.client.Util;
 
@@ -23,17 +24,21 @@ import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.ClassUtils.getAllInterfaces;
 
+import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 
-public final class RestBridgeConfiguration implements Configuration
+@RequiredArgsConstructor
+final class RestBridgeConfiguration implements Configuration
 {
 
 	private static final Logger L = Logger.getLogger( "ascelion.rest.bridge.micro.CONFIG" );
 
+	private final RestBridgeBuilder bld;
 	private final Map<String, Object> properties = new HashMap<>();
 	private final Set<Class<?>> classes = newSetFromMap( new IdentityHashMap<>() );
 	private final Set<Object> instances = newSetFromMap( new IdentityHashMap<>() );
 	private final Map<Class<?>, Map<Class<?>, Integer>> registrations = new IdentityHashMap<>();
+	private final Set<Class<?>> enabledFeatures = newSetFromMap( new IdentityHashMap<>() );
 
 	@Override
 	public RuntimeType getRuntimeType()
@@ -62,13 +67,13 @@ public final class RestBridgeConfiguration implements Configuration
 	@Override
 	public boolean isEnabled( Feature feature )
 	{
-		return false;
+		return this.enabledFeatures.contains( feature.getClass() );
 	}
 
 	@Override
 	public boolean isEnabled( Class<? extends Feature> featureClass )
 	{
-		return false;
+		return this.enabledFeatures.contains( featureClass );
 	}
 
 	@Override
@@ -101,9 +106,9 @@ public final class RestBridgeConfiguration implements Configuration
 		return unmodifiableSet( this.instances );
 	}
 
-	RestBridgeConfiguration forClient()
+	RestBridgeConfiguration forClient( RestBridgeBuilder bld )
 	{
-		final RestBridgeConfiguration clone = new RestBridgeConfiguration();
+		final RestBridgeConfiguration clone = new RestBridgeConfiguration( bld );
 
 		clone.properties.putAll( this.properties );
 
@@ -188,6 +193,10 @@ public final class RestBridgeConfiguration implements Configuration
 			return false;
 		}
 
+		if( Feature.class.isAssignableFrom( type ) ) {
+			handleFeature( (Feature) Util.newInstance( type ) );
+		}
+
 		return true;
 	}
 
@@ -199,6 +208,21 @@ public final class RestBridgeConfiguration implements Configuration
 			return false;
 		}
 
+		if( Feature.class.isInstance( instance ) ) {
+			handleFeature( (Feature) instance );
+		}
+
 		return true;
+	}
+
+	private void handleFeature( Feature feat )
+	{
+		if( !isEnabled( feat ) ) {
+			final FeatureContext fc = new RestBridgeFeatureContext( this.bld );
+
+			if( feat.configure( fc ) ) {
+				this.enabledFeatures.add( feat.getClass() );
+			}
+		}
 	}
 }

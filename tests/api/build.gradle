@@ -9,5 +9,6 @@ dependencies {
 	implementation 'javax.xml.bind:jaxb-api'
 	implementation 'javax.ws.rs:javax.ws.rs-api'
 	implementation 'javax.inject:javax.inject'
+
 	implementation 'com.fasterxml.jackson.core:jackson-annotations'
 }

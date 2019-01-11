@@ -29,7 +29,7 @@ import org.eclipse.microprofile.rest.client.spi.RestClientListener;
 final class RestBridgeBuilder implements RestClientBuilder
 {
 
-	private final RestBridgeConfiguration configuration = new RestBridgeConfiguration();
+	private final RestBridgeConfiguration configuration = new RestBridgeConfiguration( this );
 	private URL baseUrl;
 	private long connectTimeout = 0;
 	private long readTimeout = 0;
@@ -169,7 +169,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 		ServiceLoader.load( RestClientListener.class )
 			.forEach( l -> l.onNewClient( type, this ) );
 
-		final RestBridgeConfiguration cfg = this.configuration.forClient();
+		final RestBridgeConfiguration cfg = this.configuration.forClient( this );
 
 		configureProviders( cfg, type );
 

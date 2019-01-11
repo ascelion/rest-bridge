@@ -118,7 +118,7 @@ public final class Util
 		}
 	}
 
-	static <T> T newInstance( Class<T> type )
+	static public <T> T newInstance( Class<T> type )
 	{
 		try {
 			return javax.enterprise.inject.spi.CDI.current().select( type ).get();
