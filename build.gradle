@@ -39,7 +39,7 @@ subprojects { sub ->
 	apply from: rootProject.file( 'dependencies.gradle' )
 
 	group = 'ascelion.rest-bridge'
-	version = '1.0.2-SNAPSHOT'
+	version = scmVersion.version
 
 	sourceCompatibility = JavaVersion.VERSION_1_8
 	targetCompatibility = JavaVersion.VERSION_1_8
@@ -89,7 +89,7 @@ subprojects { sub ->
 			}
 		}
 	}
-	
+
 	plugins.withType( MavenPublishPlugin ) {
 		sub.apply from: rootProject.file( 'publish.gradle' )
 	}
