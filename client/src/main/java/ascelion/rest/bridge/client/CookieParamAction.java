@@ -14,7 +14,7 @@ extends AnnotationAction<CookieParam>
 	}
 
 	@Override
-	public RestRequest execute( final RestRequest req )
+	public RestRequest<?> execute( final RestRequest<?> req )
 	{
 		visitCollection( req );
 
@@ -22,7 +22,7 @@ extends AnnotationAction<CookieParam>
 	}
 
 	@Override
-	void visitElement( RestRequest req, Object v )
+	<T> void visitElement( RestRequest<?> req, T v )
 	{
 		if( v instanceof Cookie ) {
 			final Cookie c = (Cookie) v;

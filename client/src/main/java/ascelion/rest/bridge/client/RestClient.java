@@ -11,6 +11,9 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
 
+import static ascelion.rest.bridge.client.RestClientProperties.ASYNC_INTERCEPTOR;
+import static ascelion.rest.bridge.client.RestClientProperties.RESPONSE_HANDLER;
+
 import lombok.Setter;
 
 public final class RestClient
@@ -30,7 +33,7 @@ public final class RestClient
 	@Setter
 	private ResponseHandler responseHandler = ResponseHandler.NONE;
 	@Setter
-	private AsyncInterceptor<?> asyncInterceptor;
+	private AsyncInterceptor<?> asyncInterceptor = AsyncInterceptor.NONE;
 	@Setter
 	private Executor executor = Executors.newCachedThreadPool();
 
@@ -55,6 +58,16 @@ public final class RestClient
 		}
 
 		this.cvsf = new ConvertersFactory( client );
+
+		final Object rh = client.getConfiguration().getProperty( RESPONSE_HANDLER );
+		final Object ai = client.getConfiguration().getProperty( ASYNC_INTERCEPTOR );
+
+		if( rh != null ) {
+			this.responseHandler = (ResponseHandler) rh;
+		}
+		if( ai != null ) {
+			this.asyncInterceptor = (AsyncInterceptor<?>) ai;
+		}
 	}
 
 	public <X> X getInterface( Class<X> type )

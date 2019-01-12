@@ -13,7 +13,7 @@ extends AnnotationAction<PathParam>
 	}
 
 	@Override
-	public RestRequest execute( RestRequest req )
+	public RestRequest<?> execute( RestRequest<?> req )
 	{
 		final String val = this.param.converter.apply( this.param.currentValue( req ) );
 

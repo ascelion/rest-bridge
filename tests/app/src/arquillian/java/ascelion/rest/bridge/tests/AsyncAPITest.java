@@ -1,7 +1,10 @@
 
 package ascelion.rest.bridge.tests;
 
-import ascelion.rest.bridge.tests.api.BeanAPI;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+
+import ascelion.rest.bridge.tests.api.AsyncBeanAPI;
 import ascelion.rest.bridge.tests.api.BeanData;
 import ascelion.rest.bridge.tests.arquillian.IgnoreWithProvider;
 import ascelion.rest.bridge.tests.providers.JerseyProxyProvider;
@@ -13,18 +16,37 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-public class APITest
-extends AbstractTestCase<BeanAPI>
+public class AsyncAPITest
+extends AbstractTestCase<AsyncBeanAPI>
 {
 
+	@Override
+	public void setUp() throws Exception
+	{
+		TestClientProvider.getInstance().getBuilder().register( AsyncThreadFilter.class );
+
+		AsyncThreadFilter.reset();
+
+		super.setUp();
+	}
+
+	@Override
+	public void tearDown()
+	{
+		AsyncThreadFilter.checkThread();
+
+		super.tearDown();
+	}
+
 	@Test
 	@IgnoreWithProvider(
 		value = { ResteasyProxyProvider.class, JerseyProxyProvider.class, },
 		reason = "interface too generic, cannot infer the return type" )
-	public void create()
+	public void create() throws InterruptedException, ExecutionException
 	{
 		final BeanData b0 = new BeanData( "create" );
-		final BeanData b1 = this.client.create( b0 );
+		final CompletionStage<BeanData> cs = this.client.create( b0 );
+		final BeanData b1 = cs.toCompletableFuture().get();
 
 		assertThat( b1, is( equalTo( b0 ) ) );
 	}
@@ -33,22 +55,11 @@ extends AbstractTestCase<BeanAPI>
 	@IgnoreWithProvider(
 		value = { ResteasyProxyProvider.class, JerseyProxyProvider.class, },
 		reason = "interface too generic, cannot infer the return type" )
-	public void createAbort()
-	{
-		final BeanData b0 = new BeanData( "create" );
-		final BeanData b1 = this.client.create( b0 );
-
-		assertThat( b1, is( equalTo( b0 ) ) );
-	}
-
-	@Test
-	@IgnoreWithProvider(
-		value = { ResteasyProxyProvider.class, JerseyProxyProvider.class, },
-		reason = "interface too generic, cannot infer the return type" )
-	public void get()
+	public void get() throws InterruptedException, ExecutionException
 	{
 		final BeanData b0 = new BeanData( "value" );
-		final BeanData b1 = this.client.get();
+		final CompletionStage<BeanData> cs = this.client.get();
+		final BeanData b1 = cs.toCompletableFuture().get();
 
 		assertThat( b1, is( equalTo( b0 ) ) );
 	}
@@ -57,17 +68,21 @@ extends AbstractTestCase<BeanAPI>
 	@IgnoreWithProvider(
 		value = { ResteasyProxyProvider.class, JerseyProxyProvider.class, },
 		reason = "interface too generic, cannot infer the return type" )
-	public void update()
+	public void update() throws InterruptedException, ExecutionException
 	{
 		final BeanData b0 = new BeanData( "update" );
-		final BeanData b1 = this.client.update( b0 );
+		final CompletionStage<BeanData> cs = this.client.update( b0 );
+		final BeanData b1 = cs.toCompletableFuture().get();
 
 		assertThat( b1, is( equalTo( b0 ) ) );
 	}
 
 	@Test
-	public void delete()
+	public void delete() throws InterruptedException, ExecutionException
 	{
-		this.client.delete();
+		this.client
+			.delete()
+			.toCompletableFuture()
+			.get();
 	}
 }

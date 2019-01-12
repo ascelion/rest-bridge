@@ -34,5 +34,5 @@ implements Comparable<Action>
 		return format( "index = %s", this.param.index );
 	}
 
-	abstract Callable<?> execute( RestRequest cx );
+	abstract Callable<?> execute( RestRequest<?> cx );
 }

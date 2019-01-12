@@ -13,7 +13,7 @@ extends AnnotationAction<FormParam>
 	}
 
 	@Override
-	public RestRequest execute( RestRequest req )
+	public RestRequest<?> execute( RestRequest<?> req )
 	{
 		visitCollection( req );
 
@@ -21,7 +21,7 @@ extends AnnotationAction<FormParam>
 	}
 
 	@Override
-	void visitElement( RestRequest req, Object v )
+	<T> void visitElement( RestRequest<?> req, T v )
 	{
 		req.form( this.annotation.value(), this.param.converter.apply( v ) );
 	}

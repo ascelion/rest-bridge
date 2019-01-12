@@ -19,7 +19,7 @@ extends Action
 	}
 
 	@Override
-	Callable<?> execute( RestRequest req )
+	Callable<?> execute( RestRequest<?> req )
 	{
 		final RestClientIH inv = new RestClientIH( new RestBridgeType( this.resourceType, this.rbt, () -> req.getTarget() ) );
 

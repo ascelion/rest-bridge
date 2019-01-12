@@ -18,8 +18,7 @@ import org.junit.runners.Suite.SuiteClasses;
 	ProvidersSuite.JerseyProxy.class,
 	ProvidersSuite.ResteasyBridge.class,
 	ProvidersSuite.ResteasyProxy.class,
-	// lots of timeouts
-	// ProvidersSuite.CxfBridge.class,
+	ProvidersSuite.CxfBridge.class,
 } )
 public class ProvidersSuite
 {

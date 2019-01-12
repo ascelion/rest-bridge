@@ -180,7 +180,7 @@ final class RestMethod
 			boolean entityCandidate = true;
 
 			for( final Field field : fields ) {
-				final Function<RestRequest, Object> sup = req -> readFieldValue( req, param, field );
+				final Function<RestRequest<?>, Object> sup = req -> readFieldValue( req, param, field );
 
 				if( !collectActions( field.getAnnotations(), new ActionParam( param.index, field.getType(), field.getAnnotations(), sup, param.converter ) ) ) {
 					entityCandidate = false;
@@ -194,10 +194,10 @@ final class RestMethod
 	}
 
 	@SneakyThrows
-	private Object readFieldValue( RestRequest request, ActionParam param, Field field )
+	private Object readFieldValue( RestRequest<?> req, ActionParam param, Field field )
 	{
 		try {
-			return doPrivileged( (PrivilegedExceptionAction) () -> readField( field, param.currentValue( request ), true ) );
+			return doPrivileged( (PrivilegedExceptionAction<?>) () -> readField( field, param.currentValue( req ), true ) );
 		}
 		catch( final PrivilegedActionException e ) {
 			throw e.getCause();
@@ -207,7 +207,7 @@ final class RestMethod
 	Callable<?> request( Object proxy, Object... arguments ) throws URISyntaxException
 	{
 		final WebTarget actualTarget = Util.addPathFromAnnotation( this.javaMethod, this.rbt.tsup.get() );
-		final RestRequest req = new RestRequest( this.rbt, proxy, this.httpMethod, actualTarget, this.returnType, arguments );
+		final RestRequest<?> req = new RestRequest<>( this.rbt, proxy, this.httpMethod, actualTarget, this.returnType, arguments );
 		Callable<?> res = null;
 
 		for( final Action a : this.actions ) {
