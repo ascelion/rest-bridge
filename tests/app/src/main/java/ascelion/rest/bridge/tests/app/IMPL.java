@@ -14,7 +14,7 @@ implements API<T>
 	}
 
 	@Override
-	public void delete( T t )
+	public void delete()
 	{
 	}
 

@@ -29,6 +29,7 @@ public class DefaultRestApplicationConfig implements RestApplicationConfig
 		classes.add( ValidatedImpl.class );
 		classes.add( ConvertImpl.class );
 		classes.add( UsersImpl.class );
+		classes.add( AsyncBeanIMPL.class );
 
 		classes.add( LocalDateConverterProvider.class );
 

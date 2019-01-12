@@ -1,6 +1,8 @@
 
 package ascelion.rest.bridge.tests.api;
 
+import java.util.concurrent.CompletionStage;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
@@ -8,20 +10,19 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 
-public interface API<T>
+public interface AsyncAPI<T>
 {
 
-	String BASE = "rest";
-
 	@POST
-	T create( @Valid @NotNull T t );
+	CompletionStage<T> create( @Valid @NotNull T t );
 
 	@DELETE
-	void delete();
+	CompletionStage<Void> delete();
 
 	@GET
-	T get();
+	CompletionStage<T> get();
 
 	@PUT
-	T update( @Valid @NotNull T t );
+	CompletionStage<T> update( @Valid @NotNull T t );
+
 }

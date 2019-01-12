@@ -47,7 +47,7 @@ extends Action
 	}
 
 	@Override
-	public RestRequest execute( RestRequest req )
+	public RestRequest<?> execute( RestRequest<?> req )
 	{
 		final ValidatorFactory vf = getValidator();
 

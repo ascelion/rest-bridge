@@ -18,14 +18,17 @@ extends Deployments
 	@Before
 	public void setUp() throws Exception
 	{
-		final Class<T> clientClass = (Class) GenericTypeReflector.getTypeParameter( getClass(), INTEFACE_TYPE );
-
-		this.client = TestClientProvider.getInstance().createClient( this.target, clientClass );
+		this.client = TestClientProvider.getInstance().createClient( this.target, interfaceType() );
 	}
 
 	@After
 	public void tearDown()
 	{
 		TestClientProvider.getInstance().release( this.client );
+	}
+
+	protected final Class<T> interfaceType()
+	{
+		return (Class) GenericTypeReflector.getTypeParameter( getClass(), INTEFACE_TYPE );
 	}
 }

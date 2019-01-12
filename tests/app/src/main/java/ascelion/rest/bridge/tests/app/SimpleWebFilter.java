@@ -11,7 +11,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
 
-@WebFilter( urlPatterns = "/*" )
+@WebFilter( urlPatterns = "/*", asyncSupported = true )
 public class SimpleWebFilter
 implements Filter
 {
@@ -22,15 +22,13 @@ implements Filter
 	}
 
 	@Override
-	public void doFilter( ServletRequest request, ServletResponse response, FilterChain chain )
-	throws IOException, ServletException
+	public void doFilter( ServletRequest request, ServletResponse response, FilterChain chain ) throws IOException, ServletException
 	{
 		chain.doFilter( request, response );
 	}
 
 	@Override
-	public void init( FilterConfig filterConfig )
-	throws ServletException
+	public void init( FilterConfig filterConfig ) throws ServletException
 	{
 	}
 }

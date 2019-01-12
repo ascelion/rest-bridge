@@ -9,12 +9,14 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -24,7 +26,7 @@ import static java.util.Optional.ofNullable;
 
 import lombok.Getter;
 
-final class RestRequest implements Callable<Object>
+final class RestRequest<T> implements Callable<T>
 {
 
 	private final RestBridgeType rbt;
@@ -33,7 +35,7 @@ final class RestRequest implements Callable<Object>
 	private final String httpMethod;
 	@Getter
 	private WebTarget target;
-	private final GenericType<?> returnType;
+	private final GenericType<T> returnType;
 
 	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
 	private final Collection<Cookie> cookies = new ArrayList<>();
@@ -61,7 +63,7 @@ final class RestRequest implements Callable<Object>
 			gt = new GenericType<>( returnType );
 		}
 
-		this.returnType = gt;
+		this.returnType = (GenericType<T>) gt;
 		this.target = target;
 		this.arguments = arguments == null ? new Object[0] : arguments;
 	}
@@ -134,7 +136,7 @@ final class RestRequest implements Callable<Object>
 	}
 
 	@Override
-	public Object call() throws Exception
+	public T call() throws Exception
 	{
 		final Invocation.Builder b = this.target.request();
 
@@ -146,7 +148,7 @@ final class RestRequest implements Callable<Object>
 
 		this.cookies.forEach( b::cookie );
 
-		if( this.contentType == null ) {
+		if( this.contentType == null && this.entity != null ) {
 			if( this.entity instanceof Form ) {
 				this.contentType = MediaType.APPLICATION_FORM_URLENCODED;
 			}
@@ -158,33 +160,60 @@ final class RestRequest implements Callable<Object>
 		if( this.async ) {
 			final Object ais = this.rbt.aint.prepare();
 
-			return CompletableFuture.supplyAsync( () -> async( b, ais ), this.rbt.exec );
+			final CompletableFuture<T> fut = new CompletableFuture<>();
+
+			this.rbt.exec.execute( () -> invokeAsync( b, ais, fut ) );
+
+			return (T) fut;
 		}
 		else {
-			return sync( b );
+			return invoke( b );
 		}
 	}
 
-	private Object sync( Invocation.Builder b ) throws Exception
+	private T invoke( Invocation.Builder b ) throws Exception
 	{
 		final Response rsp;
 
-		if( this.entity != null ) {
-			final Entity<?> e = Entity.entity( this.entity, this.contentType );
+		try {
+			if( this.entity != null ) {
+				final Entity<?> e = Entity.entity( this.entity, this.contentType );
 
-			rsp = b.method( this.httpMethod, e );
+				rsp = b.method( this.httpMethod, e );
+			}
+			else {
+				if( this.contentType != null ) {
+					// Micro TCK uses a GET with a Content-Type, so let's keep it happy!
+					b.header( HttpHeaders.CONTENT_TYPE, this.contentType );
+				}
+
+				rsp = b.method( this.httpMethod );
+			}
 		}
-		else {
-			rsp = b.method( this.httpMethod );
+		catch( final ProcessingException e ) {
+			final Throwable c = e.getCause();
+
+			if( c instanceof RuntimeException ) {
+				throw(RuntimeException) c;
+			}
+			else {
+				throw e;
+			}
 		}
 
 		this.rbt.rsph.handleResponse( rsp );
 
-		if( this.returnType.getRawType() == Response.class ) {
-			return rsp;
+		final Class<?> rawType = this.returnType.getRawType();
+
+		if( rawType == Response.class ) {
+			return (T) rsp;
 		}
 
 		try {
+			if( rawType == void.class || rawType == Void.class ) {
+				return null;
+			}
+
 			return rsp.readEntity( this.returnType );
 		}
 		finally {
@@ -192,32 +221,15 @@ final class RestRequest implements Callable<Object>
 		}
 	}
 
-	private Object async( Invocation.Builder b, Object ais )
+	private void invokeAsync( Invocation.Builder b, Object ais, CompletableFuture<T> fut )
 	{
 		this.rbt.aint.before( ais );
 
 		try {
-			final Response rsp;
-
-			if( this.entity != null ) {
-				final Entity<?> e = Entity.entity( this.entity, this.contentType );
-
-				rsp = b.method( this.httpMethod, e );
-			}
-			else {
-				rsp = b.method( this.httpMethod );
-			}
-
-			if( this.returnType.getRawType() == Response.class ) {
-				return rsp;
-			}
-
-			try {
-				return rsp.readEntity( this.returnType );
-			}
-			finally {
-				rsp.close();
-			}
+			fut.complete( invoke( b ) );
+		}
+		catch( final Exception e ) {
+			fut.completeExceptionally( e );
 		}
 		finally {
 			this.rbt.aint.after( ais );
