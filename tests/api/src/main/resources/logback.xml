@@ -9,17 +9,10 @@
 		</encoder>
 	</appender>
 
-	<logger name="ascelion.rest.bridge.TRAFFIC" level="ALL" />
-	<logger name="ascelion.rest.bridge.tests.SERVER" level="ALL" />
+	<logger name="ascelion.rest.bridge.TRAFFIC" level="OFF" />
+	<logger name="ascelion.rest.bridge.tests.SERVER" level="OFF" />
 
-	<logger name="org.glassfish.jersey" level="WARN" />
-	<logger name="org.glassfish.jersey.process.internal" level="WARN" />
-	<logger name="org.glassfish.jersey.client.internal" level="WARN" />
-	<logger name="org.glassfish.jersey.internal.util" level="WARN" />
-	<logger name="org.glassfish.jersey.server.model" level="WARN" />
-	<logger name="org.glassfish.jersey.client.ClientExecutorProvidersConfigurator" level="WARN" />
-
-	<root level="INFO">
+	<root level="ERROR">
 		<appender-ref ref="CONSOLE" />
 	</root>
 

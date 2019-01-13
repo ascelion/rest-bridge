@@ -2,14 +2,16 @@
 package ascelion.rest.bridge.tests;
 
 import java.net.URI;
+import java.util.ServiceLoader;
 
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
 
 import ascelion.rest.bridge.etc.RestClientTrace;
 import ascelion.rest.bridge.tests.providers.JerseyBridgeProvider;
 
 import lombok.Getter;
-import org.glassfish.jersey.jackson.JacksonFeature;
 
 public abstract class TestClientProvider<B extends ClientBuilder>
 {
@@ -37,9 +39,11 @@ public abstract class TestClientProvider<B extends ClientBuilder>
 	{
 		this.builder = builder;
 
-		builder.register( JacksonFeature.class );
 		builder.register( JerseyTrace.class );
 		builder.register( RestClientTrace.class );
+
+		ServiceLoader.load( MessageBodyReader.class ).forEach( builder::register );
+		ServiceLoader.load( MessageBodyWriter.class ).forEach( builder::register );
 	}
 
 	public abstract <T> T createClient( URI target, Class<T> cls );
