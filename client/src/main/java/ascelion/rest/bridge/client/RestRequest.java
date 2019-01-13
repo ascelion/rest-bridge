@@ -24,6 +24,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import static java.util.Optional.ofNullable;
+import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 
 import io.leangen.geantyref.GenericTypeReflector;
 import lombok.Getter;
@@ -224,8 +225,12 @@ final class RestRequest<T> implements Callable<T>
 			if( rawType == void.class || rawType == Void.class ) {
 				return null;
 			}
-
-			return rsp.readEntity( this.returnType );
+			if( rsp.getStatus() == NO_CONTENT.getStatusCode() ) {
+				return null;
+			}
+			else {
+				return rsp.readEntity( this.returnType );
+			}
 		}
 		finally {
 			rsp.close();
@@ -251,6 +256,6 @@ final class RestRequest<T> implements Callable<T>
 	{
 		return ofNullable( this.rbt.conf.getProperty( RestClientProperties.DEFAULT_CONTENT_TYPE ) )
 			.map( Object::toString )
-			.orElse( MediaType.TEXT_PLAIN );
+			.orElse( MediaType.APPLICATION_OCTET_STREAM );
 	}
 }
