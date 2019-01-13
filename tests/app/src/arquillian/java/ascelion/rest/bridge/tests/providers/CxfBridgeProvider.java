@@ -16,7 +16,6 @@ extends TestClientProvider<ClientBuilderImpl>
 	public CxfBridgeProvider()
 	{
 		super( new ClientBuilderImpl() );
-
 	}
 
 	@Override

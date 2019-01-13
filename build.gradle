@@ -35,6 +35,10 @@ allprojects {
 }
 
 subprojects { sub ->
+	ext {
+		tckDir = rootProject.file 'eclipse/tck/src/main/java'
+	}
+
 	apply plugin: ascelion.rest.bridge.BuildPlugin
 	apply from: rootProject.file( 'dependencies.gradle' )
 
@@ -68,26 +72,6 @@ subprojects { sub ->
 		}
 
 		systemProperty "seed", UUID.randomUUID()
-	}
-
-	tasks.withType( War ) {
-		jar.enabled = true
-
-		apply plugin: 'eclipse-wtp'
-
-		eclipse {
-			wtp {
-				facet {
-					facet name: 'jst.web', version: '3.1'
-
-					file {
-						whenMerged { facets ->
-							facets.facets.removeIf { it.name == 'jst.utility' }
-						}
-					}
-				}
-			}
-		}
 	}
 
 	plugins.withType( MavenPublishPlugin ) {

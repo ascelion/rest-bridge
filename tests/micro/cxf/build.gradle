@@ -1,5 +1,3 @@
-def tckDir = rootProject.file 'eclipse/tck/src/main/java'
-
 sourceSets {
 	test {
 		java {
@@ -11,13 +9,13 @@ sourceSets {
 
 dependencies
 {
-//	testRuntime 'org.apache.cxf:cxf-rt-rs-mp-client:3.3.0-SNAPSHOT'
 	testRuntime project( ':micro' )
 	testImplementation project( ':tests:api' )
 	testImplementation project( ':tests:shared' )
 
 	testImplementation 'org.testng:testng'
 	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
 	testImplementation 'javax.ws.rs:javax.ws.rs-api'
 	testImplementation 'javax.annotation:javax.annotation-api'
 	testImplementation 'javax.validation:validation-api'
