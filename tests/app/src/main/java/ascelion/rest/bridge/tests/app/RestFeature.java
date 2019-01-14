@@ -30,7 +30,10 @@ public class RestFeature implements Feature
 		context.register( ValidatedImpl.class );
 		context.register( ConvertImpl.class );
 		context.register( UsersImpl.class );
-		context.register( AsyncBeanIMPL.class );
+
+		context.register( AsyncSuspendedIMPL.class );
+		//https://github.com/eclipse-ee4j/jersey/issues/3672
+		//context.register( AsyncCompletionIMPL.class );
 
 		context.register( LocalDateConverterProvider.class );
 

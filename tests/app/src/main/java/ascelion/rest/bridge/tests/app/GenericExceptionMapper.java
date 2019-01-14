@@ -4,6 +4,7 @@ package ascelion.rest.bridge.tests.app;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -18,6 +19,7 @@ import org.glassfish.jersey.server.ParamException;
 
 @Provider
 @Produces( MediaType.WILDCARD )
+@ApplicationScoped
 public class GenericExceptionMapper implements ExceptionMapper<Throwable>
 {
 

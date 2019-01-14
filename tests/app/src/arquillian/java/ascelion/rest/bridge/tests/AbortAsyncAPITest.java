@@ -3,7 +3,7 @@ package ascelion.rest.bridge.tests;
 
 import javax.ws.rs.WebApplicationException;
 
-import ascelion.rest.bridge.tests.api.AsyncBeanAPI;
+import ascelion.rest.bridge.tests.api.AsyncAPI;
 import ascelion.rest.bridge.tests.api.BeanData;
 import ascelion.rest.bridge.tests.arquillian.IgnoreWithProvider;
 import ascelion.rest.bridge.tests.providers.JerseyProxyProvider;
@@ -16,7 +16,7 @@ import static org.junit.Assert.assertThat;
 import org.junit.Test;
 
 public class AbortAsyncAPITest
-extends AbortTestCase<AsyncBeanAPI>
+extends AbortTestCase<AsyncAPI>
 {
 
 	@Override

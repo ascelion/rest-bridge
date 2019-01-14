@@ -17,7 +17,6 @@ import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.Rule;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
@@ -40,7 +39,7 @@ public abstract class Deployments
 		return web;
 	}
 
-	@Rule
+//	@Rule
 	public final Timeout timeout = new Timeout( 15, TimeUnit.SECONDS );
 
 	@ArquillianResource
