@@ -4,7 +4,7 @@ package ascelion.rest.bridge.tests;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
-import ascelion.rest.bridge.tests.api.AsyncBeanAPI;
+import ascelion.rest.bridge.tests.api.AsyncAPI;
 import ascelion.rest.bridge.tests.api.BeanData;
 import ascelion.rest.bridge.tests.arquillian.IgnoreWithProvider;
 import ascelion.rest.bridge.tests.providers.JerseyProxyProvider;
@@ -16,8 +16,8 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-public class AsyncAPITest
-extends AbstractTestCase<AsyncBeanAPI>
+public class AsyncTest
+extends AbstractTestCase<AsyncAPI>
 {
 
 	@Override
