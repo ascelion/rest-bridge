@@ -12,6 +12,6 @@ public class Resolver extends RestClientBuilderResolver
 	@Override
 	public RestClientBuilder newBuilder()
 	{
-		return new Builder( ClientBuilder.newClient() );
+		return new Builder( ClientBuilder.newBuilder() );
 	}
 }

@@ -19,7 +19,7 @@ configurations.all { cf ->
 			add cf.name, 'javax.servlet:javax.servlet-api:3.1.0'
 			add cf.name, 'javax.validation:validation-api:1.1.0.Final'
 			add cf.name, 'javax.annotation:javax.annotation-api:1.2'
-			add cf.name, 'javax.ws.rs:javax.ws.rs-api:2.0.1'
+			add cf.name, 'javax.ws.rs:javax.ws.rs-api:2.1.1'
 			add cf.name, 'javax.xml.bind:jaxb-api:2.3.1'
 			add cf.name, 'javax.inject:javax.inject:1'
 			add cf.name, 'javax.enterprise:cdi-api:2.0'
