@@ -24,10 +24,6 @@ public class ValidationActionTest
 
 	static private final Object NULL = null;
 
-	static private final Object NULL = null;
-
-	@Mock
-	private WebTarget target;
 	@Mock
 	private WebTarget target;
 	@Mock

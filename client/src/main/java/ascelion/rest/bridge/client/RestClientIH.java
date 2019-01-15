@@ -7,7 +7,6 @@ import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
