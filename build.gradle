@@ -6,7 +6,7 @@ allprojects {
 		}
 	}
 
-	defaultTasks 'build'
+	defaultTasks 'test'
 }
 
 apply plugin: 'eclipse'
@@ -53,23 +53,6 @@ subprojects {
 						}
 					}
 				}
-			}
-		}
-	}
-
-	plugins.withType( ascelion.rest.bridge.ASPlugin ) {
-		containers {
-			payara41( payara ) {
-				distribution 'fish.payara.distributions:payara:4.1.2.+@zip'
-			}
-			payara5( payara ) {
-				distribution 'fish.payara.distributions:payara:5.+@zip'
-			}
-			gf4( glassfish ) {
-				distribution 'org.glassfish.main.distributions:glassfish:4.+@zip'
-			}
-			gf5( glassfish ) {
-				distribution 'org.glassfish.main.distributions:glassfish:5.+@zip'
 			}
 		}
 	}
