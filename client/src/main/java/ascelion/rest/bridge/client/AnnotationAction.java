@@ -27,9 +27,9 @@ extends Action
 		return format( "%s, annotation = %s", super.inspect(), this.annotation );
 	}
 
-	final <T> Collection<T> visitCollection( RestRequest cx )
+	final <T> Collection<T> visitCollection( RestRequest<?> req )
 	{
-		final Object value = this.param.currentValue( cx );
+		final Object value = this.param.currentValue( req );
 
 		final Collection<T> c;
 
@@ -47,13 +47,13 @@ extends Action
 		}
 
 		for( final T t : c ) {
-			visitElement( cx, t );
+			visitElement( req, t );
 		}
 
 		return c;
 	}
 
-	<T> void visitElement( RestRequest cx, T t )
+	<T> void visitElement( RestRequest<?> req, T t )
 	{
 	}
 }

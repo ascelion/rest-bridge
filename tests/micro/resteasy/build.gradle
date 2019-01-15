@@ -1,0 +1,66 @@
+sourceSets {
+	test {
+		java {
+			srcDir project( ':micro' ).sourceSets.test.java.srcDirs
+			srcDir tckDir
+		}
+	}
+}
+
+dependencies
+{
+	testImplementation project( ':micro' )
+	testImplementation project( ':tests:api' )
+	testImplementation project( ':tests:shared' )
+
+	testImplementation 'org.testng:testng'
+	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
+	testImplementation 'javax.ws.rs:javax.ws.rs-api'
+	testImplementation 'javax.annotation:javax.annotation-api'
+	testImplementation 'javax.validation:validation-api'
+	testImplementation 'javax.annotation:javax.annotation-api'
+	testImplementation 'javax.json:javax.json-api'
+	testImplementation 'javax.json.bind:javax.json.bind-api'
+	testImplementation 'javax.enterprise:cdi-api'
+	testImplementation 'org.apache.commons:commons-lang3'
+
+	testImplementation 'org.jboss.arquillian.test:arquillian-test-api'
+	testImplementation 'org.jboss.arquillian.container:arquillian-container-test-api'
+	testImplementation 'org.jboss.arquillian.testng:arquillian-testng-container'
+	testImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
+	testImplementation 'com.github.tomakehurst:wiremock'
+	
+	testRuntime 'org.jboss.arquillian.container:arquillian-weld-embedded'
+	testRuntime 'org.jboss.weld.se:weld-se-core'
+	testRuntime 'org.jboss:jandex'
+	testRuntime 'com.beust:jcommander'
+	testRuntime 'org.apache.geronimo.config:geronimo-config-impl'
+	testRuntime 'org.glassfish:javax.json'
+	testRuntime 'org.eclipse:yasson'
+	testRuntime 'commons-logging:commons-logging'
+
+	testRuntime 'org.jboss.resteasy:resteasy-client'
+}
+
+// XXX: Gradle+TestNG don't run tests from other source set than 'test'
+test {
+	enabled = false
+}
+
+task arquillian( type: Test ) {
+	reports {
+		html.enabled = false
+		junitXml.enabled = false
+	}
+
+	useTestNG() {
+		useDefaultListeners = true
+
+		suites 'src/test/resources/tests.xml'
+	}
+}
+
+check {
+	dependsOn arquillian
+}

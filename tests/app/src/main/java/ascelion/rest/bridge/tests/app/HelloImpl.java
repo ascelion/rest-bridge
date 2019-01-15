@@ -1,9 +1,12 @@
 
 package ascelion.rest.bridge.tests.app;
 
+import javax.enterprise.context.ApplicationScoped;
+
 import ascelion.rest.bridge.tests.api.Hello;
 import ascelion.rest.bridge.tests.api.UserBean;
 
+@ApplicationScoped
 public class HelloImpl
 implements Hello
 {

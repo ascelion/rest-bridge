@@ -23,7 +23,19 @@ extends AbstractTestCase<BeanAPI>
 		reason = "interface too generic, cannot infer the return type" )
 	public void create()
 	{
-		final BeanData b0 = new BeanData( "cici" );
+		final BeanData b0 = new BeanData( "create" );
+		final BeanData b1 = this.client.create( b0 );
+
+		assertThat( b1, is( equalTo( b0 ) ) );
+	}
+
+	@Test
+	@IgnoreWithProvider(
+		value = { ResteasyProxyProvider.class, JerseyProxyProvider.class, },
+		reason = "interface too generic, cannot infer the return type" )
+	public void createAbort()
+	{
+		final BeanData b0 = new BeanData( "create" );
 		final BeanData b1 = this.client.create( b0 );
 
 		assertThat( b1, is( equalTo( b0 ) ) );
@@ -39,5 +51,23 @@ extends AbstractTestCase<BeanAPI>
 		final BeanData b1 = this.client.get();
 
 		assertThat( b1, is( equalTo( b0 ) ) );
+	}
+
+	@Test
+	@IgnoreWithProvider(
+		value = { ResteasyProxyProvider.class, JerseyProxyProvider.class, },
+		reason = "interface too generic, cannot infer the return type" )
+	public void update()
+	{
+		final BeanData b0 = new BeanData( "update" );
+		final BeanData b1 = this.client.update( b0 );
+
+		assertThat( b1, is( equalTo( b0 ) ) );
+	}
+
+	@Test
+	public void delete()
+	{
+		this.client.delete();
 	}
 }

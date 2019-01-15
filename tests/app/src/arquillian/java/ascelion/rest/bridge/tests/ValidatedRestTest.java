@@ -5,6 +5,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -137,7 +138,12 @@ extends Deployments
 	{
 		final WebTarget w = getTarget( path );
 		final Builder b = w.request( MediaType.APPLICATION_JSON );
-		final Entity e = v != null ? Entity.entity( v, MediaType.APPLICATION_JSON ) : null;
+		final Entity<?> e = v != null ? Entity.entity( v, MediaType.APPLICATION_JSON ) : null;
+
+		if( v == null ) {
+			b.header( HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON );
+		}
+
 		final Response r = b.method( "POST", e );
 
 		assertNotNull( r );
@@ -166,7 +172,9 @@ extends Deployments
 
 		final Form f = new Form();
 
-		f.param( "value", v );
+		if( v != null ) {
+			f.param( "value", v );
+		}
 
 		final Response r = b.method( "POST", Entity.entity( f, MediaType.APPLICATION_FORM_URLENCODED ) );
 
@@ -181,7 +189,12 @@ extends Deployments
 	private void notNullHeaderParam( final String v, Status status )
 	{
 		final WebTarget w = getTarget( "notNullHeaderParam" );
-		final Builder b = w.request().header( "value", v );
+		final Builder b = w.request();
+
+		if( v != null ) {
+			b.header( "value", v );
+		}
+
 		final Response r = b.method( "GET" );
 
 		assertNotNull( r );

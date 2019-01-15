@@ -1,6 +1,7 @@
 
 package ascelion.rest.bridge.tests;
 
+import ascelion.rest.bridge.tests.providers.CxfBridgeProvider;
 import ascelion.rest.bridge.tests.providers.JerseyBridgeProvider;
 import ascelion.rest.bridge.tests.providers.JerseyProxyProvider;
 import ascelion.rest.bridge.tests.providers.ResteasyBridgeProvider;
@@ -17,6 +18,7 @@ import org.junit.runners.Suite.SuiteClasses;
 	ProvidersSuite.JerseyProxy.class,
 	ProvidersSuite.ResteasyBridge.class,
 	ProvidersSuite.ResteasyProxy.class,
+	ProvidersSuite.CxfBridge.class,
 } )
 public class ProvidersSuite
 {
@@ -66,6 +68,18 @@ public class ProvidersSuite
 		static public void setUpClass()
 		{
 			TestClientProvider.setInstance( new ResteasyProxyProvider() );
+		}
+	}
+
+	@RunWith( Suite.class )
+	@SuiteClasses( TestsSuite.class )
+	static public class CxfBridge
+	{
+
+		@BeforeClass
+		static public void setUpClass()
+		{
+			TestClientProvider.setInstance( new CxfBridgeProvider() );
 		}
 	}
 

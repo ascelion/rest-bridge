@@ -14,14 +14,20 @@ public interface API<T>
 	String BASE = "rest";
 
 	@POST
+	@Valid
+	@NotNull
 	T create( @Valid @NotNull T t );
 
 	@DELETE
-	void delete( @Valid @NotNull T t );
+	void delete();
 
 	@GET
+	@Valid
+	@NotNull
 	T get();
 
 	@PUT
+	@Valid
+	@NotNull
 	T update( @Valid @NotNull T t );
 }

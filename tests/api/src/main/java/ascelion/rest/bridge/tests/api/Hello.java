@@ -19,8 +19,6 @@ public interface Hello
 	@Produces( MediaType.APPLICATION_JSON )
 	UserBean authenticate( @QueryParam( "username" ) String username, @HeaderParam( "password" ) String password );
 
-//	@Path( "{username}" )
-
 	@GET
 	@Produces( MediaType.TEXT_PLAIN )
 	String sayByParam( @QueryParam( "username" ) @DefaultValue( "guest" ) String username );

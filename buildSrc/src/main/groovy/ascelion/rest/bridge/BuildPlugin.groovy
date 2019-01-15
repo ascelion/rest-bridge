@@ -14,7 +14,7 @@ class BuildPlugin implements Plugin<Project> {
 	@Override
 	public void apply( Project target ) {
 		target.plugins.apply( 'eclipse' )
-		target.plugins.apply( 'java' )
+		target.plugins.apply( 'java-library' )
 
 		target.sourceSets.all { SourceSet set ->
 			set.output.resourcesDir = set.output.classesDirs.singleFile
@@ -22,10 +22,19 @@ class BuildPlugin implements Plugin<Project> {
 
 		ClosureBackedAction.execute(target) {
 			eclipse {
-				project { name = "${rootProject.name}${target.path.replace(':', '-')}" }
+				project {
+					name = "${rootProject.name}${target.path.replace(':', '-')}"
+
+					natures 'org.eclipse.buildship.core.gradleprojectnature'
+					buildCommand 'org.eclipse.buildship.core.gradleprojectbuilder'
+				}
 
 				classpath {
-					defaultOutputDir target.file("build/eclipse")
+					defaultOutputDir file("build/eclipse")
+
+					sourceSets.all { SourceSet set ->
+						plusConfigurations += [configurations.getByName( set.annotationProcessorConfigurationName )]
+					}
 
 					file {
 						whenMerged {

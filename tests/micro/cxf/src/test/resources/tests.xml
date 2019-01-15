@@ -1,0 +1,34 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="CxfMPRestClientTCK1.2">
+	<test name="AllTests">
+		<packages>
+			<package name="ascelion.rest.micro.tests" />
+			<package name="org.eclipse.microprofile.rest.client.tck" />
+			<package name="org.eclipse.microprofile.rest.client.tck.cditests" />
+			<package name="org.eclipse.microprofile.rest.client.tck.asynctests" />
+		</packages>
+		<classes>
+			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithJsonBProviderTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
+			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
+			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
+			<class name="org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
+		</classes>
+	</test>
+</suite>

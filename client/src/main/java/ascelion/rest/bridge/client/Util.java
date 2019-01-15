@@ -5,22 +5,141 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.nio.charset.Charset;
+import java.security.PrivilegedAction;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.MediaType;
 
+import static java.lang.Thread.currentThread;
+import static java.security.AccessController.doPrivileged;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.reflect.MethodUtils.getOverrideHierarchy;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.ClassUtils.Interfaces;
 
-final class Util
+@NoArgsConstructor( access = AccessLevel.PRIVATE )
+public final class Util
 {
+
+	static public ClassLoader threadClassLoader()
+	{
+		return doPrivileged( (PrivilegedAction<ClassLoader>) () -> currentThread().getContextClassLoader() );
+	}
+
+	static public <T> Class<T> safeLoadClass( String name )
+	{
+		try {
+			return (Class<T>) threadClassLoader().loadClass( name.trim() );
+		}
+		catch( final ClassNotFoundException e ) {
+			return null;
+		}
+	}
+
+	static public <T> Class<T> rtLoadClass( String name )
+	{
+		try {
+			return (Class<T>) threadClassLoader().loadClass( name.trim() );
+		}
+		catch( final ClassNotFoundException e ) {
+			throw new IllegalArgumentException( "Cannot load class " + name.trim() );
+		}
+	}
+
+	static public <T> Collection<T> providers( Configuration cf, Class<T> type )
+	{
+		final Stream<T> si = cf
+			.getInstances()
+			.stream()
+			.filter( type::isInstance )
+			.map( type::cast );
+		final Stream<T> sc = cf
+			.getClasses()
+			.stream()
+			.filter( type::isAssignableFrom )
+			.map( Util::newInstance )
+			.map( type::cast );
+
+		return Stream.concat( si, sc )
+			.sorted( ( o1, o2 ) -> comparePriority( cf, o1.getClass(), o2.getClass(), type ) )
+			.collect( toList() );
+	}
+
+	static public Charset charset( MediaType mt )
+	{
+		final String cs = ofNullable( mt )
+			.map( MediaType::getParameters )
+			.map( m -> m.get( "charset" ) )
+			.orElse( "UTF-8" );
+
+		return Charset.forName( cs );
+	}
+
+	static public int getPriority( Class<?> cls )
+	{
+		return Optional.ofNullable( cls.getAnnotation( Priority.class ) )
+			.map( Priority::value )
+			.orElse( Priorities.USER );
+	}
+
+	static public int getPriority( Class<?> value, int priority )
+	{
+		return priority == -1 ? getPriority( value ) : priority;
+	}
+
+	static boolean isCDI()
+	{
+		try {
+			javax.enterprise.inject.spi.CDI.current();
+
+			return true;
+		}
+		catch( final NoClassDefFoundError e ) {
+			return false;
+		}
+		catch( final IllegalStateException e ) {
+			return false;
+		}
+	}
+
+	static public <T> T newInstance( Class<T> type )
+	{
+		try {
+			return javax.enterprise.inject.spi.CDI.current().select( type ).get();
+		}
+		catch( final NoClassDefFoundError e ) {
+			;
+		}
+		catch( final IllegalStateException e ) {
+			;
+		}
+		catch( final RuntimeException e ) {
+			;
+		}
+
+		try {
+			return type.newInstance();
+		}
+		catch( InstantiationException | IllegalAccessException e ) {
+			throw new RestClientException( "Cannot instantiate type " + type.getName() );
+		}
+	}
 
 	static WebTarget addPathFromAnnotation( AnnotatedElement ae, WebTarget target )
 	{
@@ -35,53 +154,9 @@ final class Util
 		return v.isEmpty() || v.equals( "/" ) ? target : target.path( p.value() );
 	}
 
-	static String getHttpMethod( Method method )
-	{
-		return getOverrideHierarchy( method, Interfaces.INCLUDE ).stream()
-			.map( Util::httpMethodOf )
-			.filter( Objects::nonNull )
-			.findFirst()
-			.orElse( null );
-	}
-
-	private static String httpMethodOf( Method method )
-	{
-		String httpMethod = getHttpMethodName( method );
-
-		for( final Annotation ann : method.getAnnotations() ) {
-			final String m = getHttpMethodName( ann.annotationType() );
-
-			if( m != null ) {
-				if( httpMethod != null ) {
-					throw new RestClientMethodException( "Too many HTTP methods", method );
-				}
-
-				httpMethod = m;
-			}
-		}
-		return httpMethod;
-	}
-
-	private static String getHttpMethodName( AnnotatedElement element )
-	{
-		final HttpMethod a = element.getAnnotation( HttpMethod.class );
-
-		return a != null ? a.value() : null;
-	}
-
-	static int byPriority( Object o1, Object o2 )
-	{
-		final Class c1 = o1 instanceof Class ? (Class) o1 : o1.getClass();
-		final Class c2 = o2 instanceof Class ? (Class) o2 : o2.getClass();
-		final int p1 = findAnnotation( Priority.class, c1 ).map( Priority::value ).orElse( 0 );
-		final int p2 = findAnnotation( Priority.class, c2 ).map( Priority::value ).orElse( 0 );
-
-		return Integer.compare( p1, p2 );
-	}
-
 	static <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Class<?> cls )
 	{
-		if( type == null || (Class) type == Object.class ) {
+		if( cls == null || cls == Object.class ) {
 			return Optional.empty();
 		}
 
@@ -127,7 +202,52 @@ final class Util
 		return elements;
 	}
 
-	private Util()
+	static String getHttpMethod( Method method )
 	{
+		return getOverrideHierarchy( method, Interfaces.INCLUDE ).stream()
+			.map( Util::httpMethodOf )
+			.filter( Objects::nonNull )
+			.findFirst()
+			.orElse( null );
+	}
+
+	static private int comparePriority( Configuration cf, Class<?> c1, Class<?> c2, Class<?> type )
+	{
+		if( Proxy.isProxyClass( c1 ) ) {
+			c1 = c1.getSuperclass();
+		}
+		if( Proxy.isProxyClass( c2 ) ) {
+			c2 = c2.getSuperclass();
+		}
+
+		final int p1 = cf.getContracts( c1 ).getOrDefault( type, Priorities.USER );
+		final int p2 = cf.getContracts( c2 ).getOrDefault( type, Priorities.USER );
+
+		return Integer.compare( p1, p2 );
+	}
+
+	private static String httpMethodOf( Method method )
+	{
+		String httpMethod = getHttpMethodName( method );
+
+		for( final Annotation ann : method.getAnnotations() ) {
+			final String m = getHttpMethodName( ann.annotationType() );
+
+			if( m != null ) {
+				if( httpMethod != null ) {
+					throw new RestClientMethodException( "Too many HTTP methods", method );
+				}
+
+				httpMethod = m;
+			}
+		}
+		return httpMethod;
+	}
+
+	private static String getHttpMethodName( AnnotatedElement element )
+	{
+		final HttpMethod a = element.getAnnotation( HttpMethod.class );
+
+		return a != null ? a.value() : null;
 	}
 }
