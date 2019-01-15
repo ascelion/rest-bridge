@@ -52,7 +52,7 @@ dependencies {
 	arquillianRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
 	arquillianRuntime 'com.fasterxml.jackson.core:jackson-annotations'
 	arquillianRuntime 'com.fasterxml.jackson.core:jackson-databind'
-	
+
 	arquillianCompile 'org.glassfish.jersey.containers:jersey-container-servlet'
 	arquillianRuntime 'org.jboss.weld.servlet:weld-servlet-core'
 	arquillianRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'

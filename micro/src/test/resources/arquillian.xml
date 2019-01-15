@@ -12,17 +12,9 @@
 		<property name="deploymentExportPath">build/deployments</property>
 	</engine>
 
-	<container qualifier="glassfish" default="true">
+	<container qualifier="jetty" default="true">
 		<configuration>
-			<property name="adminPort">${server.adminPort}</property>
-			<property name="glassFishHome">${server.home}</property>
-		</configuration>
-	</container>
-
-	<container qualifier="wildfly">
-		<configuration>
-			<property name="jbossHome">${server.home}</property>
-			<property name="modulePath">${server.home}/modules</property>
+			<property name="bindHttpPort">9090</property>
 		</configuration>
 	</container>
 </arquillian>

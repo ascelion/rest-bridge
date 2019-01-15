@@ -1,9 +1,11 @@
-apply plugin: ascelion.rest.bridge.ASPlugin
+plugins {
+	id 'com.williamhill.wiremock' version '0.4.1'
+}
 
 def tckDir = file 'eclipse/tck/src/main/java'
 
 sourceSets {
-	tck {
+	test {
 		java {
 			srcDir tckDir
 		}
@@ -16,34 +18,51 @@ dependencies {
 
 	implementation project( ':client' )
 
-	tckCompile 'javax.ws.rs:javax.ws.rs-api'
-	tckCompile 'javax.annotation:javax.annotation-api'
-	tckCompile 'javax.validation:validation-api'
-	tckCompile 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
-	tckCompile 'javax.json:javax.json-api'
-	tckCompile 'javax.json.bind:javax.json.bind-api'
-	tckCompile 'javax.enterprise:cdi-api'
-	tckCompile 'org.testng:testng'
-	tckCompile 'com.github.tomakehurst:wiremock'
-	tckRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
-	tckCompile 'org.jboss.arquillian.testng:arquillian-testng-container'
-	tckCompile 'com.beust:jcommander'
-	tckRuntime 'org.glassfish.jersey.core:jersey-client'
-	tckRuntime "fish.payara.arquillian:arquillian-payara-server-4-${serverType}"
+	testCompile 'javax.ws.rs:javax.ws.rs-api'
+	testCompile 'javax.annotation:javax.annotation-api'
+	testCompile 'javax.validation:validation-api'
+	testCompile 'javax.json:javax.json-api'
+	testCompile 'javax.json.bind:javax.json.bind-api'
+	testCompile 'javax.enterprise:cdi-api'
+	testCompile 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+//	testCompile 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
+	testCompile 'org.testng:testng'
+
+	testCompile 'org.jboss.arquillian.test:arquillian-test-api'
+	testCompile 'org.jboss.arquillian.container:arquillian-container-test-api'
+	testCompile 'org.jboss.arquillian.testng:arquillian-testng-container'
+
+	testCompile 'org.jboss.shrinkwrap:shrinkwrap-api'
+	testCompile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-gradle-embedded-archive'
+	testCompile 'com.github.tomakehurst:wiremock'
+	testCompile 'com.beust:jcommander'
+
+	testRuntime 'ch.qos.logback:logback-classic'
+	testRuntime 'org.glassfish.jersey.core:jersey-client'
+	testRuntime 'org.glassfish.jersey.core:jersey-server'
+	testRuntime 'org.glassfish.jersey.containers:jersey-container-servlet'
+	testRuntime 'org.jboss.weld.servlet:weld-servlet-core'
+	testRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
+	testRuntime 'org.glassfish.jersey.inject:jersey-hk2'
+	testRuntime 'org.glassfish.jersey.connectors:jersey-grizzly-connector'
+	testRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
+	testRuntime 'com.fasterxml.jackson.core:jackson-annotations'
+	testRuntime 'com.fasterxml.jackson.core:jackson-databind'
+
+	testRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
+	testRuntime 'org.jboss.arquillian.container:arquillian-jetty-embedded-9'
+	testRuntime 'org.eclipse.jetty:jetty-server'
+	testRuntime 'org.eclipse.jetty:jetty-deploy'
+	testRuntime 'org.eclipse.jetty:jetty-annotations'
 }
 
-processTestResources {
-	inputs.property 'serverName', serverName
-
-	filesMatching( '**/*.xml' ) {
-		expand([
-			server: containers[serverName]
-		])
+test {
+	useTestNG() {
+		useDefaultListeners = true
+		suites 'src/test/resources/tests.xml'
 	}
-}
 
-task(name: "tck-test", type: Test ) {
-	useTestNG()
-	
+	runWithWiremock = true
+
 	onlyIf { tckDir.directory }
 }
