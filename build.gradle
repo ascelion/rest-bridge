@@ -10,11 +10,6 @@ buildscript {
 apply plugin: 'pl.allegro.tech.build.axion-release'
 apply plugin: 'eclipse'
 
-task publishLocal {
-	doLast {
-		println 'no publishing defined yet'
-	}
-}
 task publish {
 	doLast {
 		println 'no publishing defined yet'
@@ -23,27 +18,46 @@ task publish {
 
 allprojects {
 	repositories {
-		jcenter()
+		mavenLocal()
+		mavenCentral()
 		maven {
 			url = 'https://repo.gradle.org/gradle/libs-releases'
+		}
+		maven {
+			url = 'https://repository.apache.org/content/repositories/snapshots'
+			content {
+				includeGroup 'org.apache.cxf'
+			}
 		}
 	}
 
 	defaultTasks 'test'
 }
 
-subprojects {
+subprojects { sub ->
+	ext {
+		tckDir = rootProject.file 'eclipse/tck/src/main/java'
+	}
+
 	apply plugin: ascelion.rest.bridge.BuildPlugin
 	apply from: rootProject.file( 'dependencies.gradle' )
 
 	group = 'ascelion.rest-bridge'
-	version = '1.0.2-SNAPSHOT'
+	version = scmVersion.version
 
 	sourceCompatibility = JavaVersion.VERSION_1_8
 	targetCompatibility = JavaVersion.VERSION_1_8
 
+	sourceSets.all { src ->
+		src.compileClasspath += src.annotationProcessorPath
+	}
+
 	tasks.withType( Test ) {
-		outputs.upToDateWhen { false }
+		group = 'verification'
+
+		if( name == 'arquillian' ) {
+			description = 'Runs all Arquillian checks.'
+		}
 
 		ignoreFailures = true
 		enableAssertions = true
@@ -56,25 +70,11 @@ subprojects {
 		reports {
 			html.enabled = true
 		}
+
+		systemProperty "seed", UUID.randomUUID()
 	}
 
-	tasks.withType( War ) {
-		jar.enabled = true
-
-		apply plugin: 'eclipse-wtp'
-
-		eclipse {
-			wtp {
-				facet {
-					facet name: 'jst.web', version: '3.1'
-
-					file {
-						whenMerged { facets ->
-							facets.facets.removeIf { it.name == 'jst.utility' }
-						}
-					}
-				}
-			}
-		}
+	plugins.withType( MavenPublishPlugin ) {
+		sub.apply from: rootProject.file( 'publish.gradle' )
 	}
 }

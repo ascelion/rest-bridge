@@ -12,7 +12,7 @@ class ActionParam
 
 	final int index;
 	final Class<?> type;
-	private final Function<RestRequest, Object> supplier;
+	private final Function<RestRequest<?>, Object> supplier;
 	private final String defaultValue;
 	final Function<Object, String> converter;
 
@@ -23,14 +23,14 @@ class ActionParam
 		} );
 	}
 
-	ActionParam( int index, Class<?> type, Annotation[] annotations, Function<RestRequest, Object> supplier )
+	ActionParam( int index, Class<?> type, Annotation[] annotations, Function<RestRequest<?>, Object> supplier )
 	{
 		this( index, type, annotations, supplier, o -> {
 			throw new UnsupportedOperationException( "TODO (no converter)" );
 		} );
 	}
 
-	ActionParam( int index, Class<?> type, Annotation[] annotations, Function<RestRequest, Object> supplier, Function<Object, String> converter )
+	ActionParam( int index, Class<?> type, Annotation[] annotations, Function<RestRequest<?>, Object> supplier, Function<Object, String> converter )
 	{
 		this.index = index;
 		this.type = type;
@@ -44,7 +44,7 @@ class ActionParam
 			.findFirst().orElse( null );
 	}
 
-	Object currentValue( RestRequest req )
+	Object currentValue( RestRequest<?> req )
 	{
 		final Object val = this.supplier.apply( req );
 

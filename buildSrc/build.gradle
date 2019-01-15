@@ -7,8 +7,8 @@ apply plugin: 'eclipse'
 
 dependencies
 {
-	compile localGroovy()
-	compile gradleApi()
+	implementation localGroovy()
+	implementation gradleApi()
 
 	compileOnly 'org.projectlombok:lombok:1.18.4'
 	annotationProcessor 'org.projectlombok:lombok:1.18.4'
@@ -20,5 +20,19 @@ eclipse {
 	}
 	classpath {
 		defaultOutputDir file("build/eclipse")
+
+		file {
+			whenMerged { clp ->
+				File gradleAllDist = file( "${gradle.gradleUserHomeDir}/wrapper/dists/gradle-${gradle.gradleVersion}-all" )
+
+				if( gradleAllDist.exists() ) {
+					File gradleSrc = file( "${gradleAllDist.listFiles()[0]}/gradle-${gradle.gradleVersion}/src" )
+
+					clp.entries
+							.findAll {  it.kind == 'lib' && it.sourcePath == null && it.path =~ "/gradle[^/]*.jar" }
+							.each { it.sourcePath = clp.fileReference( gradleSrc ) }
+				}
+			}
+		}
 	}
 }

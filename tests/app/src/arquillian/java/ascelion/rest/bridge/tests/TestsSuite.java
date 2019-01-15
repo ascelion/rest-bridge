@@ -11,6 +11,7 @@ import org.junit.runners.Suite.SuiteClasses;
 	BeanResourceTest.class,
 	HelloTest.class,
 	MethodsTest.class,
+	TimeoutTest.class,
 	UsersTest.class,
 	ValidatedRestTest.class,
 	ValidatedTest.class,

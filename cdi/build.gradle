@@ -1,9 +1,11 @@
+apply plugin: 'maven-publish'
 
 dependencies {
+	api project( ':client' )
+
 	compileOnly 'javax.ws.rs:javax.ws.rs-api'
 	compileOnly 'javax.validation:validation-api'
 	compileOnly 'javax.enterprise:cdi-api'
 
-	compile 'org.apache.deltaspike.core:deltaspike-core-api'
-	compile project( ':client' )
+	implementation 'org.apache.commons:commons-lang3'
 }

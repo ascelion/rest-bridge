@@ -14,22 +14,19 @@ class ValidationAction
 extends Action
 {
 
-	static private final boolean isCDI = isCDI();
-
-	private static ValidatorFactory cdiValidator()
-	{
-		return javax.enterprise.inject.spi.CDI.current().select( ValidatorFactory.class ).get();
-	}
-
 	private static ValidatorFactory getValidator()
 	{
-		if( isCDI ) {
-			try {
-				return cdiValidator();
-			}
-			catch( final Exception e ) {
-				;
-			}
+		try {
+			return javax.enterprise.inject.spi.CDI.current().select( ValidatorFactory.class ).get();
+		}
+		catch( final NoClassDefFoundError e ) {
+			;
+		}
+		catch( final IllegalStateException e ) {
+			;
+		}
+		catch( final RuntimeException e ) {
+			;
 		}
 
 		try {
@@ -38,19 +35,6 @@ extends Action
 		catch( final Throwable e ) {
 			return null;
 		}
-	}
-
-	private static boolean isCDI()
-	{
-		try {
-			Class.forName( "javax.enterprise.inject.spi.CDI" );
-
-			return true;
-		}
-		catch( final ClassNotFoundException e ) {
-			return false;
-		}
-
 	}
 
 	private final Method method;
@@ -63,7 +47,7 @@ extends Action
 	}
 
 	@Override
-	public RestRequest execute( RestRequest req )
+	public RestRequest<?> execute( RestRequest<?> req )
 	{
 		final ValidatorFactory vf = getValidator();
 

@@ -7,12 +7,15 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.time.LocalDate;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
@@ -21,7 +24,8 @@ import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Provider;
 
-import ascelion.rest.bridge.tests.api.util.RestClientTrace;
+import ascelion.rest.bridge.etc.RestClientTrace;
+import ascelion.rest.bridge.tests.api.SLF4JHandler;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
@@ -29,10 +33,12 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -49,12 +55,17 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class RestClientTest
 {
 
+	static {
+		SLF4JHandler.install();
+	}
+
 	@Rule
 	public final WireMockRule rule = new WireMockRule();
 
 	private Client client;
 	private URI target;
 
+	@SuppressWarnings( "rawtypes" )
 	@Mock( lenient = true )
 	private ParamConverter conv;
 	private PCP prov;
@@ -68,10 +79,10 @@ public class RestClientTest
 		this.client.register( RestClientTrace.class );
 
 		when( this.conv.toString( any( String.class ) ) ).then( ic -> {
-			return "X" + ic.getArgument( 0 );
+			return "S" + ic.getArgument( 0 );
 		} );
-		when( this.conv.toString( any() ) ).then( ic -> {
-			return "X" + ic.getArgument( 0 );
+		when( this.conv.toString( any( LocalDate.class ) ) ).then( ic -> {
+			return "D" + ic.getArgument( 0 );
 		} );
 
 		this.prov = new PCP( this.conv );
@@ -129,13 +140,23 @@ public class RestClientTest
 	}
 
 	@Test
-	public void findConverter()
+	public void findStringConverter()
 	{
-		final ConvertersFactory cvsf = new ConvertersFactory( this.client.getConfiguration() );
-		final Function<Object, String> cv = cvsf.getConverter( String.class, new Annotation[0] );
+		final ConvertersFactory cvsf = new ConvertersFactory( this.client );
+		final Function<String, String> cv = cvsf.getConverter( String.class, new Annotation[0] );
 
 		assertThat( cv, notNullValue() );
-		assertThat( "XHIHI", is( equalTo( this.conv.toString( "HIHI" ) ) ) );
+		assertThat( "SHIHI", is( equalTo( this.conv.toString( "HIHI" ) ) ) );
+	}
+
+	@Test
+	public void findLocalDateConverter()
+	{
+		final ConvertersFactory cvsf = new ConvertersFactory( this.client );
+		final Function<LocalDate, String> cv = cvsf.getConverter( LocalDate.class, new Annotation[0] );
+
+		assertThat( cv, notNullValue() );
+		assertThat( "SHIHI", is( equalTo( this.conv.toString( "HIHI" ) ) ) );
 	}
 
 	@Test
@@ -152,8 +173,66 @@ public class RestClientTest
 
 		assertThat( ct.format( now ), equalTo( now.toString() ) );
 
-		verify( this.conv, times( 1 ) ).toString( any() );
-		verify( this.conv, times( 0 ) ).toString( any( String.class ) );
+		verify( this.conv, times( 1 ) ).toString( any( LocalDate.class ) );
+		verifyNoMoreInteractions( this.conv );
+	}
+
+	@Test
+	public void dateFormatDefault() throws Exception
+	{
+		final RestClient rc = new RestClient( this.client, this.target );
+		final Interface ct = rc.getInterface( Interface.class );
+
+		assertThat( ct, notNullValue() );
+
+		final LocalDate def = LocalDate.of( 1643, 1, 4 );
+
+		stubFormat( def );
+
+		assertThat( ct.format( null ), equalTo( def.toString() ) );
+
+		verify( this.conv, times( 1 ) ).toString( any( String.class ) );
+		verifyNoMoreInteractions( this.conv );
+	}
+
+	@Test
+	public void parseDate() throws Exception
+	{
+		this.client.register( LocalDateBodyReader.class );
+
+		final RestClient rc = new RestClient( this.client, this.target );
+		final Interface ct = rc.getInterface( Interface.class );
+
+		assertThat( ct, notNullValue() );
+
+		final LocalDate now = LocalDate.now();
+
+		stubParse( now );
+
+		assertThat( ct.parse( now.toString() ), equalTo( now ) );
+
+		verify( this.conv, times( 1 ) ).toString( any( String.class ) );
+		verifyNoMoreInteractions( this.conv );
+	}
+
+	@Test
+	public void parseDateDefault() throws Exception
+	{
+		this.client.register( LocalDateBodyReader.class );
+
+		final RestClient rc = new RestClient( this.client, this.target );
+		final Interface ct = rc.getInterface( Interface.class );
+
+		assertThat( ct, notNullValue() );
+
+		final LocalDate def = LocalDate.of( 1643, 1, 4 );
+
+		stubParse( def );
+
+		assertThat( ct.parse( null ), equalTo( def ) );
+
+		verify( this.conv, times( 1 ) ).toString( any( String.class ) );
+		verifyNoMoreInteractions( this.conv );
 	}
 
 	@Test
@@ -181,62 +260,65 @@ public class RestClientTest
 		assertThat( api.get(), equalTo( "t2" ) );
 	}
 
-	@Test
-	public void dateFormatDefault() throws Exception
+	@Test( expected = ProcessingException.class )
+	public void exception()
 	{
+		final IOException ex = new IOException( "thrown" );
+		final ClientRequestFilter flt = cx -> {
+			ex.fillInStackTrace();
+			throw ex;
+		};
+
+		this.client.register( flt, Integer.MIN_VALUE );
+
 		final RestClient rc = new RestClient( this.client, this.target );
-		final Interface ct = rc.getInterface( Interface.class );
+		final Interface api = rc.getInterface( Interface.class );
 
-		assertThat( ct, notNullValue() );
+		try {
+			api.get();
+		}
+		catch( final ProcessingException e ) {
+			assertThat( e.getCause(), sameInstance( ex ) );
 
-		final LocalDate def = LocalDate.of( 1643, 1, 4 );
-
-		stubFormat( def );
-
-		assertThat( ct.format( null ), equalTo( def.toString() ) );
-
-		verify( this.conv, times( 0 ) ).toString( any() );
-		verify( this.conv, times( 0 ) ).toString( any( String.class ) );
+			throw e;
+		}
 	}
 
-	@Test
-	public void parseFormat() throws Exception
+	@Test( expected = RuntimeException.class )
+	public void rtException()
 	{
-		this.client.register( LocalDateBodyReader.class );
+		final RuntimeException ex = new RuntimeException( "thrown" );
+		final ClientRequestFilter flt = cx -> {
+			ex.fillInStackTrace();
+			throw ex;
+		};
+
+		this.client.register( flt, Integer.MIN_VALUE );
 
 		final RestClient rc = new RestClient( this.client, this.target );
-		final Interface ct = rc.getInterface( Interface.class );
+		final Interface api = rc.getInterface( Interface.class );
 
-		assertThat( ct, notNullValue() );
+		try {
+			api.get();
+		}
+		catch( final RuntimeException e ) {
+			assertThat( e, sameInstance( ex ) );
 
-		final LocalDate now = LocalDate.now();
-
-		stubParse( now );
-
-		assertThat( ct.parse( now.toString() ), equalTo( now ) );
-
-		verify( this.conv, times( 0 ) ).toString( any() );
-		verify( this.conv, times( 0 ) ).toString( any( String.class ) );
+			throw e;
+		}
 	}
 
-	@Test
-	public void parseFormatDefault() throws Exception
+	@Test( expected = ProcessingException.class )
+	public void timeout()
 	{
-		this.client.register( LocalDateBodyReader.class );
+		final Client clt = ClientBuilder.newBuilder()
+			.connectTimeout( 2, TimeUnit.SECONDS )
+			.build();
 
-		final RestClient rc = new RestClient( this.client, this.target );
-		final Interface ct = rc.getInterface( Interface.class );
+		final RestClient rc = new RestClient( clt, URI.create( "http://ascelion.com:1234" ) );
+		final Interface api = rc.getInterface( Interface.class );
 
-		assertThat( ct, notNullValue() );
-
-		final LocalDate def = LocalDate.of( 1643, 1, 4 );
-
-		stubParse( def );
-
-		assertThat( ct.parse( null ), equalTo( def ) );
-
-		verify( this.conv, times( 0 ) ).toString( any() );
-		verify( this.conv, times( 0 ) ).toString( any( String.class ) );
+		api.get();
 	}
 
 	@Test

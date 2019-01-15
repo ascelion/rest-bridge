@@ -10,11 +10,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import lombok.EqualsAndHashCode;
@@ -23,21 +23,31 @@ import lombok.ToString;
 class ConvertersFactory
 {
 
-	static class DefaultPC<T> implements ParamConverter<T>
+	static private final ParamConverter<?> DEFAULT_PC = new ParamConverter<Object>()
 	{
 
 		@Override
-		public T fromString( String value )
+		public Object fromString( String value )
 		{
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public String toString( T value )
+		public String toString( Object value )
 		{
 			return Objects.toString( value, null );
 		}
-	}
+	};
+
+	static private final ParamConverterProvider DEFAULT_PCP = new ParamConverterProvider()
+	{
+
+		@Override
+		public <T> ParamConverter<T> getConverter( Class<T> rawType, Type genericType, Annotation[] annotations )
+		{
+			return (ParamConverter<T>) DEFAULT_PC;
+		}
+	};
 
 	@EqualsAndHashCode
 	@ToString
@@ -57,50 +67,26 @@ class ConvertersFactory
 	}
 
 	private final Map<KEY, Function<Object, String>> converters = new ConcurrentHashMap<>();
-	private final Collection<ParamConverterProvider> providers;
+	private final Configuration cf;
 
-	ConvertersFactory( Configuration cf )
+	ConvertersFactory( Client client )
 	{
-		Function<Class, Object> bld = (Function<Class, Object>) cf.getProperties().get( RestClient.INSTANTIATOR_PROPERTY );
+		this.cf = client.getConfiguration();
 
-		if( bld == null ) {
-			bld = this::newInstance;
+		if( !this.cf.isRegistered( DEFAULT_PCP ) ) {
+			client.register( DEFAULT_PCP, Integer.MAX_VALUE );
 		}
-
-		final Stream<ParamConverterProvider> si = cf
-			.getInstances()
-			.stream()
-			.filter( ParamConverterProvider.class::isInstance )
-			.map( ParamConverterProvider.class::cast );
-		final Stream<ParamConverterProvider> sc = cf
-			.getClasses()
-			.stream()
-			.filter( ParamConverterProvider.class::isAssignableFrom )
-			.map( bld::apply )
-			.map( ParamConverterProvider.class::cast );
-
-		this.providers = Stream.concat( si, sc )
-			.sorted( Util::byPriority )
-			.collect( toList() );
-		this.providers.add( new ParamConverterProvider()
-		{
-
-			@Override
-			public <T> ParamConverter<T> getConverter( Class<T> rawType, Type genericType, Annotation[] annotations )
-			{
-				return new DefaultPC<>();
-			}
-		} );
 	}
 
-	Function<Object, String> getConverter( Class<?> type, Annotation[] annotations )
+	<T> Function<T, String> getConverter( Class<T> type, Annotation[] annotations )
 	{
-		return this.converters.computeIfAbsent( new KEY( type, annotations ), this::findConverter );
+		return t -> this.converters.computeIfAbsent( new KEY( type, annotations ), this::findConverter ).apply( t );
 	}
 
-	private Function<Object, String> findConverter( KEY key )
+	private <T> Function<T, String> findConverter( KEY key )
 	{
-		final ParamConverter c = (ParamConverter) this.providers.stream()
+		final Collection<ParamConverterProvider> providers = Util.providers( this.cf, ParamConverterProvider.class );
+		final ParamConverter<T> c = (ParamConverter<T>) providers.stream()
 			.map( p -> p.getConverter( key.type, key.type, key.annotations ) )
 			.filter( Objects::nonNull )
 			.findFirst()
@@ -110,22 +96,8 @@ class ConvertersFactory
 			if( v == null ) {
 				return null;
 			}
-			if( v instanceof String ) {
-				return trimToNull( (String) v );
-			}
 
 			return trimToNull( c.toString( v ) );
 		};
-	}
-
-	private Object newInstance( Class type )
-	{
-		try {
-			return type.newInstance();
-		}
-		catch( InstantiationException | IllegalAccessException e ) {
-			// TODO define exception
-			throw new RuntimeException( e );
-		}
 	}
 }

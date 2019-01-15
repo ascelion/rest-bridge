@@ -1,12 +1,14 @@
 
 package ascelion.rest.bridge.tests.app;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import ascelion.rest.bridge.tests.api.BeanAPI;
 import ascelion.rest.bridge.tests.api.BeanData;
 import ascelion.rest.bridge.tests.api.Hello;
 
+@ApplicationScoped
 public class BeanIMPL
 extends IMPL<BeanData>
 implements BeanAPI
@@ -18,9 +20,7 @@ implements BeanAPI
 	@Override
 	public BeanData get()
 	{
-		if( this.hello == null ) {
-			throw new IllegalStateException();
-		}
+		this.hello.sayByParam( "guest" );
 
 		return new BeanData( "value" );
 	}
