@@ -56,24 +56,24 @@ final class RestMethod
 
 	//	static private final Logger L = LoggerFactory.getLogger( RestMethod.class );
 
-	private final RestBridgeType rbt;
+	private final RestClientData rcd;
 	private final Method javaMethod;
 	private final String httpMethod;
 	private final List<Action> actions = new ArrayList<>( 8 );
 	private final Map<String, Boolean> pathElements = new LinkedHashMap<>();
 
-	RestMethod( RestBridgeType rbt, Method method )
+	RestMethod( RestClientData rcd, Method method )
 	{
-		this.rbt = rbt;
+		this.rcd = rcd;
 		this.javaMethod = method;
-		this.httpMethod = Util.getHttpMethod( method );
+		this.httpMethod = RBUtils.getHttpMethod( method );
 
-		final String paths = Stream.of( method.getAnnotation( Path.class ), rbt.type.getAnnotation( Path.class ) )
+		final String paths = Stream.of( method.getAnnotation( Path.class ), rcd.type.getAnnotation( Path.class ) )
 			.filter( Objects::nonNull )
 			.map( Path::value )
 			.collect( joining() );
 
-		Util.pathElements( paths ).forEach( p -> this.pathElements.put( p, false ) );
+		RBUtils.pathElements( paths ).forEach( p -> this.pathElements.put( p, false ) );
 
 		final Parameter[] params = method.getParameters();
 
@@ -82,7 +82,7 @@ final class RestMethod
 		for( int q = 0, z = params.length; q < z; q++ ) {
 			final int index = q;
 			final Annotation[] annotations = params[index].getAnnotations();
-			final Function<Object, String> cvt = (Function) rbt.cvsf.getConverter( params[index].getType(), annotations );
+			final Function<Object, String> cvt = (Function) rcd.cvsf.getConverter( params[index].getType(), annotations );
 			final ActionParam p = new ActionParam( index, params[index].getType(), annotations, req -> req.arguments[index], cvt );
 
 			if( collectActions( annotations, p ) ) {
@@ -92,16 +92,16 @@ final class RestMethod
 						throw new RestClientMethodException( "An entity is already present at parameter " + a.param.index, this.javaMethod );
 					} );
 
-				final Type entityType = GenericTypeReflector.getExactParameterTypes( this.javaMethod, this.rbt.type )[index];
+				final Type entityType = GenericTypeReflector.getExactParameterTypes( this.javaMethod, this.rcd.type )[index];
 				final EntityAction entityAction = new EntityAction( p, entityType );
 
 				this.actions.add( entityAction );
 			}
 		}
 
-		Util.findAnnotation( Produces.class, method, rbt.type )
+		RBUtils.findAnnotation( Produces.class, method, rcd.type )
 			.ifPresent( a -> this.actions.add( new ProducesAction( a, this.actions.size() ) ) );
-		Util.findAnnotation( Consumes.class, method, rbt.type )
+		RBUtils.findAnnotation( Consumes.class, method, rcd.type )
 			.ifPresent( a -> this.actions.add( new ConsumesAction( a, this.actions.size() ) ) );
 
 		this.pathElements.entrySet().stream()
@@ -113,7 +113,7 @@ final class RestMethod
 		if( this.httpMethod == null ) {
 //			resource methods that have a @Path annotation,
 //			but no HTTP method are considered sub-resource locators.
-			this.actions.add( new SubresourceAction( this.actions.size(), this.javaMethod.getReturnType(), rbt ) );
+			this.actions.add( new SubresourceAction( this.actions.size(), this.javaMethod.getReturnType(), rcd ) );
 		}
 
 		Collections.sort( this.actions );
@@ -204,8 +204,8 @@ final class RestMethod
 
 	Callable<?> request( Object proxy, Object... arguments ) throws URISyntaxException
 	{
-		final WebTarget actualTarget = Util.addPathFromAnnotation( this.javaMethod, this.rbt.tsup.get() );
-		final RestRequest<?> req = new RestRequest<>( this.rbt, proxy, this.javaMethod, this.httpMethod, actualTarget, arguments );
+		final WebTarget actualTarget = RBUtils.addPathFromAnnotation( this.javaMethod, this.rcd.tsup.get() );
+		final RestRequest<?> req = new RestRequest<>( this.rcd, proxy, this.javaMethod, this.httpMethod, actualTarget, arguments );
 		Callable<?> res = null;
 
 		for( final Action a : this.actions ) {

@@ -22,6 +22,8 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import static ascelion.rest.bridge.client.RestClientProperties.NO_ASYNC_INTERCEPTOR;
+import static ascelion.rest.bridge.client.RestClientProperties.NO_RESPONSE_HANDLER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.apache.commons.lang3.reflect.FieldUtils.readDeclaredField;
@@ -62,7 +64,7 @@ public class AnnotationActionTest
 	public void setUp()
 	{
 		final ConvertersFactory cvsf = new ConvertersFactory( this.mc.client );
-		final RestBridgeType rbt = new RestBridgeType( Interface.class, this.mc.configuration, cvsf, ResponseHandler.NONE, null, AsyncInterceptor.NONE, () -> this.mc.methodTarget );
+		final RestClientData rbt = new RestClientData( Interface.class, this.mc.configuration, cvsf, NO_RESPONSE_HANDLER, null, NO_ASYNC_INTERCEPTOR, () -> this.mc.methodTarget );
 
 		this.met = new RestMethod( rbt, Interface.class.getMethod( "get" ) );
 		this.actions = (List<Action>) readDeclaredField( this.met, "actions", true );

@@ -13,7 +13,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-import ascelion.rest.bridge.client.Util;
+import ascelion.rest.bridge.client.RBUtils;
 
 import org.apache.commons.io.IOUtils;
 
@@ -29,7 +29,7 @@ final class MBRWString implements MessageBodyWriter<String>, MessageBodyReader<S
 	@Override
 	public String readFrom( Class<String> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, String> headers, InputStream is ) throws IOException, WebApplicationException
 	{
-		return IOUtils.toString( is, Util.charset( mt ) );
+		return IOUtils.toString( is, RBUtils.charset( mt ) );
 	}
 
 	@Override
@@ -41,7 +41,7 @@ final class MBRWString implements MessageBodyWriter<String>, MessageBodyReader<S
 	@Override
 	public void writeTo( String t, Class<?> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, Object> headers, OutputStream os ) throws IOException, WebApplicationException
 	{
-		IOUtils.write( t, os, Util.charset( mt ) );
+		IOUtils.write( t, os, RBUtils.charset( mt ) );
 	}
 
 }

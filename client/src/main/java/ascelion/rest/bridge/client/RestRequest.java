@@ -32,7 +32,7 @@ import lombok.Getter;
 final class RestRequest<T> implements Callable<T>
 {
 
-	private final RestBridgeType rbt;
+	private final RestClientData rcd;
 	final Object proxy;
 	private final Method javaMethod;
 	final Object[] arguments;
@@ -49,14 +49,14 @@ final class RestRequest<T> implements Callable<T>
 	private Object entity;
 	private boolean async;
 
-	RestRequest( RestBridgeType rbt, Object proxy, Method javaMethod, String httpMethod, WebTarget target, Object... arguments )
+	RestRequest( RestClientData rcd, Object proxy, Method javaMethod, String httpMethod, WebTarget target, Object... arguments )
 	{
-		this.rbt = rbt;
+		this.rcd = rcd;
 		this.proxy = proxy;
 		this.javaMethod = javaMethod;
 		this.httpMethod = httpMethod;
 
-		final Type rt = GenericTypeReflector.getExactReturnType( this.javaMethod, rbt.type );
+		final Type rt = GenericTypeReflector.getExactReturnType( this.javaMethod, rcd.type );
 		GenericType<?> gt = new GenericType<>( rt );
 
 		if( gt.getRawType() == CompletionStage.class ) {
@@ -165,11 +165,11 @@ final class RestRequest<T> implements Callable<T>
 		}
 
 		if( this.async ) {
-			final Object ais = this.rbt.aint.prepare();
+			final Object ais = this.rcd.aint.prepare();
 
 			final CompletableFuture<T> fut = new CompletableFuture<>();
 
-			this.rbt.exec.execute( () -> invokeAsync( b, ais, fut ) );
+			this.rcd.exec.execute( () -> invokeAsync( b, ais, fut ) );
 
 			return (T) fut;
 		}
@@ -213,7 +213,17 @@ final class RestRequest<T> implements Callable<T>
 			RestClient.invokedMethod( null );
 		}
 
-		this.rbt.rsph.handleResponse( rsp );
+		final Throwable ex = this.rcd.rsph.apply( rsp );
+
+		if( ex != null ) {
+			ex.fillInStackTrace();
+
+			if( ex instanceof Error ) {
+				throw(Error) ex;
+			}
+
+			throw(Exception) ex;
+		}
 
 		final Class<?> rawType = this.returnType.getRawType();
 
@@ -239,7 +249,7 @@ final class RestRequest<T> implements Callable<T>
 
 	private void invokeAsync( Invocation.Builder b, Object ais, CompletableFuture<T> fut )
 	{
-		this.rbt.aint.before( ais );
+		this.rcd.aint.before( ais );
 
 		try {
 			fut.complete( invoke( b ) );
@@ -248,13 +258,13 @@ final class RestRequest<T> implements Callable<T>
 			fut.completeExceptionally( e );
 		}
 		finally {
-			this.rbt.aint.after( ais );
+			this.rcd.aint.after( ais );
 		}
 	}
 
 	private String defaultContentType()
 	{
-		return ofNullable( this.rbt.conf.getProperty( RestClientProperties.DEFAULT_CONTENT_TYPE ) )
+		return ofNullable( this.rcd.conf.getProperty( RestClientProperties.DEFAULT_CONTENT_TYPE ) )
 			.map( Object::toString )
 			.orElse( MediaType.APPLICATION_OCTET_STREAM );
 	}

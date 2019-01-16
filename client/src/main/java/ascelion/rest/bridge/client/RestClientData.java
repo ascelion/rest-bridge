@@ -2,33 +2,35 @@
 package ascelion.rest.bridge.client;
 
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-final class RestBridgeType
+final class RestClientData
 {
 
 	final Class<?> type;
 	final Configuration conf;
 	final ConvertersFactory cvsf;
-	final ResponseHandler rsph;
+	final Function<Response, Throwable> rsph;
 	final Executor exec;
 	final AsyncInterceptor<Object> aint;
 	final Supplier<WebTarget> tsup;
 
-	RestBridgeType( Class<?> type, RestBridgeType rbt, Supplier<WebTarget> tsup )
+	RestClientData( Class<?> type, RestClientData rcd, Supplier<WebTarget> tsup )
 	{
 		this.type = type;
-		this.conf = rbt.conf;
-		this.cvsf = rbt.cvsf;
-		this.rsph = rbt.rsph;
-		this.exec = rbt.exec;
-		this.aint = rbt.aint;
+		this.conf = rcd.conf;
+		this.cvsf = rcd.cvsf;
+		this.rsph = rcd.rsph;
+		this.exec = rcd.exec;
+		this.aint = rcd.aint;
 		this.tsup = tsup;
 	}
 }

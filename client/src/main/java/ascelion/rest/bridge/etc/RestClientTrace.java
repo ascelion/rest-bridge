@@ -25,7 +25,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 import ascelion.rest.bridge.client.RestClient;
-import ascelion.rest.bridge.client.Util;
+import ascelion.rest.bridge.client.RBUtils;
 
 import static ascelion.rest.bridge.client.RestClientProperties.DEFAULT_CONTENT_TYPE;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
@@ -117,10 +117,6 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 
 		final Method method = RestClient.invokedMethod();
 
-		if( method != null && method.getDeclaringClass().getName().contains( "JerseyClientInitialisation" ) ) {
-			return;
-		}
-
 		ID.incrementAndGet();
 
 		final Formatter fmt = new Formatter();
@@ -211,7 +207,7 @@ public class RestClientTrace implements ClientRequestFilter, ClientResponseFilte
 	private void printBody( Formatter fmt, String prefix, byte[] body, MediaType mt )
 	{
 		try {
-			readLines( new ByteArrayInputStream( body ), Util.charset( mt ) )
+			readLines( new ByteArrayInputStream( body ), RBUtils.charset( mt ) )
 				.forEach( line -> printLine( fmt, prefix, "%s", line ) );
 		}
 		catch( final IOException e ) {

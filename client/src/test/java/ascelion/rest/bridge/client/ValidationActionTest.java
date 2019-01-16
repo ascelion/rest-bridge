@@ -162,7 +162,7 @@ public class ValidationActionTest
 	private void runTest( String methodName, Object... arguments )
 	{
 		final Method method = findMethod( methodName );
-		final RestBridgeType rbt = new RestBridgeType( Object.class, null, null, null, null, null, null );
+		final RestClientData rbt = new RestClientData( Object.class, null, null, null, null, null, null );
 		final RestRequest<?> req = new RestRequest<>( rbt, this.client, Object.class.getMethod( "hashCode" ), "GET", this.target, arguments );
 		final ValidationAction action = new ValidationAction( method );
 

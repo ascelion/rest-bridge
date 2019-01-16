@@ -13,10 +13,10 @@ pipeline {
 	}
 
 	stages {
-		stage('Build') {
+		stage('Compile') {
 			steps {
 				sh "chmod +x gradlew"
-				sh "./gradlew cV clean build -xcheck"
+				sh "./gradlew cV clean classes testClasses"
 			}
 		}
 		stage('Checks') {
@@ -28,7 +28,7 @@ pipeline {
 		}
 		stage('Publish') {
 			steps {
-				sh "./gradlew publishLocal publish -xcheck "
+				sh "./gradlew publish -xcheck "
 			}
 		}
 		stage('Archive') {

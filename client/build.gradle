@@ -1,11 +1,10 @@
 apply plugin: 'maven-publish'
 
 dependencies {
-	compileOnly 'javax.ws.rs:javax.ws.rs-api'
-	compileOnly 'javax.annotation:javax.annotation-api'
-	compileOnly 'javax.validation:validation-api'
-	compileOnly 'javax.enterprise:cdi-api'
-	compileOnly 'org.eclipse.microprofile.config:microprofile-config-api'
+	externalApi 'javax.validation:validation-api'
+	externalApi 'javax.annotation:javax.annotation-api'
+	externalApi 'javax.ws.rs:javax.ws.rs-api'
+	externalApi 'javax.enterprise:cdi-api'
 
 	implementation 'io.leangen.geantyref:geantyref'
 	implementation 'org.apache.commons:commons-lang3'
@@ -14,8 +13,6 @@ dependencies {
 
 	testImplementation project( ':tests:api' )
 
-	testImplementation 'javax.ws.rs:javax.ws.rs-api'
-	testImplementation 'javax.validation:validation-api'
 	testImplementation 'com.github.tomakehurst:wiremock'
 	testImplementation 'org.apache.commons:commons-io'
 
