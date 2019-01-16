@@ -3,13 +3,9 @@ apply plugin: 'maven-publish'
 dependencies {
 	api project( ':client' )
 
-	compileOnly 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
-	compileOnly 'javax.ws.rs:javax.ws.rs-api'
-	compileOnly 'javax.annotation:javax.annotation-api'
-	compileOnly 'javax.json:javax.json-api'
-	compileOnly 'javax.enterprise:cdi-api'
-	compileOnly 'javax.json.bind:javax.json.bind-api'
-	compileOnly 'org.eclipse.microprofile.config:microprofile-config-api'
+	externalApi 'javax.ws.rs:javax.ws.rs-api'
+	externalApi 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+	externalApi 'org.eclipse.microprofile.config:microprofile-config-api'
 
 	implementation 'org.eclipse:yasson'
 	implementation 'org.apache.commons:commons-lang3'
@@ -17,11 +13,7 @@ dependencies {
 
 	testImplementation project( ':tests:api' )
 	testImplementation project( ':tests:shared' )
-	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
-	testImplementation 'javax.ws.rs:javax.ws.rs-api'
-	testImplementation 'javax.json.bind:javax.json.bind-api'
-	testImplementation 'org.apache.commons:commons-lang3'
 }
 
 test {

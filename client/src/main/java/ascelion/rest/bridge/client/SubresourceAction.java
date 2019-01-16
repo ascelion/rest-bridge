@@ -8,20 +8,20 @@ extends Action
 {
 
 	private final Class<?> resourceType;
-	private final RestBridgeType rbt;
+	private final RestClientData rcd;
 
-	SubresourceAction( int index, Class<?> resourceType, RestBridgeType rbt )
+	SubresourceAction( int index, Class<?> resourceType, RestClientData rcd )
 	{
 		super( new ActionParam( index ) );
 
 		this.resourceType = resourceType;
-		this.rbt = rbt;
+		this.rcd = rcd;
 	}
 
 	@Override
 	Callable<?> execute( RestRequest<?> req )
 	{
-		final RestClientIH inv = new RestClientIH( new RestBridgeType( this.resourceType, this.rbt, () -> req.getTarget() ) );
+		final RestClientIH inv = new RestClientIH( new RestClientData( this.resourceType, this.rcd, () -> req.getTarget() ) );
 
 		return () -> inv.newProxy();
 	}

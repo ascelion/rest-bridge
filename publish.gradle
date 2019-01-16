@@ -1,13 +1,4 @@
 
-if( tasks.findByName( 'publishLocal') == null ) {
-	task publishLocal {
-		group = 'publishing'
-		description = 'Alias for publishToMavenLocal'
-	
-		dependsOn publishToMavenLocal
-	}
-}
-
 task sourcesJar(type: Jar) {
 	from sourceSets.main.allJava
 	classifier = 'sources'
@@ -28,6 +19,16 @@ publishing {
 
 			afterEvaluate {
 				artifactId = "rest-bridge-${project.name}"
+			}
+		}
+	}
+	repositories {
+		maven {
+			url = "${gradle.ext.mavenDeployURL}-${version.endsWith('-SNAPSHOT') ? 'snapshots' : 'releases'}"
+
+			credentials {
+				username = "${gradle.ext.mavenDeployUsername}"
+				password = gradle.decryptPassword( "${gradle.ext.mavenDeployPassword}" )
 			}
 		}
 	}

@@ -19,7 +19,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-import ascelion.rest.bridge.client.Util;
+import ascelion.rest.bridge.client.RBUtils;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
@@ -57,7 +57,7 @@ class MBRWTextPlain implements MessageBodyReader<Object>, MessageBodyWriter<Obje
 	@Override
 	public Object readFrom( Class<Object> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, String> headers, InputStream is ) throws IOException, WebApplicationException
 	{
-		final String value = trimToNull( IOUtils.toString( is, Util.charset( mt ) ) );
+		final String value = trimToNull( IOUtils.toString( is, RBUtils.charset( mt ) ) );
 
 		if( value == null ) {
 			return null;
@@ -108,7 +108,7 @@ class MBRWTextPlain implements MessageBodyReader<Object>, MessageBodyWriter<Obje
 	public void writeTo( Object t, Class<?> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, Object> headers, OutputStream os ) throws IOException, WebApplicationException
 	{
 		if( t != null ) {
-			IOUtils.write( t.toString(), os, Util.charset( mt ) );
+			IOUtils.write( t.toString(), os, RBUtils.charset( mt ) );
 		}
 	}
 

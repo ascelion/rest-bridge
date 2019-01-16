@@ -4,19 +4,19 @@ package ascelion.rest.micro;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Response;
 
-import ascelion.rest.bridge.client.ResponseHandler;
 import ascelion.rest.bridge.client.RestClient;
-import ascelion.rest.bridge.client.Util;
+import ascelion.rest.bridge.client.RBUtils;
 
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 
-final class MPResponseHandler implements ResponseHandler
+final class MPResponseHandler implements Function<Response, Throwable>
 {
 
 	static private final String CONFIG_KEY_DISABLE_DEFAULT_MAPPER = "microprofile.rest.client.disable.default.mapper";
@@ -25,7 +25,7 @@ final class MPResponseHandler implements ResponseHandler
 
 	MPResponseHandler( Configuration cf )
 	{
-		this.providers = Util.providers( cf, ResponseExceptionMapper.class );
+		this.providers = RBUtils.providers( cf, ResponseExceptionMapper.class );
 
 		final String dis = MP.getConfig( CONFIG_KEY_DISABLE_DEFAULT_MAPPER )
 			.orElse( Objects.toString( cf.getProperty( CONFIG_KEY_DISABLE_DEFAULT_MAPPER ), "false" ) );
@@ -36,9 +36,9 @@ final class MPResponseHandler implements ResponseHandler
 	}
 
 	@Override
-	public void handleResponse( Response rsp ) throws Exception
+	public Throwable apply( Response rsp )
 	{
-		final Throwable ex = this.providers
+		return this.providers
 			.stream()
 			.filter( h -> h.handles( rsp.getStatus(), rsp.getHeaders() ) )
 			.map( h -> h.toThrowable( rsp ) )
@@ -46,16 +46,6 @@ final class MPResponseHandler implements ResponseHandler
 			.filter( this::matchesMethod )
 			.findFirst()
 			.orElse( null );
-
-		if( ex == null ) {
-			return;
-		}
-
-		if( ex instanceof Error ) {
-			throw(Error) ex;
-		}
-
-		throw(Exception) ex;
 	}
 
 	private boolean matchesMethod( final Throwable ex )

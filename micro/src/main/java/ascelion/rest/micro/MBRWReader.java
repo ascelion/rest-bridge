@@ -15,7 +15,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-import ascelion.rest.bridge.client.Util;
+import ascelion.rest.bridge.client.RBUtils;
 
 import org.apache.commons.io.IOUtils;
 
@@ -31,7 +31,7 @@ final class MBRWReader implements MessageBodyWriter<Reader>, MessageBodyReader<R
 	@Override
 	public Reader readFrom( Class<Reader> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, String> headers, InputStream is ) throws IOException, WebApplicationException
 	{
-		return IOUtils.toBufferedReader( new InputStreamReader( is, Util.charset( mt ) ) );
+		return IOUtils.toBufferedReader( new InputStreamReader( is, RBUtils.charset( mt ) ) );
 	}
 
 	@Override
@@ -43,7 +43,7 @@ final class MBRWReader implements MessageBodyWriter<Reader>, MessageBodyReader<R
 	@Override
 	public void writeTo( Reader t, Class<?> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, Object> headers, OutputStream os ) throws IOException, WebApplicationException
 	{
-		IOUtils.copy( t, os, Util.charset( mt ) );
+		IOUtils.copy( t, os, RBUtils.charset( mt ) );
 	}
 
 }

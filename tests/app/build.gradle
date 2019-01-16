@@ -1,97 +1,56 @@
 dependencies {
+	externalApi 'javax.enterprise:cdi-api'
+
 	implementation project( ':tests:api' )
 	implementation project( ':tests:shared' )
 
-	implementation 'javax.servlet:javax.servlet-api'
-	implementation 'javax.validation:validation-api'
-	implementation 'javax.xml.bind:jaxb-api'
-	implementation 'javax.ws.rs:javax.ws.rs-api'
-	implementation 'javax.inject:javax.inject'
-	implementation 'javax.enterprise:cdi-api'
 	implementation 'ch.qos.logback:logback-classic'
 
 	implementation 'org.glassfish.jersey.core:jersey-server'
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider'
 	implementation 'org.glassfish.jersey.media:jersey-media-json-jackson'
-}
 
-// testing
-sourceSets {
-	arquillian {
-		compileClasspath += sourceSets.main.output
-		runtimeClasspath += sourceSets.main.output
-	}
-}
-configurations {
-	arquillianImplementation.extendsFrom implementation
-	arquillianRuntime.extendsFrom runtime
-}
-dependencies {
-	arquillianImplementation 'io.leangen.geantyref:geantyref'
-	arquillianImplementation project( ':client' )
+	testImplementation 'io.leangen.geantyref:geantyref'
+	testImplementation project( ':client' )
 
-	arquillianImplementation 'junit:junit'
-	arquillianImplementation 'org.hamcrest:hamcrest-core'
-	arquillianImplementation 'org.hamcrest:hamcrest-library'
+	testImplementation 'junit:junit'
+	testImplementation 'org.hamcrest:hamcrest-core'
+	testImplementation 'org.hamcrest:hamcrest-library'
 
-	arquillianImplementation 'org.jboss.arquillian.junit:arquillian-junit-core'
-	arquillianImplementation 'org.jboss.arquillian.test:arquillian-test-api'
-	arquillianImplementation 'org.jboss.arquillian.container:arquillian-container-test-api'
-	arquillianImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
-	arquillianImplementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-gradle-embedded-archive'
+	testImplementation 'org.jboss.arquillian.junit:arquillian-junit-core'
+	testImplementation 'org.jboss.arquillian.test:arquillian-test-api'
+	testImplementation 'org.jboss.arquillian.container:arquillian-container-test-api'
+	testImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
 
-	arquillianImplementation 'org.glassfish.jersey.core:jersey-client'
-	arquillianImplementation 'org.glassfish.jersey.ext:jersey-proxy-client'
-	arquillianImplementation 'org.jboss.resteasy:resteasy-client'
-	arquillianImplementation 'org.apache.cxf:cxf-rt-rs-client'
-	arquillianRuntime 'commons-logging:commons-logging'
+	testImplementation 'org.glassfish.jersey.core:jersey-client'
+	testImplementation 'org.glassfish.jersey.ext:jersey-proxy-client'
+	testImplementation 'org.jboss.resteasy:resteasy-client'
+	testImplementation 'org.apache.cxf:cxf-rt-rs-client'
+	testRuntime 'commons-logging:commons-logging'
 
-	arquillianRuntime 'org.jboss.weld.servlet:weld-servlet-core'
-	arquillianRuntime 'org.jboss:jandex'
+	testRuntime 'org.jboss.weld.servlet:weld-servlet-core'
+	testRuntime 'org.jboss:jandex'
 
-	arquillianRuntime 'org.glassfish.jersey.core:jersey-server'
-	arquillianRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
-	arquillianRuntime 'org.glassfish.jersey.inject:jersey-hk2'
-	arquillianRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
-	arquillianRuntime 'org.glassfish.jersey.containers:jersey-container-servlet'
-	arquillianRuntime 'com.fasterxml.jackson.core:jackson-annotations'
-	arquillianRuntime 'com.fasterxml.jackson.core:jackson-databind'
+	testRuntime 'org.glassfish.jersey.core:jersey-server'
+	testRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
+	testRuntime 'org.glassfish.jersey.inject:jersey-hk2'
+	testRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
+	testRuntime 'org.glassfish.jersey.containers:jersey-container-servlet'
+	testRuntime 'com.fasterxml.jackson.core:jackson-annotations'
+	testRuntime 'com.fasterxml.jackson.core:jackson-databind'
 	
-	arquillianCompile 'org.glassfish.jersey.containers:jersey-container-servlet'
-	arquillianRuntime 'org.jboss.weld.servlet:weld-servlet-core'
-	arquillianRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
+	testImplementation 'org.glassfish.jersey.containers:jersey-container-servlet'
+	testRuntime 'org.jboss.weld.servlet:weld-servlet-core'
+	testRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
 
-	arquillianRuntime 'org.jboss.arquillian.junit:arquillian-junit-container'
-	arquillianRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
-	arquillianRuntime 'org.jboss.arquillian.container:arquillian-jetty-embedded-9'
-	arquillianRuntime 'org.eclipse.jetty:jetty-server'
-	arquillianRuntime 'org.eclipse.jetty:jetty-deploy'
-	arquillianRuntime 'org.eclipse.jetty:jetty-annotations'
+	testRuntime 'org.jboss.arquillian.junit:arquillian-junit-container'
+	testRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
+	testRuntime 'org.jboss.arquillian.container:arquillian-jetty-embedded-9'
+	testRuntime 'org.eclipse.jetty:jetty-server'
+	testRuntime 'org.eclipse.jetty:jetty-deploy'
+	testRuntime 'org.eclipse.jetty:jetty-annotations'
 }
-
-task arquillian( type: Test ) {
-	dependsOn arquillianClasses
-
+test {
 	include '**/ProvidersSuite.class'
-
-	testClassesDirs = sourceSets.arquillian.output.classesDirs
-
-	classpath += sourceSets.arquillian.output
-	classpath += configurations.arquillianRuntimeClasspath
-}
-check {
-	dependsOn arquillian
-}
-
-dependencies {
-	// workaround to buildship issue
-	arquillianRuntime project( ':client' ).sourceSets.main.output
-	arquillianRuntime project( ':tests:api' ).sourceSets.main.output
-	arquillianRuntime project( ':tests:shared' ).sourceSets.main.output
-}
-eclipse {
-	classpath {
-		plusConfigurations << configurations.arquillianRuntimeClasspath
-	}
 }

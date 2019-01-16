@@ -9,13 +9,13 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-public class UtilTest
+public class RBUtilsTest
 {
 
 	@Test
 	public void pathElements()
 	{
-		final Set<String> elements = Util.pathElements( "first/{path1}/{path2}/samd/{path3}/last" );
+		final Set<String> elements = RBUtils.pathElements( "first/{path1}/{path2}/samd/{path3}/last" );
 
 		assertThat( elements, hasSize( 3 ) );
 		assertThat( elements, contains( "path1", "path2", "path3" ) );

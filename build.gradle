@@ -10,12 +10,6 @@ buildscript {
 apply plugin: 'pl.allegro.tech.build.axion-release'
 apply plugin: 'eclipse'
 
-task publish {
-	doLast {
-		println 'no publishing defined yet'
-	}
-}
-
 allprojects {
 	repositories {
 		mavenLocal()
@@ -31,14 +25,10 @@ allprojects {
 		}
 	}
 
-	defaultTasks 'test'
+	defaultTasks 'check'
 }
 
 subprojects { sub ->
-	ext {
-		tckDir = rootProject.file 'eclipse/tck/src/main/java'
-	}
-
 	apply plugin: ascelion.rest.bridge.BuildPlugin
 	apply from: rootProject.file( 'dependencies.gradle' )
 

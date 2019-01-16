@@ -34,7 +34,7 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.ClassUtils.Interfaces;
 
 @NoArgsConstructor( access = AccessLevel.PRIVATE )
-public final class Util
+public final class RBUtils
 {
 
 	static public ClassLoader threadClassLoader()
@@ -73,7 +73,7 @@ public final class Util
 			.getClasses()
 			.stream()
 			.filter( type::isAssignableFrom )
-			.map( Util::newInstance )
+			.map( RBUtils::newInstance )
 			.map( type::cast );
 
 		return Stream.concat( si, sc )
@@ -205,7 +205,7 @@ public final class Util
 	static String getHttpMethod( Method method )
 	{
 		return getOverrideHierarchy( method, Interfaces.INCLUDE ).stream()
-			.map( Util::httpMethodOf )
+			.map( RBUtils::httpMethodOf )
 			.filter( Objects::nonNull )
 			.findFirst()
 			.orElse( null );

@@ -20,7 +20,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
 
-import ascelion.rest.bridge.client.Util;
+import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.micro.MP;
 
 import static java.lang.String.format;
@@ -153,7 +153,7 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 	private Class<? extends Annotation> lookupScope()
 	{
 		final Optional<Class<? extends Annotation>> c = MP.getConfig( this.type, "scope" )
-			.map( Util::rtLoadClass );
+			.map( RBUtils::rtLoadClass );
 
 		return c.orElse( inferScope() );
 	}

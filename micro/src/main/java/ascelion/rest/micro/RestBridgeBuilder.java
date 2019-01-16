@@ -16,7 +16,7 @@ import javax.ws.rs.core.Configuration;
 
 import ascelion.rest.bridge.client.RestClient;
 import ascelion.rest.bridge.client.RestClientMethodException;
-import ascelion.rest.bridge.client.Util;
+import ascelion.rest.bridge.client.RBUtils;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -208,14 +208,14 @@ final class RestBridgeBuilder implements RestClientBuilder
 	private <T> void configureProviders( RestBridgeConfiguration cfg, Class<T> type )
 	{
 		Stream.of( type.getAnnotationsByType( RegisterProvider.class ) )
-			.forEach( a -> cfg.register( a.value(), Util.getPriority( a.value(), a.priority() ) ) );
+			.forEach( a -> cfg.register( a.value(), RBUtils.getPriority( a.value(), a.priority() ) ) );
 
 		MP.getConfig( type, "providers" )
 			.map( s -> Stream.of( s.split( "," ) ) )
 			.orElse( Stream.empty() )
-			.map( Util::safeLoadClass )
+			.map( RBUtils::safeLoadClass )
 			.filter( Objects::nonNull )
-			.forEach( p -> cfg.register( p, Util.getPriority( p ) ) );
+			.forEach( p -> cfg.register( p, RBUtils.getPriority( p ) ) );
 
 		final String prefix = format( "%s/mp-rest/providers/", type.getName() );
 		final Iterable<String> names = MP.getConfig().map( c -> c.getPropertyNames() ).orElse( emptyList() );
@@ -234,7 +234,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 				continue;
 			}
 
-			final Class<?> prov = Util.safeLoadClass( vec[0] );
+			final Class<?> prov = RBUtils.safeLoadClass( vec[0] );
 
 			if( prov == null ) {
 				continue;

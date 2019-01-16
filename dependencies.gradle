@@ -7,6 +7,14 @@ def versions = [
 	]
 ]
 
+configurations {
+	externalApi
+
+	compileOnly.extendsFrom externalApi
+	testCompileOnly.extendsFrom externalApi
+	testRuntimeOnly.extendsFrom externalApi
+}
+
 dependencies {
 	implementation platform( 'org.apache.cxf:cxf-parent:3.3.0-SNAPSHOT')
 	implementation platform( 'org.glassfish.jersey:jersey-bom:2.27' )
@@ -19,19 +27,19 @@ dependencies {
 	implementation platform( 'com.fasterxml.jackson:jackson-bom:2.9.7' )
 
 	constraints {
-		implementation 'io.leangen.geantyref:geantyref:1.3.6'
-		implementation 'javax.servlet:javax.servlet-api:4.0.1'
-		implementation 'javax.validation:validation-api:2.0.1.Final'
-		implementation 'javax.annotation:javax.annotation-api:1.3'
-		implementation 'javax.ws.rs:javax.ws.rs-api:2.1.1'
-		implementation 'javax.xml.bind:jaxb-api:2.3.1'
-		implementation 'javax.inject:javax.inject:1'
-		implementation 'javax.json:javax.json-api:1.1.4'
-		implementation 'javax.json.bind:javax.json.bind-api:1.0'
-		implementation 'javax.enterprise:cdi-api:2.0'
-		implementation 'javax.el:javax.el-api:3.0.1-b06'
+		externalApi 'io.leangen.geantyref:geantyref:1.3.6'
+		externalApi 'javax.servlet:javax.servlet-api:4.0.1'
+		externalApi 'javax.validation:validation-api:2.0.1.Final'
+		externalApi 'javax.annotation:javax.annotation-api:1.3'
+		externalApi 'javax.ws.rs:javax.ws.rs-api:2.1.1'
+		externalApi 'javax.xml.bind:jaxb-api:2.3.1'
+		externalApi 'javax.inject:javax.inject:1'
+		externalApi 'javax.json:javax.json-api:1.1.4'
+		externalApi 'javax.json.bind:javax.json.bind-api:1.0'
+		externalApi 'javax.enterprise:cdi-api:2.0'
+		externalApi 'javax.el:javax.el-api:3.0.1-b06'
+		externalApi "org.eclipse.microprofile.rest.client:microprofile-rest-client-api:${versions.micro.rest}"
 
-		implementation "org.eclipse.microprofile.rest.client:microprofile-rest-client-api:${versions.micro.rest}"
 		implementation "org.eclipse.microprofile.rest.client:microprofile-rest-client-tck:${versions.micro.rest}"
 		implementation "org.eclipse.microprofile.config:microprofile-config-api:${versions.micro.config}"
 		implementation "org.apache.geronimo.config:geronimo-config-impl:${versions.micro.config}"
@@ -58,8 +66,6 @@ dependencies {
 		implementation "org.slf4j:slf4j-api:${versions.slf4j}"
 		implementation 'ch.qos.logback:logback-classic:1.2.3'
 		implementation 'org.jboss:jandex:2.0.5.Final'
-
-		implementation "org.gradle:gradle-tooling-api:${gradle.gradleVersion}"
 
 		implementation 'org.mockito:mockito-core:2.23.4'
 		implementation 'junit:junit:4.12'

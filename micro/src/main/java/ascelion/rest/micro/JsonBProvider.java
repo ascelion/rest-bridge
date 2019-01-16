@@ -22,7 +22,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-import ascelion.rest.bridge.client.Util;
+import ascelion.rest.bridge.client.RBUtils;
 
 import org.eclipse.yasson.YassonProperties;
 
@@ -57,7 +57,7 @@ public class JsonBProvider implements MessageBodyReader<Object>, MessageBodyWrit
 			cf.setProperty( YassonProperties.FAIL_ON_UNKNOWN_PROPERTIES, false );
 
 			cf.withPropertyVisibilityStrategy( new AnyAccessStrategy() );
-			cf.withEncoding( Util.charset( mt ).name() );
+			cf.withEncoding( RBUtils.charset( mt ).name() );
 
 			return JsonbBuilder.newBuilder()
 				.withConfig( cf )

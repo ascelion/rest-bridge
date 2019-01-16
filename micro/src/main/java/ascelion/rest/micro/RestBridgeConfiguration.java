@@ -14,7 +14,7 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-import ascelion.rest.bridge.client.Util;
+import ascelion.rest.bridge.client.RBUtils;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
@@ -138,7 +138,7 @@ final class RestBridgeConfiguration implements Configuration
 
 	void addRegistration( Class<?> type )
 	{
-		final int priority = Util.getPriority( type );
+		final int priority = RBUtils.getPriority( type );
 		final Map<Class<?>, Integer> cm = getAllInterfaces( type ).stream()
 			.collect( toMap( x -> x, x -> priority ) );
 
@@ -156,7 +156,7 @@ final class RestBridgeConfiguration implements Configuration
 	void addRegistration( Class<?> type, Class<?>[] contracts )
 	{
 		final Map<Class<?>, Integer> cm = Stream.of( contracts )
-			.collect( toMap( x -> x, x -> Util.getPriority( x ) ) );
+			.collect( toMap( x -> x, x -> RBUtils.getPriority( x ) ) );
 
 		addRegistration( type, cm );
 	}
@@ -194,7 +194,7 @@ final class RestBridgeConfiguration implements Configuration
 		}
 
 		if( Feature.class.isAssignableFrom( type ) ) {
-			handleFeature( (Feature) Util.newInstance( type ) );
+			handleFeature( (Feature) RBUtils.newInstance( type ) );
 		}
 
 		return true;

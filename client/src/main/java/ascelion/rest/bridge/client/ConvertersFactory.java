@@ -85,7 +85,7 @@ class ConvertersFactory
 
 	private <T> Function<T, String> findConverter( KEY key )
 	{
-		final Collection<ParamConverterProvider> providers = Util.providers( this.cf, ParamConverterProvider.class );
+		final Collection<ParamConverterProvider> providers = RBUtils.providers( this.cf, ParamConverterProvider.class );
 		final ParamConverter<T> c = (ParamConverter<T>) providers.stream()
 			.map( p -> p.getConverter( key.type, key.type, key.annotations ) )
 			.filter( Objects::nonNull )

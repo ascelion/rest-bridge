@@ -18,12 +18,12 @@ final class RestClientIH
 
 	static private final Collection<Method> O_METHODS = asList( Object.class.getMethods() );
 
-	private final RestBridgeType rbt;
+	private final RestClientData rcd;
 	private final Map<Method, RestMethod> methods = new HashMap<>();
 
-	RestClientIH( RestBridgeType rbt )
+	RestClientIH( RestClientData rcd )
 	{
-		this.rbt = rbt;
+		this.rcd = rcd;
 
 		initMethods();
 	}
@@ -31,19 +31,19 @@ final class RestClientIH
 	@Override
 	public String toString()
 	{
-		return String.format( "%s -> %s", this.rbt.type.getName(), this.rbt.tsup.get() );
+		return String.format( "%s -> %s", this.rcd.type.getName(), this.rcd.tsup.get() );
 	}
 
 	<X> X newProxy()
 	{
-		if( this.rbt.type.isInterface() ) {
-			return (X) Proxy.newProxyInstance( this.rbt.type.getClassLoader(), new Class[] { this.rbt.type }, this::invoke );
+		if( this.rcd.type.isInterface() ) {
+			return (X) Proxy.newProxyInstance( this.rcd.type.getClassLoader(), new Class[] { this.rcd.type }, this::invoke );
 		}
 		else {
 			final ProxyFactory pf = new ProxyFactory();
 
 			try {
-				pf.setSuperclass( this.rbt.type );
+				pf.setSuperclass( this.rcd.type );
 
 				return (X) pf.create( new Class[0], new Object[0], ( self, thisMethod, proceed, args ) -> invoke( self, proceed, args ) );
 			}
@@ -51,10 +51,10 @@ final class RestClientIH
 				throw e;
 			}
 			catch( final InvocationTargetException e ) {
-				throw new RuntimeException( format( "Cannot proxy class %s", this.rbt.type.getName() ), e.getCause() );
+				throw new RuntimeException( format( "Cannot proxy class %s", this.rcd.type.getName() ), e.getCause() );
 			}
 			catch( final NoSuchMethodException | InstantiationException | IllegalAccessException e ) {
-				throw new RuntimeException( format( "Cannot proxy class %s", this.rbt.type.getName() ), e );
+				throw new RuntimeException( format( "Cannot proxy class %s", this.rcd.type.getName() ), e );
 			}
 		}
 
@@ -62,7 +62,7 @@ final class RestClientIH
 
 	private void initMethods()
 	{
-		for( final Method m : this.rbt.type.getMethods() ) {
+		for( final Method m : this.rcd.type.getMethods() ) {
 			if( O_METHODS.contains( m ) ) {
 				continue;
 			}
@@ -73,7 +73,7 @@ final class RestClientIH
 
 	private void addMethod( Method m )
 	{
-		this.methods.put( m, new RestMethod( this.rbt, m ) );
+		this.methods.put( m, new RestMethod( this.rcd, m ) );
 	}
 
 	private Object invoke( Object proxy, Method method, Object[] arguments ) throws Throwable
