@@ -87,3 +87,4 @@ configurations.all { cf ->
 	cf.exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
 	cf.exclude group: 'org.jboss.spec.javax.ws.rs', module: 'jboss-jaxrs-api_2.1_spec'
 }
+
