@@ -43,12 +43,6 @@ subprojects { sub ->
 	}
 
 	tasks.withType( Test ) {
-		group = 'verification'
-
-		if( name == 'arquillian' ) {
-			description = 'Runs all Arquillian checks.'
-		}
-
 		ignoreFailures = true
 		enableAssertions = true
 		scanForTestClasses = true
@@ -61,10 +55,11 @@ subprojects { sub ->
 			html.enabled = true
 		}
 
-		systemProperty "seed", UUID.randomUUID()
+		systemProperty "force", UUID.randomUUID()
 	}
 
 	plugins.withType( MavenPublishPlugin ) {
 		sub.apply from: rootProject.file( 'publish.gradle' )
 	}
 }
+

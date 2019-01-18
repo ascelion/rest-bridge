@@ -22,14 +22,18 @@ publishing {
 			}
 		}
 	}
-	repositories {
-		maven {
-			url = "${gradle.ext.mavenDeployURL}-${version.endsWith('-SNAPSHOT') ? 'snapshots' : 'releases'}"
 
-			credentials {
-				username = "${gradle.ext.mavenDeployUsername}"
-				password = gradle.decryptPassword( "${gradle.ext.mavenDeployPassword}" )
+	if( gradle.hasProperty( 'mavenDeployURL' ) ) {
+		repositories {
+			maven {
+				url = "${gradle.ext.mavenDeployURL}-${version.endsWith('-SNAPSHOT') ? 'snapshots' : 'releases'}"
+
+				credentials {
+					username = "${gradle.ext.mavenDeployUsername}"
+					password = gradle.decryptPassword( "${gradle.ext.mavenDeployPassword}" )
+				}
 			}
 		}
 	}
 }
+
