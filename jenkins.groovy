@@ -15,6 +15,7 @@ pipeline {
 	stages {
 		stage('Compile') {
 			steps {
+				sh "git fetch --force --tags"
 				sh "chmod +x gradlew"
 				sh "./gradlew cV clean classes testClasses"
 			}
