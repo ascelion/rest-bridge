@@ -145,16 +145,6 @@ final class RestRequest<T> implements Callable<T>
 	@Override
 	public T call() throws Exception
 	{
-		final Invocation.Builder b = this.target.request();
-
-		b.headers( this.headers );
-
-		if( this.accepts != null ) {
-			b.accept( this.accepts );
-		}
-
-		this.cookies.forEach( b::cookie );
-
 		if( this.contentType == null && this.entity != null ) {
 			if( this.entity instanceof Form ) {
 				this.contentType = MediaType.APPLICATION_FORM_URLENCODED;
@@ -169,17 +159,27 @@ final class RestRequest<T> implements Callable<T>
 
 			final CompletableFuture<T> fut = new CompletableFuture<>();
 
-			this.rcd.exec.execute( () -> invokeAsync( b, ais, fut ) );
+			this.rcd.exec.execute( () -> invokeAsync( ais, fut ) );
 
 			return (T) fut;
 		}
 		else {
-			return invoke( b );
+			return invoke();
 		}
 	}
 
-	private T invoke( Invocation.Builder b ) throws Exception
+	private T invoke() throws Exception
 	{
+		final Invocation.Builder b = this.target.request();
+
+		b.headers( this.headers );
+
+		if( this.accepts != null ) {
+			b.accept( this.accepts );
+		}
+
+		this.cookies.forEach( b::cookie );
+
 		final Response rsp;
 
 		RestClient.invokedMethod( this.javaMethod );
@@ -247,12 +247,12 @@ final class RestRequest<T> implements Callable<T>
 		}
 	}
 
-	private void invokeAsync( Invocation.Builder b, Object ais, CompletableFuture<T> fut )
+	private void invokeAsync( Object ais, CompletableFuture<T> fut )
 	{
 		this.rcd.aint.before( ais );
 
 		try {
-			fut.complete( invoke( b ) );
+			fut.complete( invoke() );
 		}
 		catch( final Exception e ) {
 			fut.completeExceptionally( e );

@@ -1,36 +1,52 @@
-
 sourceSets {
-	test {
+	arq {
 		java {
-			srcDir project( ':micro' ).file( 'src/test/java' )
+			srcDir project( ':micro' ).file( 'src/arq/java' )
 			srcDir mpTckDir
+		}
+		resources {
+			srcDir project( ':micro' ).file( 'src/arq/resources' )
 		}
 	}
 }
 
 dependencies
 {
-	externalApi 'javax.ws.rs:javax.ws.rs-api'
-	externalApi 'javax.json.bind:javax.json.bind-api'
+	arqImplementation 'javax.ws.rs:javax.ws.rs-api'
+	arqImplementation 'javax.json.bind:javax.json.bind-api'
+	arqImplementation 'javax.interceptor:javax.interceptor-api'
 
-	testImplementation project( ':micro' )
-	testImplementation project( ':tests:application' )
-	testImplementation project( ':tests:shared' )
-	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
-	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
-	testImplementation 'org.hamcrest:hamcrest-core'
+	arqImplementation project( ':micro' )
+	arqImplementation project( ':tests:application' )
+	arqImplementation project( ':tests:interfaces' )
+	arqImplementation project( ':tests:shared' )
+	arqImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+	arqImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
+	arqImplementation 'org.hamcrest:hamcrest-core'
 
-	testRuntime 'org.jboss.arquillian.container:arquillian-weld-embedded'
-	testRuntime 'org.jboss.weld.se:weld-se-core'
-	testRuntime 'org.jboss:jandex'
-	testRuntime 'com.beust:jcommander'
-	testRuntime 'org.apache.geronimo.config:geronimo-config-impl'
-	testRuntime 'org.glassfish:javax.json'
-	testRuntime 'org.eclipse:yasson'
-	testRuntime 'commons-logging:commons-logging'
+	arqRuntime 'org.glassfish:javax.el'
+	arqRuntime 'org.glassfish:javax.json'
+	arqRuntime 'org.apache.geronimo.config:geronimo-config-impl'
+	arqRuntime 'org.hibernate:hibernate-validator'
+	arqRuntime 'org.eclipse:yasson'
+
+	arqRuntime 'org.jboss.arquillian.container:arquillian-weld-embedded'
+	arqRuntime 'org.jboss.weld.se:weld-se-core'
+	arqRuntime 'org.jboss:jandex'
+	arqRuntime 'com.beust:jcommander'
+	arqRuntime 'commons-logging:commons-logging'
 }
 
-test {
+check.dependsOn tasks.register( 'arq', Test ) {
+	group = 'verification'
+	description = 'Run the TCK tests.'
+	testClassesDirs = sourceSets.arq.output
+
+	classpath = files()
+
+	classpath += sourceSets.arq.output
+	classpath += configurations.arqRuntimeClasspath
+
 	reports {
 		html.enabled = false
 		junitXml.enabled = false
@@ -39,6 +55,12 @@ test {
 	useTestNG() {
 		useDefaultListeners = true
 
-		suites 'src/test/resources/tests.xml'
+		suites 'src/arq/resources/tests.xml'
+	}
+}
+
+eclipse {
+	classpath {
+		plusConfigurations += [ configurations.arqRuntimeClasspath ]
 	}
 }

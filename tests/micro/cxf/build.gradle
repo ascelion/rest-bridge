@@ -2,5 +2,5 @@ apply from: rootProject.file('eclipse-tck.gradle')
 
 dependencies
 {
-	testRuntime 'org.apache.cxf:cxf-rt-rs-client'
+	arqRuntime 'org.apache.cxf:cxf-rt-rs-client'
 }

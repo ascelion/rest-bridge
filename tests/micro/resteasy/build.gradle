@@ -2,5 +2,5 @@ apply from: rootProject.file('eclipse-tck.gradle')
 
 dependencies
 {
-	testRuntime 'org.jboss.resteasy:resteasy-client'
+	arqRuntime 'org.jboss.resteasy:resteasy-client'
 }

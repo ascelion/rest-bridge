@@ -10,6 +10,13 @@ import org.jboss.arquillian.core.spi.LoadableExtension;
 public class TestsExtension implements LoadableExtension
 {
 
+//	static {
+//		Stream.of( System.getProperty( "java.class.path", "" )
+//			.split( ":" ) )
+//			.sorted()
+//			.forEach( System.out::println );
+//	}
+
 	static {
 		System.setProperty( CoreConstants.DISABLE_SERVLET_CONTAINER_INITIALIZER_KEY, "true" );
 		SLF4JHandler.install();
