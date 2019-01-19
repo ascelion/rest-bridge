@@ -1,9 +1,18 @@
 apply plugin: 'maven-publish'
 
+sourceSets {
+	test {
+		java {
+			srcDirs = []
+		}
+	}
+}
+
 dependencies {
 	api project( ':client' )
 
 	externalApi 'javax.ws.rs:javax.ws.rs-api'
+	externalApi 'javax.json.bind:javax.json.bind-api'
 	externalApi 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 	externalApi 'org.eclipse.microprofile.config:microprofile-config-api'
 
@@ -11,9 +20,10 @@ dependencies {
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'org.apache.commons:commons-io'
 
-	testImplementation project( ':tests:api' )
+	testImplementation project( ':tests:interfaces' )
 	testImplementation project( ':tests:shared' )
 	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
+	testImplementation 'org.hamcrest:hamcrest-core'
 }
 
 test {

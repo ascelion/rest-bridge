@@ -1,0 +1,17 @@
+
+sourceSets {
+	main {
+		java {
+			srcDirs = [ file('../eclipse/api/src/main/java') ]
+		}
+	}
+}
+
+dependencies {
+	compileOnly 'org.osgi:org.osgi.annotation.versioning:1.0.0'
+
+	externalApi 'javax.annotation:javax.annotation-api'
+	externalApi 'javax.ws.rs:javax.ws.rs-api'
+	externalApi 'javax.enterprise:cdi-api'
+	externalApi 'org.eclipse.microprofile.config:microprofile-config-api'
+}

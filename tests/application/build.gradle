@@ -1,7 +1,7 @@
 dependencies {
 	externalApi 'javax.enterprise:cdi-api'
 
-	implementation project( ':tests:api' )
+	implementation project( ':tests:interfaces' )
 	implementation project( ':tests:shared' )
 
 	implementation 'ch.qos.logback:logback-classic'

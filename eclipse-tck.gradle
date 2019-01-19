@@ -1,38 +1,24 @@
-def tckDir = rootProject.file 'eclipse/tck/src/main/java'
 
 sourceSets {
 	test {
 		java {
-			srcDir project( ':micro' ).sourceSets.test.java.srcDirs
-			srcDir tckDir
+			srcDir project( ':micro' ).file( 'src/test/java' )
+			srcDir mpTckDir
 		}
 	}
 }
 
 dependencies
 {
-	externalApi 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 	externalApi 'javax.ws.rs:javax.ws.rs-api'
-	externalApi 'javax.validation:validation-api'
-	externalApi 'javax.annotation:javax.annotation-api'
-	externalApi 'javax.enterprise:cdi-api'
 	externalApi 'javax.json.bind:javax.json.bind-api'
 
 	testImplementation project( ':micro' )
-	testImplementation project( ':tests:api' )
+	testImplementation project( ':tests:application' )
 	testImplementation project( ':tests:shared' )
-
-	testImplementation 'org.testng:testng'
-
-	if( !tckDir.exists() ) {
-		testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
-	}
-
-	testImplementation 'org.jboss.arquillian.test:arquillian-test-api'
-	testImplementation 'org.jboss.arquillian.container:arquillian-container-test-api'
-	testImplementation 'org.jboss.arquillian.testng:arquillian-testng-container'
-	testImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
-	testImplementation 'com.github.tomakehurst:wiremock'
+	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
+	testImplementation 'org.hamcrest:hamcrest-core'
 
 	testRuntime 'org.jboss.arquillian.container:arquillian-weld-embedded'
 	testRuntime 'org.jboss.weld.se:weld-se-core'

@@ -13,6 +13,8 @@ class BuildPlugin implements Plugin<Project> {
 
 	@Override
 	public void apply( Project target ) {
+		extendModel( target )
+
 		target.plugins.apply( 'eclipse' )
 		target.plugins.apply( 'java-library' )
 
@@ -54,6 +56,42 @@ class BuildPlugin implements Plugin<Project> {
 			target.sourceSets.all { SourceSet set ->
 				task.finalizedBy set.processResourcesTaskName
 			}
+		}
+	}
+
+	private void extendModel( Project target ) {
+		target.metaClass.stringProperty = { String key, Object val ->
+			String prp = System.getProperty( key )
+
+			if( prp != null ) {
+				return prp
+			}
+
+			return target.ext.properties.getOrDefault( key, val )
+		}
+
+		target.metaClass.booleanProperty = { String key, boolean val ->
+			String prp = System.getProperty( key )
+
+			if( prp != null ) {
+				return prp.empty || Boolean.valueOf( prp )
+			}
+
+			return Boolean.valueOf( target.stringProperty( key, val ) )
+		}
+
+		target.metaClass.integerProperty = { String key, int val ->
+			return Integer.valueOf( target.stringProperty( key, Integer.toString( val )) )
+		}
+
+		target.metaClass.stringProperty = { String key ->
+			target.stringProperty( key, null )
+		}
+		target.metaClass.booleanProperty = { String key ->
+			target.booleanProperty( key, false )
+		}
+		target.metaClass.integerProperty = { String key ->
+			target.integerProperty( key, 0 )
 		}
 	}
 

@@ -11,7 +11,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-io'
 	implementation 'org.javassist:javassist'
 
-	testImplementation project( ':tests:api' )
+	testImplementation project( ':tests:interfaces' )
 
 	testImplementation 'com.github.tomakehurst:wiremock'
 	testImplementation 'org.apache.commons:commons-io'
