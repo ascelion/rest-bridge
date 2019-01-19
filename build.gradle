@@ -3,7 +3,8 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath group: 'pl.allegro.tech.build', name: 'axion-release-plugin', version: '1.10.0'
+		classpath 'pl.allegro.tech.build:axion-release-plugin:1.10.0'
+		classpath 'io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE'
 	}
 }
 
@@ -29,6 +30,12 @@ allprojects {
 }
 
 subprojects { sub ->
+	ext {
+		mpLocal  = rootProject.file( 'mp-local/eclipse/pom.xml' ).exists()
+		mpApiDir = rootProject.file 'mp-local/eclipse/api/src/main/java'
+		mpTckDir = rootProject.file 'mp-local/eclipse/tck/src/main/java'
+	}
+
 	apply plugin: ascelion.rest.bridge.BuildPlugin
 	apply from: rootProject.file( 'dependencies.gradle' )
 
@@ -43,7 +50,7 @@ subprojects { sub ->
 	}
 
 	tasks.withType( Test ) {
-		ignoreFailures = true
+		ignoreFailures = booleanProperty 'ignoreFailures'
 		enableAssertions = true
 		scanForTestClasses = true
 

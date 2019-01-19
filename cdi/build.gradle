@@ -3,9 +3,9 @@ apply plugin: 'maven-publish'
 dependencies {
 	api project( ':client' )
 
-	compileOnly 'javax.ws.rs:javax.ws.rs-api'
-	compileOnly 'javax.validation:validation-api'
-	compileOnly 'javax.enterprise:cdi-api'
+	externalApi 'javax.ws.rs:javax.ws.rs-api'
+	externalApi 'javax.validation:validation-api'
+	externalApi 'javax.enterprise:cdi-api'
 
 	implementation 'org.apache.commons:commons-lang3'
 }

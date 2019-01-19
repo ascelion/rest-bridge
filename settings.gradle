@@ -1,12 +1,18 @@
-
 rootProject.name = 'rest-bridge'
 
 include 'cdi'
 include 'client'
 include 'micro'
-include 'tests:api'
-include 'tests:app'
+include 'tests:application'
+include 'tests:interfaces'
+include 'tests:shared'
 include 'tests:micro:cxf'
 include 'tests:micro:jersey'
 include 'tests:micro:resteasy'
-include 'tests:shared'
+
+def mpLocal = new File( rootProject.projectDir, 'mp-local/eclipse' )
+
+if( mpLocal.exists() ) {
+	include 'mp-local:api'
+	include 'mp-local:tck'
+}

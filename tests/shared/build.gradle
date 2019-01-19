@@ -1,6 +1,6 @@
 dependencies {
 	implementation project( ':client' )
-	implementation project( ':tests:api' )
+	implementation project( ':tests:interfaces' )
 
 	implementation 'javax.ws.rs:javax.ws.rs-api'
 	implementation 'javax.annotation:javax.annotation-api'
