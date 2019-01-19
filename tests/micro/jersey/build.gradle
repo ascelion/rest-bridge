@@ -2,6 +2,6 @@ apply from: rootProject.file('eclipse-tck.gradle')
 
 dependencies
 {
-	testRuntime 'org.glassfish.jersey.core:jersey-client'
-	testRuntime 'org.glassfish.jersey.inject:jersey-hk2'
+	arqRuntime 'org.glassfish.jersey.core:jersey-client'
+	arqRuntime 'org.glassfish.jersey.inject:jersey-hk2'
 }

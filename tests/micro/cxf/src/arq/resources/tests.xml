@@ -5,9 +5,11 @@
 		<packages>
 			<package name="ascelion.rest.micro.tests" />
 			<package name="org.eclipse.microprofile.rest.client.tck" />
-			<package name="org.eclipse.microprofile.rest.client.tck.cditests" />
 			<package name="org.eclipse.microprofile.rest.client.tck.asynctests" />
+			<package name="org.eclipse.microprofile.rest.client.tck.cditests" />
+			<package name="org.eclipse.microprofile.rest.client.tck.timeout" />
 		</packages>
+<!--
 		<classes>
 			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithJsonBProviderTest">
 				<methods>
@@ -30,5 +32,6 @@
 				</methods>
 			</class>
 		</classes>
+-->
 	</test>
 </suite>

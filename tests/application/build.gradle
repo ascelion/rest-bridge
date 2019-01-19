@@ -1,3 +1,15 @@
+sourceSets {
+	arq {
+		compileClasspath += sourceSets.main.output
+		runtimeClasspath += sourceSets.main.output
+	}
+}
+
+configurations {
+	arqImplementation.extendsFrom implementation
+	arqRuntimeOnly.extendsFrom runtimeOnly
+}
+
 dependencies {
 	externalApi 'javax.enterprise:cdi-api'
 
@@ -11,46 +23,55 @@ dependencies {
 	implementation 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider'
 	implementation 'org.glassfish.jersey.media:jersey-media-json-jackson'
 
-	testImplementation 'io.leangen.geantyref:geantyref'
-	testImplementation project( ':client' )
+	arqImplementation 'io.leangen.geantyref:geantyref'
+	arqImplementation project( ':client' )
 
-	testImplementation 'junit:junit'
-	testImplementation 'org.hamcrest:hamcrest-core'
-	testImplementation 'org.hamcrest:hamcrest-library'
+	arqImplementation 'junit:junit'
+	arqImplementation 'org.hamcrest:hamcrest-core'
+	arqImplementation 'org.hamcrest:hamcrest-library'
 
-	testImplementation 'org.jboss.arquillian.junit:arquillian-junit-core'
-	testImplementation 'org.jboss.arquillian.test:arquillian-test-api'
-	testImplementation 'org.jboss.arquillian.container:arquillian-container-test-api'
-	testImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
+	arqImplementation 'org.jboss.arquillian.junit:arquillian-junit-core'
+	arqImplementation 'org.jboss.arquillian.test:arquillian-test-api'
+	arqImplementation 'org.jboss.arquillian.container:arquillian-container-test-api'
+	arqImplementation 'org.jboss.shrinkwrap:shrinkwrap-api'
 
-	testImplementation 'org.glassfish.jersey.core:jersey-client'
-	testImplementation 'org.glassfish.jersey.ext:jersey-proxy-client'
-	testImplementation 'org.jboss.resteasy:resteasy-client'
-	testImplementation 'org.apache.cxf:cxf-rt-rs-client'
-	testRuntime 'commons-logging:commons-logging'
+	arqImplementation 'org.glassfish.jersey.core:jersey-client'
+	arqImplementation 'org.glassfish.jersey.ext:jersey-proxy-client'
+	arqImplementation 'org.jboss.resteasy:resteasy-client'
+	arqImplementation 'org.apache.cxf:cxf-rt-rs-client'
+	arqRuntime 'commons-logging:commons-logging'
 
-	testRuntime 'org.jboss.weld.servlet:weld-servlet-core'
-	testRuntime 'org.jboss:jandex'
+	arqRuntime 'org.jboss.weld.servlet:weld-servlet-core'
+	arqRuntime 'org.jboss:jandex'
 
-	testRuntime 'org.glassfish.jersey.core:jersey-server'
-	testRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
-	testRuntime 'org.glassfish.jersey.inject:jersey-hk2'
-	testRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
-	testRuntime 'org.glassfish.jersey.containers:jersey-container-servlet'
-	testRuntime 'com.fasterxml.jackson.core:jackson-annotations'
-	testRuntime 'com.fasterxml.jackson.core:jackson-databind'
-	
-	testImplementation 'org.glassfish.jersey.containers:jersey-container-servlet'
-	testRuntime 'org.jboss.weld.servlet:weld-servlet-core'
-	testRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
+	arqRuntime 'org.glassfish.jersey.core:jersey-server'
+	arqRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
+	arqRuntime 'org.glassfish.jersey.inject:jersey-hk2'
+	arqRuntime 'org.glassfish.jersey.ext:jersey-bean-validation'
+	arqRuntime 'org.glassfish.jersey.containers:jersey-container-servlet'
+	arqRuntime 'com.fasterxml.jackson.core:jackson-annotations'
+	arqRuntime 'com.fasterxml.jackson.core:jackson-databind'
 
-	testRuntime 'org.jboss.arquillian.junit:arquillian-junit-container'
-	testRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
-	testRuntime 'org.jboss.arquillian.container:arquillian-jetty-embedded-9'
-	testRuntime 'org.eclipse.jetty:jetty-server'
-	testRuntime 'org.eclipse.jetty:jetty-deploy'
-	testRuntime 'org.eclipse.jetty:jetty-annotations'
+	arqImplementation 'org.glassfish.jersey.containers:jersey-container-servlet'
+	arqRuntime 'org.jboss.weld.servlet:weld-servlet-core'
+	arqRuntime 'org.glassfish.jersey.ext.cdi:jersey-cdi1x'
+
+	arqRuntime 'org.jboss.arquillian.junit:arquillian-junit-container'
+	arqRuntime 'org.jboss.arquillian.protocol:arquillian-protocol-servlet'
+	arqRuntime 'org.jboss.arquillian.container:arquillian-jetty-embedded-9'
+	arqRuntime 'org.eclipse.jetty:jetty-server'
+	arqRuntime 'org.eclipse.jetty:jetty-deploy'
+	arqRuntime 'org.eclipse.jetty:jetty-annotations'
 }
-test {
+
+check.dependsOn tasks.register( 'arq', Test ) {
+	group = 'verification'
+	description = 'Run the Arquillian tests.'
+	testClassesDirs = sourceSets.arq.output
+
+	classpath = files()
+	classpath += sourceSets.arq.output
+	classpath += configurations.arqRuntimeClasspath
+
 	include '**/ProvidersSuite.class'
 }
