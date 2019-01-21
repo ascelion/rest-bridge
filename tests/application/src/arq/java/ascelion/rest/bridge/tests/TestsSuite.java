@@ -9,6 +9,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses( {
 	APITest.class,
 	BeanResourceTest.class,
+	ClientHeadersTest.class,
 	HelloTest.class,
 	MethodsTest.class,
 	TimeoutTest.class,

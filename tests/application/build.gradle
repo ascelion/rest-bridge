@@ -11,11 +11,16 @@ configurations {
 }
 
 dependencies {
+	externalApi 'javax.validation:validation-api'
+	externalApi 'javax.annotation:javax.annotation-api'
+	externalApi 'javax.ws.rs:javax.ws.rs-api'
 	externalApi 'javax.enterprise:cdi-api'
+	externalApi 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 
 	implementation project( ':tests:interfaces' )
 	implementation project( ':tests:shared' )
-
+	implementation project( ':client' )
+	
 	implementation 'ch.qos.logback:logback-classic'
 
 	implementation 'org.glassfish.jersey.core:jersey-server'
@@ -23,8 +28,10 @@ dependencies {
 	implementation 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider'
 	implementation 'org.glassfish.jersey.media:jersey-media-json-jackson'
 
+	arqImplementation configurations.externalApi
+	arqImplementation project( ':micro' )
+
 	arqImplementation 'io.leangen.geantyref:geantyref'
-	arqImplementation project( ':client' )
 
 	arqImplementation 'junit:junit'
 	arqImplementation 'org.hamcrest:hamcrest-core'
@@ -62,6 +69,22 @@ dependencies {
 	arqRuntime 'org.eclipse.jetty:jetty-server'
 	arqRuntime 'org.eclipse.jetty:jetty-deploy'
 	arqRuntime 'org.eclipse.jetty:jetty-annotations'
+
+	arqRuntime 'org.glassfish:javax.el'
+	arqRuntime 'org.glassfish:javax.json'
+	arqRuntime 'org.apache.geronimo.config:geronimo-config-impl'
+	arqRuntime 'org.hibernate:hibernate-validator'
+	arqRuntime 'org.eclipse:yasson'
+
+	// buildship issue?
+	arqRuntime project( ':tests:interfaces' ).sourceSets.main.output
+	arqRuntime project( ':tests:shared' ).sourceSets.main.output
+	arqRuntime project( ':client' ).sourceSets.main.output
+	arqRuntime project( ':micro' ).sourceSets.main.output
+
+	if( mpLocal ) {
+		arqRuntime project( ':mp-local:api' ).sourceSets.main.output
+	}
 }
 
 check.dependsOn tasks.register( 'arq', Test ) {
@@ -70,8 +93,15 @@ check.dependsOn tasks.register( 'arq', Test ) {
 	testClassesDirs = sourceSets.arq.output
 
 	classpath = files()
+	classpath += sourceSets.main.output
 	classpath += sourceSets.arq.output
 	classpath += configurations.arqRuntimeClasspath
 
 	include '**/ProvidersSuite.class'
+}
+
+eclipse {
+	classpath {
+		plusConfigurations += [ configurations.arqRuntimeClasspath ]
+	}
 }

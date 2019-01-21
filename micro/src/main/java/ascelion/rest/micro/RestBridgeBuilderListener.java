@@ -14,7 +14,14 @@ public class RestBridgeBuilderListener implements RestClientBuilderListener
 	{
 		bld.register( new ClientMethodProvider(), Integer.MIN_VALUE );
 		bld.register( new JSR310ParamConverters(), Integer.MAX_VALUE );
-		bld.register( new JsonBProvider(), Integer.MAX_VALUE );
+
+		try {
+			bld.register( new JsonBProvider(), Integer.MAX_VALUE );
+		}
+		catch( final NoClassDefFoundError e ) {
+			;
+		}
+
 		bld.register( new JsonPProvider(), Integer.MAX_VALUE );
 		bld.register( new MBRWString(), Integer.MAX_VALUE );
 		bld.register( new MBRWBytes(), Integer.MAX_VALUE );

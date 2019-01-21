@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -24,6 +25,8 @@ import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 
 public class MPRequestInterceptor implements Function<RestRequestContext, RestRequestContext>
 {
+
+	private final ThreadLocalValue<HttpHeaders> tlHeaders = ThreadLocalProxy.create( HttpHeaders.class );
 
 	@Override
 	public RestRequestContext apply( RestRequestContext rc )
@@ -52,8 +55,9 @@ public class MPRequestInterceptor implements Function<RestRequestContext, RestRe
 
 	private void headersFactory( RestRequestContext rc, RegisterClientHeaders a )
 	{
+		final MultivaluedMap<String, String> incHeaders = this.tlHeaders.isPresent() ? this.tlHeaders.get().getRequestHeaders() : new MultivaluedHashMap<>();
 		final MultivaluedMap<String, String> headers = RBUtils.newInstance( a.value() )
-			.update( new MultivaluedHashMap<String, String>(), rc.getHeaders() );
+			.update( incHeaders, rc.getHeaders() );
 
 		rc.getHeaders().putAll( headers );
 	}
