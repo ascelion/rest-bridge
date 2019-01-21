@@ -124,7 +124,7 @@ class BuildPlugin implements Plugin<Project> {
 			if( it.entryAttributes.containsKey('gradle_scope')) {
 				def scope = it.entryAttributes['gradle_scope']
 
-				it.entryAttributes['test'] = scope == 'test' || scope == 'arquillian'
+				it.entryAttributes['test'] = scope == 'test' //|| scope == 'arq'
 			}
 		}
 	}

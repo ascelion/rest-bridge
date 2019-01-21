@@ -10,9 +10,11 @@ dependencies {
 	externalApi 'org.eclipse.microprofile.config:microprofile-config-api'
 
 	compileOnly 'org.eclipse:yasson'
+	compileOnly 'org.glassfish.jersey.core:jersey-common'
 
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'org.apache.commons:commons-io'
+	implementation 'com.google.guava:guava'
 
 	testImplementation 'junit:junit'
 	testImplementation 'org.hamcrest:hamcrest-core'

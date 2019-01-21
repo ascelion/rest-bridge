@@ -67,6 +67,7 @@ dependencyManagement {
 		dependency 'commons-codec:commons-codec:1.11'
 		dependency 'commons-logging:commons-logging:1.2'
 		dependency 'org.apache.httpcomponents:httpclient:4.5.6'
+		dependency 'com.google.guava:guava:27.0.1-jre'
 
 		dependency 'org.javassist:javassist:3.24.1-GA'
 
@@ -100,7 +101,9 @@ configurations.all { cf ->
 	cf.exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
 	cf.exclude group: 'org.jboss.spec.javax.ws.rs', module: 'jboss-jaxrs-api_2.1_spec'
 	cf.exclude group: 'org.jboss.spec.javax,interceptor', module: 'jboss-interceptors-api_1.2_spec'
-
+	cf.exclude group: 'org.jboss.spec.javax.annotation', module: 'jboss-annotations-api_1.3_spec'
+	cf.exclude group: 'org.jboss.spec.javax.el', module: 'jboss-el-api_3.0_spec'
+	
 	if( mpLocal ) {
 		resolutionStrategy.dependencySubstitution {
 			substitute module('org.eclipse.microprofile.rest.client:microprofile-rest-client-api') with project( ':mp-local:api' )

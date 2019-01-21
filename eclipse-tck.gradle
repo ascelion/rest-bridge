@@ -16,6 +16,9 @@ dependencies
 	arqImplementation 'javax.ws.rs:javax.ws.rs-api'
 	arqImplementation 'javax.json.bind:javax.json.bind-api'
 	arqImplementation 'javax.interceptor:javax.interceptor-api'
+	arqImplementation 'javax.json:javax.json-api'
+	arqImplementation 'javax.json.bind:javax.json.bind-api'
+	arqImplementation 'javax.validation:validation-api'
 
 	arqImplementation project( ':tests:application' )
 	arqImplementation project( ':tests:interfaces' )

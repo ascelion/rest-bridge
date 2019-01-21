@@ -20,6 +20,7 @@ import ascelion.rest.bridge.client.RestClientMethodException;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
@@ -173,8 +174,8 @@ final class RestBridgeBuilder implements RestClientBuilder
 
 		configureProviders( cfg, type );
 
-		final ClientBuilder bld = ClientBuilder.newBuilder()
-			.withConfig( cfg );
+		final ClientBuilder bld = ofNullable( (ClientBuilder) cfg.getProperty( ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY ) )
+			.orElse( ClientBuilder.newBuilder() ).withConfig( cfg );
 
 		configureTimeouts( bld, type );
 

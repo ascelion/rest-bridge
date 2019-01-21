@@ -116,7 +116,7 @@ final class RestRequest<T> implements Callable<T>
 
 		final Invocation.Builder b = this.rc.getTarget().request();
 
-		this.rc.getHeaders().forEach( b::header );
+		this.rc.getHeaders().forEach( ( k, v ) -> v.forEach( x -> b.header( k, x ) ) );
 		this.rc.getCookies().forEach( b::cookie );
 
 		if( this.accepts != null ) {
