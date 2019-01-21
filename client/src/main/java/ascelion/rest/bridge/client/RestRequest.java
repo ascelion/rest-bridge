@@ -17,29 +17,23 @@ import javax.ws.rs.core.Response;
 import static java.util.Optional.ofNullable;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor( access = AccessLevel.PACKAGE )
 final class RestRequest<T> implements Callable<T>
 {
 
 	private final RestClientData rcd;
 	final Object proxy;
+	private final GenericType<T> returnType;
+	private final boolean async;
 	private final String httpMethod;
 	final RestRequestContextImpl rc;
-
-	private final GenericType<T> returnType;
-	private boolean async;
 
 	private String[] accepts;
 	private String contentType;
 	private Object entity;
-
-	RestRequest( RestClientData rcd, Object proxy, GenericType<T> returnType, boolean async, String httpMethod, RestRequestContextImpl rc )
-	{
-		this.rcd = rcd;
-		this.rc = rc;
-		this.proxy = proxy;
-		this.httpMethod = httpMethod;
-		this.returnType = returnType;
-	}
 
 	void consumes( String[] value )
 	{
