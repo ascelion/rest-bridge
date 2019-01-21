@@ -67,7 +67,7 @@ final class RestMethod
 	private final RestClientData rcd;
 	private final Method javaMethod;
 	private final GenericType<?> returnType;
-	private boolean async;
+	private final boolean async;
 	private final String httpMethod;
 	private final List<Action> actions = new ArrayList<>( 8 );
 	private final Map<String, Boolean> pathElements = new LinkedHashMap<>();
