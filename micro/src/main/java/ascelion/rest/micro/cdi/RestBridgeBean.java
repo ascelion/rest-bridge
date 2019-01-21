@@ -59,30 +59,37 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 	@Override
 	public T create( CreationalContext<T> creationalContext )
 	{
-		final RestClientBuilder bld = RestClientBuilder.newBuilder();
-		final String uriA = trimToNull( this.type.getAnnotation( RegisterRestClient.class ).baseUri() );
-		final String uriW = MP.getConfig( "*/mp-rest/uri" ).orElse( uriA );
-		final String urlW = MP.getConfig( "*/mp-rest/url" ).orElse( null );
-		final String uri = MP.getConfig( this.type, "uri" ).orElse( uriW );
-		final String url = MP.getConfig( this.type, "url" ).orElse( urlW );
+		final RBBCreation rbbc = new RBBCreation( this.bm );
+		final RestClientBuilder bld = rbbc.create();
 
-		if( uri == null && url == null ) {
-			throw new IllegalStateException( format( "%s: unable to determine base URI/URL from configuration", this.type.getName() ) );
-		}
+		try {
+			final String uriA = trimToNull( this.type.getAnnotation( RegisterRestClient.class ).baseUri() );
+			final String uriW = MP.getConfig( "*/mp-rest/uri" ).orElse( uriA );
+			final String urlW = MP.getConfig( "*/mp-rest/url" ).orElse( null );
+			final String uri = MP.getConfig( this.type, "uri" ).orElse( uriW );
+			final String url = MP.getConfig( this.type, "url" ).orElse( urlW );
 
-		if( uri != null ) {
-			bld.baseUri( URI.create( uri ) );
-		}
-		else {
-			try {
-				bld.baseUrl( new URL( url ) );
+			if( uri == null && url == null ) {
+				throw new IllegalStateException( format( "%s: unable to determine base URI/URL from configuration", this.type.getName() ) );
 			}
-			catch( final MalformedURLException e ) {
-				throw new IllegalStateException( format( "%s: unable to parse base URL from configuration", this.type.getName() ), e );
-			}
-		}
 
-		return bld.build( this.type );
+			if( uri != null ) {
+				bld.baseUri( URI.create( uri ) );
+			}
+			else {
+				try {
+					bld.baseUrl( new URL( url ) );
+				}
+				catch( final MalformedURLException e ) {
+					throw new IllegalStateException( format( "%s: unable to parse base URL from configuration", this.type.getName() ), e );
+				}
+			}
+
+			return bld.build( this.type );
+		}
+		finally {
+			rbbc.release();
+		}
 	}
 
 	@Override
