@@ -91,8 +91,10 @@ public final class RBUtils
 		return Charset.forName( cs );
 	}
 
-	static public int getPriority( Class<?> cls )
+	static public int getPriority( Object t )
 	{
+		final Class<?> cls = t instanceof Class ? (Class<?>) t : t.getClass();
+
 		return Optional.ofNullable( cls.getAnnotation( Priority.class ) )
 			.map( Priority::value )
 			.orElse( Priorities.USER );
@@ -106,7 +108,7 @@ public final class RBUtils
 	static boolean isCDI()
 	{
 		try {
-			javax.enterprise.inject.spi.CDI.current();
+			javax.enterprise.inject.spi.CDI.current().getBeanManager();
 
 			return true;
 		}

@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 
 import ascelion.rest.bridge.client.RBUtils;
@@ -53,9 +54,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Class<?> componentClass )
 	{
-		if( this.configuration.addClass( componentClass, true ) ) {
-			this.configuration.addRegistration( componentClass );
-		}
+		this.configuration.register( componentClass );
 
 		return this;
 	}
@@ -63,8 +62,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Class<?> componentClass, int priority )
 	{
-		this.configuration.addClass( componentClass, false );
-		this.configuration.addRegistration( componentClass, priority );
+		this.configuration.register( componentClass, priority );
 
 		return this;
 	}
@@ -72,8 +70,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Class<?> componentClass, Class<?>... contracts )
 	{
-		this.configuration.addClass( componentClass, false );
-		this.configuration.addRegistration( componentClass, contracts );
+		this.configuration.register( componentClass, contracts );
 
 		return this;
 	}
@@ -81,8 +78,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Class<?> componentClass, Map<Class<?>, Integer> contracts )
 	{
-		this.configuration.addClass( componentClass, false );
-		this.configuration.addRegistration( componentClass, contracts );
+		this.configuration.register( componentClass, contracts );
 
 		return this;
 	}
@@ -90,9 +86,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Object component )
 	{
-		if( this.configuration.addInstance( component, true ) ) {
-			this.configuration.addRegistration( component.getClass() );
-		}
+		this.configuration.register( component );
 
 		return this;
 	}
@@ -100,8 +94,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Object component, int priority )
 	{
-		this.configuration.addInstance( component, false );
-		this.configuration.addRegistration( component.getClass(), priority );
+		this.configuration.register( component, priority );
 
 		return this;
 	}
@@ -109,8 +102,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Object component, Class<?>... contracts )
 	{
-		this.configuration.addInstance( component, false );
-		this.configuration.addRegistration( component.getClass(), contracts );
+		this.configuration.register( component, contracts );
 
 		return this;
 	}
@@ -118,8 +110,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 	@Override
 	public RestClientBuilder register( Object component, Map<Class<?>, Integer> contracts )
 	{
-		this.configuration.addInstance( component, false );
-		this.configuration.addRegistration( component.getClass(), contracts );
+		this.configuration.register( component, contracts );
 
 		return this;
 	}
@@ -170,7 +161,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 		ServiceLoader.load( RestClientListener.class )
 			.forEach( l -> l.onNewClient( type, this ) );
 
-		final RestBridgeConfiguration cfg = this.configuration.forClient( this );
+		final RestBridgeConfiguration cfg = this.configuration.forClient();
 
 		configureProviders( cfg, type );
 
@@ -207,7 +198,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 		}
 	}
 
-	private <T> void configureProviders( RestBridgeConfiguration cfg, Class<T> type )
+	private <T> void configureProviders( Configurable<? extends Configuration> cfg, Class<T> type )
 	{
 		Stream.of( type.getAnnotationsByType( RegisterProvider.class ) )
 			.forEach( a -> cfg.register( a.value(), RBUtils.getPriority( a.value(), a.priority() ) ) );
