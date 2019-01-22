@@ -13,9 +13,12 @@ import java.util.Map;
 import javax.annotation.Priority;
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
+import javax.ws.rs.ext.Provider;
 
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
+@Provider
+@Priority( Integer.MAX_VALUE )
 public final class JSR310ParamConverters implements ParamConverterProvider
 {
 

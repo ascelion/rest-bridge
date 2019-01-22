@@ -31,7 +31,15 @@ final class ThreadLocalProxy<T> implements InvocationHandler
 
 	private ThreadLocalProxy( Class<T> type )
 	{
-		this.tl = (ThreadLocal<T>) TLS.computeIfAbsent( type, t -> new ThreadLocal<>() );
+		this.tl = (ThreadLocal<T>) TLS.computeIfAbsent( type, t -> new ThreadLocal<T>()
+		{
+
+			@Override
+			protected T initialValue()
+			{
+				return Injectables.getDefault( type );
+			};
+		} );
 
 		this.handlers.put( getMatchingMethod( ThreadLocalValue.class, "set", type ), ( o, m, a ) -> tlv_set( o, a[0] ) );
 		this.handlers.put( getMatchingMethod( ThreadLocalValue.class, "get" ), ( o, m, a ) -> o );
@@ -69,13 +77,6 @@ final class ThreadLocalProxy<T> implements InvocationHandler
 
 	private Object invokeThreadLocal( Object proxy, Method method, Object[] args ) throws Throwable
 	{
-		final T t = this.tl.get();
-
-		if( t == null ) {
-			// TODO
-			throw new IllegalStateException( "NOT SET!!!" );
-		}
-
-		return method.invoke( t, args );
+		return method.invoke( this.tl.get(), args );
 	}
 }

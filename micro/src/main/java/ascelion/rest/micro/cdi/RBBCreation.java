@@ -34,6 +34,7 @@ final class RBBCreation
 			final Bean<?> bean = beans.iterator().next();
 
 			this.cc = this.bm.createCreationalContext( bean );
+
 			bld = (RestClientBuilder) this.bm.getReference( bean, RestClientBuilder.class, this.cc );
 		}
 

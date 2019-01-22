@@ -9,7 +9,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 import ascelion.rest.bridge.client.RBUtils;
@@ -55,7 +54,7 @@ public class MPRequestInterceptor implements Function<RestRequestContext, RestRe
 
 	private void headersFactory( RestRequestContext rc, RegisterClientHeaders a )
 	{
-		final MultivaluedMap<String, String> incHeaders = this.tlHeaders.isPresent() ? this.tlHeaders.get().getRequestHeaders() : new MultivaluedHashMap<>();
+		final MultivaluedMap<String, String> incHeaders = this.tlHeaders.get().getRequestHeaders();
 		final MultivaluedMap<String, String> headers = RBUtils.newInstance( a.value() )
 			.update( incHeaders, rc.getHeaders() );
 

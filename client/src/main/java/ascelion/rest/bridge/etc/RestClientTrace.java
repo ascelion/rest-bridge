@@ -24,8 +24,8 @@ import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
-import ascelion.rest.bridge.client.RestClient;
 import ascelion.rest.bridge.client.RBUtils;
+import ascelion.rest.bridge.client.RestClient;
 
 import static ascelion.rest.bridge.client.RestClientProperties.DEFAULT_CONTENT_TYPE;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
@@ -41,7 +41,7 @@ import lombok.RequiredArgsConstructor;
 @Provider
 @Priority( Integer.MAX_VALUE )
 @RequiredArgsConstructor
-public class RestClientTrace implements ClientRequestFilter, ClientResponseFilter, WriterInterceptor
+public final class RestClientTrace implements ClientRequestFilter, ClientResponseFilter, WriterInterceptor
 {
 
 	static private final String REQ_ST_PROP = "ascelion.rest.micro.tests.shared.trace.request.stream";

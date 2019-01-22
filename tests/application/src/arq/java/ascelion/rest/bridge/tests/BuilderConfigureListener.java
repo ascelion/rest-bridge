@@ -6,7 +6,7 @@ import javax.ws.rs.client.ClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.spi.RestClientListener;
 
-public class JAXRSClientBuilderListener implements RestClientListener
+public class BuilderConfigureListener implements RestClientListener
 {
 
 	@Override

@@ -5,40 +5,190 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import javax.ws.rs.RuntimeType;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.ParamConverterProvider;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import ascelion.rest.bridge.client.RBUtils;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.ClassUtils.getAllInterfaces;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.microprofile.rest.client.ext.AsyncInvocationInterceptorFactory;
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 
-@RequiredArgsConstructor
-final class RestBridgeConfiguration implements Configuration
+@RequiredArgsConstructor( access = AccessLevel.PRIVATE )
+final class RestBridgeConfiguration implements Configurable<RestBridgeConfiguration>, Configuration
 {
 
 	private static final Logger L = Logger.getLogger( "ascelion.rest.bridge.micro.CONFIG" );
+	private static Set<Class<?>> SUPPORTED;
+
+	static {
+		final Set<Class<?>> map = newSetFromMap( new IdentityHashMap<>() );
+
+		map.add( Feature.class );
+		map.add( ClientRequestFilter.class );
+		map.add( ClientResponseFilter.class );
+		map.add( ReaderInterceptor.class );
+		map.add( WriterInterceptor.class );
+		map.add( MessageBodyReader.class );
+		map.add( MessageBodyWriter.class );
+		map.add( ParamConverterProvider.class );
+		map.add( ResponseExceptionMapper.class );
+		map.add( AsyncInvocationInterceptorFactory.class );
+
+		SUPPORTED = unmodifiableSet( map );
+	}
 
 	private final RestBridgeBuilder bld;
+	private final boolean autoCreate;
 	private final Map<String, Object> properties = new HashMap<>();
-	private final Set<Class<?>> classes = newSetFromMap( new IdentityHashMap<>() );
-	private final Set<Object> instances = newSetFromMap( new IdentityHashMap<>() );
-	private final Map<Class<?>, Map<Class<?>, Integer>> registrations = new IdentityHashMap<>();
+	private final Map<Class<?>, Registration<?>> registrations = new IdentityHashMap<>();
 	private final Set<Class<?>> enabledFeatures = newSetFromMap( new IdentityHashMap<>() );
+
+	RestBridgeConfiguration( RestBridgeBuilder bld )
+	{
+		this( bld, false );
+	}
+
+	@Override
+	public Configuration getConfiguration()
+	{
+		return this;
+	}
+
+	@Override
+	public RestBridgeConfiguration property( String name, Object value )
+	{
+		this.properties.put( name, value );
+
+		return this;
+	}
+
+	@Override
+	public RestBridgeConfiguration register( Class<?> type )
+	{
+		if( this.registrations.containsKey( type ) ) {
+			L.warning( format( "Component of type %s has been already registered", type.getName() ) );
+
+			return this;
+		}
+
+		final int priority = RBUtils.getPriority( type );
+		final Map<Class<?>, Integer> cm = lookupContracts( type ).stream()
+			.collect( toMap( x -> x, x -> priority ) );
+
+		return register( type, cm );
+	}
+
+	@Override
+	public RestBridgeConfiguration register( Class<?> type, int priority )
+	{
+		final Map<Class<?>, Integer> cm = lookupContracts( type ).stream()
+			.collect( toMap( x -> x, x -> priority ) );
+
+		return register( type, cm );
+	}
+
+	@Override
+	public RestBridgeConfiguration register( Class<?> type, Class<?>... contracts )
+	{
+		final int priority = RBUtils.getPriority( type );
+		final Map<Class<?>, Integer> cm = Stream.of( contracts )
+			.collect( toMap( x -> x, x -> priority ) );
+
+		return register( type, cm );
+	}
+
+	@Override
+	public RestBridgeConfiguration register( Class<?> type, Map<Class<?>, Integer> contracts )
+	{
+		final Registration<?> reg = addRegistration( type, contracts );
+
+		if( reg != null && this.autoCreate ) {
+			if( reg.updateInstance( null ) && reg.isFeature() ) {
+				handleFeature( (Feature) reg.getInstance() );
+			}
+		}
+
+		return this;
+	}
+
+	@Override
+	public RestBridgeConfiguration register( Object component )
+	{
+		final Class<?> type = component.getClass();
+
+		if( this.registrations.containsKey( type ) ) {
+			L.warning( format( "Component of type %s has been already registered", type.getName() ) );
+
+			return this;
+		}
+
+		final int priority = RBUtils.getPriority( type );
+		final Map<Class<?>, Integer> cm = lookupContracts( type ).stream()
+			.collect( toMap( x -> x, x -> priority ) );
+
+		return register( component, cm );
+	}
+
+	@Override
+	public RestBridgeConfiguration register( Object component, int priority )
+	{
+		final Class<?> type = component.getClass();
+		final Map<Class<?>, Integer> cm = lookupContracts( type ).stream()
+			.collect( toMap( x -> x, x -> priority ) );
+
+		return register( component, cm );
+	}
+
+	@Override
+	public RestBridgeConfiguration register( Object component, Class<?>... contracts )
+	{
+		final int priority = RBUtils.getPriority( component );
+		final Map<Class<?>, Integer> cm = Stream.of( contracts )
+			.collect( toMap( x -> x, x -> priority ) );
+
+		return register( component, cm );
+	}
+
+	@Override
+	public RestBridgeConfiguration register( Object component, Map<Class<?>, Integer> contracts )
+	{
+		final Class<? extends Object> type = component.getClass();
+		final Registration<Object> reg = addRegistration( type, contracts );
+
+		if( reg != null ) {
+			if( reg.updateInstance( component ) && reg.isFeature() ) {
+				handleFeature( (Feature) reg.getInstance() );
+			}
+		}
+
+		return this;
+	}
 
 	@Override
 	public RuntimeType getRuntimeType()
@@ -79,7 +229,7 @@ final class RestBridgeConfiguration implements Configuration
 	@Override
 	public boolean isRegistered( Object component )
 	{
-		return this.instances.contains( component );
+		return component.equals( this.registrations.getOrDefault( component.getClass(), Registration.NONE ).getInstance() );
 	}
 
 	@Override
@@ -91,128 +241,83 @@ final class RestBridgeConfiguration implements Configuration
 	@Override
 	public Map<Class<?>, Integer> getContracts( Class<?> type )
 	{
-		return this.registrations.getOrDefault( type, emptyMap() );
+		return this.registrations.getOrDefault( type, Registration.NONE ).getContracts();
 	}
 
 	@Override
 	public Set<Class<?>> getClasses()
 	{
-		return unmodifiableSet( this.classes );
+		return emptySet();
 	}
 
 	@Override
 	public Set<Object> getInstances()
 	{
-		return unmodifiableSet( this.instances );
+		return unmodifiableSet( this.registrations.values().stream()
+			.map( Registration::getInstance )
+			.map( Objects::requireNonNull )
+			.collect( toSet() ) );
 	}
 
-	RestBridgeConfiguration forClient( RestBridgeBuilder bld )
+	RestBridgeConfiguration forClient()
 	{
-		final RestBridgeConfiguration clone = new RestBridgeConfiguration( bld );
+		final RestBridgeConfiguration clone = new RestBridgeConfiguration( this.bld, true );
 
 		clone.properties.putAll( this.properties );
-
-		this.classes.stream()
-			.filter( t -> !ResponseExceptionMapper.class.isAssignableFrom( t ) )
-			.forEach( clone.classes::add );
-		this.instances.stream()
-			.filter( t -> !ResponseExceptionMapper.class.isInstance( t ) )
-			.forEach( clone.instances::add );
-		this.registrations.entrySet().stream()
-			.filter( e -> !ResponseExceptionMapper.class.isAssignableFrom( e.getKey() ) )
-			.forEach( e -> clone.registrations.put( e.getKey(), e.getValue() ) );
+		clone.registrations.putAll( this.registrations );
+		clone.registrations.values().forEach( reg -> reg.updateInstance( null ) );
 
 		return clone;
 	}
 
-	void property( String name, Object value )
+	private Collection<Class<?>> lookupContracts( Class<?> type )
 	{
-		this.properties.put( name, value );
+		return getAllInterfaces( type ).stream()
+			.filter( SUPPORTED::contains )
+			.collect( toSet() );
 	}
 
-	void register( Class<?> type, int priority )
+	private <X> Registration<X> addRegistration( Class<? extends X> type, Map<Class<?>, Integer> contracts )
 	{
-		addClass( type, false );
-		addRegistration( type, priority );
+		return (Registration<X>) this.registrations.compute( type, ( key, reg ) -> mergeContracts( key, reg, contracts ) );
 	}
 
-	void addRegistration( Class<?> type )
+	private Registration<?> mergeContracts( Class<?> type, Registration<?> reg, Map<Class<?>, Integer> contracts )
 	{
-		final int priority = RBUtils.getPriority( type );
-		final Map<Class<?>, Integer> cm = getAllInterfaces( type ).stream()
-			.collect( toMap( x -> x, x -> priority ) );
+		final Map<Class<?>, Integer> map = new IdentityHashMap<>();
 
-		addRegistration( type, cm );
-	}
+		for( final Map.Entry<Class<?>, Integer> e : contracts.entrySet() ) {
+			final Class<?> c = e.getKey();
 
-	void addRegistration( Class<?> type, int priority )
-	{
-		final Map<Class<?>, Integer> cm = getAllInterfaces( type ).stream()
-			.collect( toMap( x -> x, x -> priority ) );
-
-		addRegistration( type, cm );
-	}
-
-	void addRegistration( Class<?> type, Class<?>[] contracts )
-	{
-		final Map<Class<?>, Integer> cm = Stream.of( contracts )
-			.collect( toMap( x -> x, x -> RBUtils.getPriority( x ) ) );
-
-		addRegistration( type, cm );
-	}
-
-	void addRegistration( Class<?> type, Map<Class<?>, Integer> contracts )
-	{
-		this.registrations.compute( type, ( key, map ) -> {
-			if( map == null ) {
-				map = new IdentityHashMap<>();
-			}
-
-			for( final Map.Entry<Class<?>, Integer> e : contracts.entrySet() ) {
-				final Class<?> c = e.getKey();
-
+			if( SUPPORTED.contains( c ) ) {
 				if( c.isAssignableFrom( type ) ) {
-					L.fine( format( "Settiong priority %d for contract %s of %s", e.getValue(), c.getName(), type.getName() ) );
+					L.fine( format( "Setting priority %d for contract %s of %s", e.getValue(), c.getName(), type.getName() ) );
 
 					map.put( c, e.getValue() );
 				}
 				else {
-					L.warning( format( "Component %s is not assignable from %s", key.getName(), type.getName() ) );
+					L.warning( format( "Component %s is not assignable from %s", type.getName(), type.getName() ) );
 				}
 			}
-
-			return map;
-		} );
-	}
-
-	boolean addClass( Class<?> type, boolean warn )
-	{
-		if( !this.classes.add( type ) && warn ) {
-			L.warning( format( "Component %s has been already registered", type.getName() ) );
-
-			return false;
+			else {
+				L.warning( format( "Unsupported contract: %s", c.getName() ) );
+			}
 		}
 
-		if( Feature.class.isAssignableFrom( type ) ) {
-			handleFeature( (Feature) RBUtils.newInstance( type ) );
+		if( map.isEmpty() ) {
+			L.warning( format( "Skipping registration of %s", type.getName() ) );
+
+			return reg;
 		}
 
-		return true;
-	}
-
-	boolean addInstance( Object instance, boolean warn )
-	{
-		if( !this.instances.add( instance ) && warn ) {
-			L.warning( format( "Component %s has been already registered", instance ) );
-
-			return false;
+		if( reg == null ) {
+			reg = new Registration<>( type, contracts, null );
+		}
+		else {
+			reg.add( map );
 		}
 
-		if( Feature.class.isInstance( instance ) ) {
-			handleFeature( (Feature) instance );
-		}
-
-		return true;
+		return reg;
 	}
 
 	private void handleFeature( Feature feat )

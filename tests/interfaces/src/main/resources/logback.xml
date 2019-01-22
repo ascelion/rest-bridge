@@ -13,7 +13,7 @@
 	<logger name="ascelion.rest.bridge.tests.SERVER" level="OFF" />
 	<logger name="ascelion.rest.bridge.micro.CONFIG" level="OFF" />
 
-	<root level="INFO">
+	<root level="ERROR">
 		<appender-ref ref="CONSOLE" />
 	</root>
 
