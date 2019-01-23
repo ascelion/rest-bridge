@@ -158,7 +158,9 @@ public class AnnotationActionTest
 		assertThat( headers, hasEntry( ANNOTATION_VALUE, asList( PARAM_VALUE ) ) );
 
 		headers.forEach( ( k, v ) -> {
-			verify( this.mc.bld, times( 1 ) ).header( eq( k ), eq( v ) );
+			v.forEach( x -> {
+				verify( this.mc.bld, times( 1 ) ).header( eq( k ), eq( x ) );
+			} );
 		} );
 	}
 
