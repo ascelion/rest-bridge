@@ -4,6 +4,7 @@ package ascelion.rest.bridge
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.SourceSet
 import org.gradle.plugins.ide.eclipse.GenerateEclipseProject
 import org.gradle.plugins.ide.eclipse.model.ClasspathEntry
@@ -40,6 +41,8 @@ class BuildPlugin implements Plugin<Project> {
 
 					file {
 						whenMerged {
+							configureScope( entries, target.configurations.findByName( 'compileOnly' ) )
+
 							target.sourceSets.each { SourceSet set ->
 								configureJava( target, entries, set )
 								configureResources( target, entries, set )
@@ -114,6 +117,23 @@ class BuildPlugin implements Plugin<Project> {
 			entries
 					.findAll { it.kind == 'src' && it.path == path }
 					.each { it.output = dest }
+		}
+	}
+
+	private void configureScope( List<ClasspathEntry> entries, Configuration cfg ) {
+		entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each {
+			if( it.entryAttributes.containsKey('gradle_used_by_scope')) {
+				def scope = it.entryAttributes['gradle_used_by_scope']
+
+				it.entryAttributes['test'] = !scope.contains('main') && !scope.empty
+			}
+		}
+		if( cfg != null ) {
+			entries.findAll { it.kind == 'lib' }.each {
+				if( cfg.resolvedConfiguration.files.contains( new File( it.path ) ) ) {
+					it.entryAttributes['test'] = false
+				}
+			}
 		}
 	}
 }

@@ -5,6 +5,7 @@ dependencies {
 
 	externalApi 'javax.ws.rs:javax.ws.rs-api'
 	externalApi 'javax.json.bind:javax.json.bind-api'
+	externalApi 'javax.json:javax.json-api'
 	externalApi 'javax.enterprise:cdi-api'
 	externalApi 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 	externalApi 'org.eclipse.microprofile.config:microprofile-config-api'

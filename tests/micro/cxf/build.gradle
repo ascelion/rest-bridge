@@ -2,6 +2,6 @@ apply from: rootProject.file('eclipse-tck.gradle')
 
 dependencies
 {
+	arqImplementation 'org.apache.cxf:cxf-rt-rs-client'
 	arqRuntime project( ':micro' )
-	arqRuntime 'org.apache.cxf:cxf-rt-rs-client'
 }

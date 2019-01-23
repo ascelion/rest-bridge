@@ -1,6 +1,8 @@
 
 package ascelion.rest.micro.tests.shared;
 
+import java.util.stream.Stream;
+
 import ascelion.rest.bridge.tests.api.SLF4JHandler;
 
 import ch.qos.logback.core.CoreConstants;
@@ -10,12 +12,12 @@ import org.jboss.arquillian.core.spi.LoadableExtension;
 public class TestsExtension implements LoadableExtension
 {
 
-//	static {
-//		Stream.of( System.getProperty( "java.class.path", "" )
-//			.split( ":" ) )
-//			.sorted()
-//			.forEach( System.out::println );
-//	}
+	static {
+		Stream.of( System.getProperty( "java.class.path", "" )
+			.split( ":" ) )
+			.sorted()
+			.forEach( System.out::println );
+	}
 
 	static {
 		System.setProperty( CoreConstants.DISABLE_SERVLET_CONTAINER_INITIALIZER_KEY, "true" );
