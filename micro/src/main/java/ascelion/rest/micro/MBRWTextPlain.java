@@ -9,11 +9,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Function;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -22,6 +24,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import ascelion.rest.bridge.client.RBUtils;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import org.apache.commons.io.IOUtils;
@@ -108,20 +111,27 @@ class MBRWTextPlain implements MessageBodyReader<Object>, MessageBodyWriter<Obje
 	public void writeTo( Object t, Class<?> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, Object> headers, OutputStream os ) throws IOException, WebApplicationException
 	{
 		if( t != null ) {
-			IOUtils.write( t.toString(), os, RBUtils.charset( mt ) );
+			final Charset cs = RBUtils.charset( mt );
+
+			if( mt == null || mt.isWildcardType() || mt.isWildcardSubtype() ) {
+				mt = MediaType.TEXT_PLAIN_TYPE.withCharset( cs.name() );
+
+				headers.putIfAbsent( HttpHeaders.CONTENT_TYPE, asList( mt.toString() ) );
+			}
+
+			IOUtils.write( t.toString(), os, cs );
 		}
 	}
 
 	private boolean isAccepted( Class<?> type, MediaType mt )
 	{
-		return MediaType.TEXT_PLAIN_TYPE.equals( mt )
-			&& ( Number.class.isAssignableFrom( type )
-				|| Boolean.class == type || boolean.class == type
-				|| Character.class == type || char.class == type
-				|| Integer.class == type || int.class == type
-				|| Long.class == type || long.class == type
-				|| Float.class == type || float.class == type
-				|| Double.class == type || double.class == type );
+		return Number.class.isAssignableFrom( type )
+			|| Boolean.class == type || boolean.class == type
+			|| Character.class == type || char.class == type
+			|| Integer.class == type || int.class == type
+			|| Long.class == type || long.class == type
+			|| Float.class == type || float.class == type
+			|| Double.class == type || double.class == type;
 	}
 
 }

@@ -163,9 +163,9 @@ public class ValidationActionTest
 	private void runTest( String methodName, Object... arguments )
 	{
 		final Method method = findMethod( methodName );
-		final RestClientData rbt = new RestClientData( Object.class, null, null, null, null, null, null, null );
-		final RestRequestContextImpl rc = new RestRequestContextImpl( this.target, Object.class, Object.class.getMethod( "hashCode" ), null, arguments );
-		final RestRequest<?> req = new RestRequest<>( rbt, this.client, new GenericType<>( Object.class ), false, "GET", rc );
+		final RestClientData rcd = new RestClientData( Object.class, null, null, null, null, null, null, null );
+		final RestRequestContextImpl rc = new RestRequestContextImpl( rcd, Object.class.getMethod( "hashCode" ), this.target, null, arguments );
+		final RestRequest<?> req = new RestRequest<>( rcd, this.client, new GenericType<>( Object.class ), false, "GET", rc );
 		final ValidationAction action = new ValidationAction( method );
 
 		action.execute( req );

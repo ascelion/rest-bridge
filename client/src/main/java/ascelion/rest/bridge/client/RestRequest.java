@@ -121,9 +121,6 @@ final class RestRequest<T> implements Callable<T>
 		if( this.accepts != null ) {
 			b.accept( this.accepts );
 		}
-		else {
-			b.accept( defaultContentType() );
-		}
 
 		final Response rsp;
 

@@ -220,7 +220,7 @@ final class RestMethod
 	Callable<?> request( Object proxy, Object... arguments ) throws URISyntaxException
 	{
 		final WebTarget actualTarget = addPathFromAnnotation( this.javaMethod, this.rcd.tsup.get() );
-		final RestRequestContextImpl rc = new RestRequestContextImpl( actualTarget, this.rcd.type, this.javaMethod, proxy, arguments );
+		final RestRequestContextImpl rc = new RestRequestContextImpl( this.rcd, this.javaMethod, actualTarget, proxy, arguments );
 		final RestRequest<?> req = new RestRequest<>( this.rcd, proxy, this.returnType, this.async, this.httpMethod, rc );
 		Callable<?> res = null;
 

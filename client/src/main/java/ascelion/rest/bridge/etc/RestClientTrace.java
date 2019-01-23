@@ -87,15 +87,6 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 	static private final Logger L = Logger.getLogger( "ascelion.rest.bridge.TRAFFIC" );
 	static private final AtomicLong ID = new AtomicLong();
 
-	static private boolean isTextContent( MediaType mt )
-	{
-		return ( mt != null ) &&
-			( mt.getType().equals( "text" )
-				|| mt.equals( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
-				|| mt.getSubtype().contains( "xml" )
-				|| mt.getSubtype().contains( "json" ) );
-	}
-
 	private final Logger log;
 	private final Level lev;
 
@@ -124,7 +115,7 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 		if( reqx.hasEntity() ) {
 			final MediaType mt = mediaType( reqx.getHeaderString( CONTENT_TYPE ), reqx.getConfiguration() );
 
-			if( RestClientTrace.isTextContent( mt ) ) {
+			if( RBUtils.isTextContent( mt ) ) {
 				final OutputStream st = new OLogStream( reqx.getEntityStream(), mt, fmt );
 
 				reqx.setEntityStream( st );
@@ -163,7 +154,6 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 		}
 
 		final Formatter fmt = new Formatter();
-
 		final Boolean reqok = (Boolean) reqx.getProperty( REQ_OK_PROP );
 
 		if( reqok == null || !reqok ) {
@@ -182,7 +172,7 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 		if( rspx.getEntityStream() != null ) {
 			final MediaType mt = mediaType( rspx.getHeaderString( CONTENT_TYPE ), reqx.getConfiguration() );
 
-			if( RestClientTrace.isTextContent( mt ) ) {
+			if( RBUtils.isTextContent( mt ) ) {
 				try {
 					final byte[] body = toByteArray( rspx.getEntityStream() );
 
@@ -191,7 +181,7 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 					printBody( fmt, RSP_PREFIX, body, mt );
 				}
 				catch( final Exception e ) {
-					printLine( fmt, RSP_PREFIX, "*** cannot read body: %s", e.getMessage() );
+					printLine( fmt, RSP_PREFIX, "!!! cannot read body: %s", e.getMessage() );
 				}
 			}
 		}

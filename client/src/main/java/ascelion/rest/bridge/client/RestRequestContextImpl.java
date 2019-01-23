@@ -1,10 +1,12 @@
 
 package ascelion.rest.bridge.client;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
@@ -23,26 +25,26 @@ import lombok.Setter;
 final class RestRequestContextImpl implements RestRequestContext
 {
 
+	private final RestClientData rcd;
+	private final Method javaMethod;
 	private final Configuration configuration;
 	@Setter
 	private WebTarget target;
 	@Getter( value = AccessLevel.NONE )
 	private final Object proxy;
-	private final Class<?> proxyType;
-	private final Method javaMethod;
 	private final List<Object> arguments;
 
 	private final MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
 	private final Collection<Cookie> cookies = new ArrayList<>();
 
-	RestRequestContextImpl( WebTarget target, Class<?> proxyType, Method javaMethod, Object proxy, Object[] arguments )
+	RestRequestContextImpl( RestClientData rcd, Method javaMethod, WebTarget target, Object proxy, Object[] arguments )
 	{
-		this.configuration = target.getConfiguration();
-		this.target = target;
-		this.proxyType = proxyType;
+		this.rcd = rcd;
 		this.javaMethod = javaMethod;
+		this.target = target;
 		this.proxy = proxy;
 		this.arguments = arguments != null ? asList( arguments ) : emptyList();
+		this.configuration = target.getConfiguration();
 	}
 
 	@Override
@@ -54,7 +56,7 @@ final class RestRequestContextImpl implements RestRequestContext
 	@Override
 	public Class<?> getInterfaceType()
 	{
-		return this.proxyType;
+		return this.rcd.type;
 	}
 
 	@Override
@@ -67,6 +69,12 @@ final class RestRequestContextImpl implements RestRequestContext
 	public <T> T getArgumentAt( Class<T> type, int index )
 	{
 		return type.cast( this.arguments.get( index ) );
+	}
+
+	@Override
+	public <T> Function<T, String> getConverter( Class<T> type, Annotation[] annotations )
+	{
+		return this.rcd.cvsf.getConverter( type, annotations );
 	}
 
 	void header( String name, String value )

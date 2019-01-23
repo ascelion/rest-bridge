@@ -4,10 +4,8 @@ package ascelion.rest.micro;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -19,8 +17,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 
 import ascelion.rest.bridge.client.RBUtils;
 
@@ -28,7 +24,7 @@ import org.eclipse.yasson.YassonProperties;
 
 @Produces( { "*/json", "*/*+json" } )
 @Consumes( { "*/json", "*/*+json" } )
-public class JsonBProvider implements MessageBodyReader<Object>, MessageBodyWriter<Object>
+public class JsonBProvider extends MBRWBase<Object>
 {
 
 	static public class AnyAccessStrategy implements PropertyVisibilityStrategy
@@ -89,27 +85,21 @@ public class JsonBProvider implements MessageBodyReader<Object>, MessageBodyWrit
 	}
 
 	@Override
-	public boolean isWriteable( Class<?> type, Type gt, Annotation[] annotations, MediaType mt )
+	boolean isAcceptedType( Class<?> type, MediaType mt )
 	{
 		return this.enabled && mt.getSubtype().endsWith( "json" );
 	}
 
 	@Override
-	public void writeTo( Object t, Class<?> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, Object> headers, OutputStream os ) throws IOException, WebApplicationException
-	{
-		jsonb( this.config, mt ).toJson( t, os );
-	}
-
-	@Override
-	public boolean isReadable( Class<?> type, Type gt, Annotation[] annotations, MediaType mt )
-	{
-		return this.enabled && mt.getSubtype().endsWith( "json" );
-	}
-
-	@Override
-	public Object readFrom( Class<Object> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, String> headers, InputStream is ) throws IOException, WebApplicationException
+	Object readFrom( Class<Object> type, MediaType mt, MultivaluedMap<String, String> headers, InputStream is ) throws IOException, WebApplicationException
 	{
 		return jsonb( this.config, mt ).fromJson( is, type );
+	}
+
+	@Override
+	void writeTo( Object t, Class<?> type, MediaType mt, MultivaluedMap<String, Object> headers, OutputStream os ) throws IOException, WebApplicationException
+	{
+		jsonb( this.config, mt ).toJson( t, os );
 	}
 
 }
