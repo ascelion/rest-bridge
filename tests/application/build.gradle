@@ -29,7 +29,8 @@ dependencies {
 	implementation 'org.glassfish.jersey.media:jersey-media-json-jackson'
 
 	arqImplementation configurations.externalApi
-	arqImplementation project( ':micro' )
+	arqRuntime project( ':micro' )
+//	arqRuntime 'org.apache.cxf:cxf-rt-rs-mp-client'
 
 	arqImplementation 'io.leangen.geantyref:geantyref'
 

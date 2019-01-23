@@ -13,9 +13,15 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.annotation.Priority;
+import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.AmbiguousResolutionException;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.CDI;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.Priorities;
@@ -25,6 +31,7 @@ import javax.ws.rs.core.MediaType;
 
 import static java.lang.Thread.currentThread;
 import static java.security.AccessController.doPrivileged;
+import static java.util.Arrays.stream;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.reflect.MethodUtils.getOverrideHierarchy;
@@ -108,7 +115,7 @@ public final class RBUtils
 	static boolean isCDI()
 	{
 		try {
-			javax.enterprise.inject.spi.CDI.current().getBeanManager();
+			CDI.current().getBeanManager();
 
 			return true;
 		}
@@ -122,8 +129,34 @@ public final class RBUtils
 
 	static public <T> T newInstance( Class<T> type )
 	{
+		return newInstance( type, null );
+	}
+
+	static public <T> T newInstance( Class<T> type, Supplier<T> sup )
+	{
 		try {
-			return javax.enterprise.inject.spi.CDI.current().select( type ).get();
+			final BeanManager bm = CDI.current().getBeanManager();
+			final Annotation[] quals = stream( type.getAnnotations() )
+				.map( Annotation::annotationType )
+				.filter( bm::isQualifier ).toArray( Annotation[]::new );
+
+			final Set<Bean<?>> beans = bm.getBeans( type, quals );
+
+			switch( beans.size() ) {
+				case 0:
+				break;
+
+				case 1: {
+					final Bean<?> bean = beans.iterator().next();
+					final CreationalContext<?> cc = bm.createCreationalContext( bean );
+
+					return (T) bm.getReference( bean, type, cc );
+				}
+
+				default:
+					// TODO
+					throw new AmbiguousResolutionException( "Ambigous: " + type.getName() );
+			}
 		}
 		catch( final NoClassDefFoundError e ) {
 			;
@@ -136,7 +169,7 @@ public final class RBUtils
 		}
 
 		try {
-			return type.newInstance();
+			return sup != null ? sup.get() : type.newInstance();
 		}
 		catch( InstantiationException | IllegalAccessException e ) {
 			throw new RestClientException( "Cannot instantiate type " + type.getName() );

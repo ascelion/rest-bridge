@@ -4,6 +4,8 @@ package ascelion.rest.bridge.tests.app;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -20,6 +22,9 @@ public interface ClientHeaders
 
 	class Factory implements ClientHeadersFactory
 	{
+
+		@Context
+		private HttpHeaders headers;
 
 		@Override
 		public MultivaluedMap<String, String> update( MultivaluedMap<String, String> ih, MultivaluedMap<String, String> oh )

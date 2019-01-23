@@ -3,7 +3,6 @@ package ascelion.rest.bridge.tests.app;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
@@ -11,8 +10,6 @@ import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import ascelion.rest.bridge.etc.RestClientTrace;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 
@@ -43,7 +40,6 @@ public class ClientHeadersIMPL implements ClientHeaders
 		try {
 			final ClientHeaders ch = RestClientBuilder.newBuilder()
 				.baseUri( URI.create( "http://localhost:1111" ) )
-				.register( new RestClientTrace( L, Level.INFO ) )
 				.register( ClientHeaderFilter.class )
 				.build( ClientHeaders.class );
 			;

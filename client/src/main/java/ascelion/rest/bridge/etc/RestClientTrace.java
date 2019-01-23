@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.Priority;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
@@ -20,7 +19,6 @@ import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
@@ -38,8 +36,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import lombok.RequiredArgsConstructor;
 
-@Provider
-@Priority( Integer.MAX_VALUE )
 @RequiredArgsConstructor
 public final class RestClientTrace implements ClientRequestFilter, ClientResponseFilter, WriterInterceptor
 {
@@ -163,6 +159,10 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 	@Override
 	public void filter( ClientRequestContext reqx, ClientResponseContext rspx ) throws IOException
 	{
+		if( !this.log.isLoggable( this.lev ) ) {
+			return;
+		}
+
 		final Formatter fmt = new Formatter();
 
 		printLine( fmt, INI_PREFIX, "----------------------------------" );

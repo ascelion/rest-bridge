@@ -47,7 +47,7 @@ public final class RestClient
 	private URI target;
 	private final ConvertersFactory cvsf;
 	@Setter
-	private Function<RestRequestContext, RestRequestContext> requestInterceptor = NO_REQUEST_INTERCEPTOR;
+	private RequestInterceptor requestInterceptor = NO_REQUEST_INTERCEPTOR;
 	@Setter
 	private Function<Response, Throwable> responseHandler = NO_RESPONSE_HANDLER;
 	@Setter
@@ -78,7 +78,7 @@ public final class RestClient
 		final Object aint = client.getConfiguration().getProperty( ASYNC_INTERCEPTOR );
 
 		if( reqi != null ) {
-			this.requestInterceptor = (Function<RestRequestContext, RestRequestContext>) reqi;
+			this.requestInterceptor = (RequestInterceptor) reqi;
 		}
 		if( rsph != null ) {
 			this.responseHandler = (Function<Response, Throwable>) rsph;

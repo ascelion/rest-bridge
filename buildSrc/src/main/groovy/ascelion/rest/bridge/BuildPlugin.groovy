@@ -40,8 +40,6 @@ class BuildPlugin implements Plugin<Project> {
 
 					file {
 						whenMerged {
-							configureScope( entries )
-
 							target.sourceSets.each { SourceSet set ->
 								configureJava( target, entries, set )
 								configureResources( target, entries, set )
@@ -116,16 +114,6 @@ class BuildPlugin implements Plugin<Project> {
 			entries
 					.findAll { it.kind == 'src' && it.path == path }
 					.each { it.output = dest }
-		}
-	}
-
-	private void configureScope( List<ClasspathEntry> entries) {
-		entries.findAll { it.kind == 'src' }.each {
-			if( it.entryAttributes.containsKey('gradle_scope')) {
-				def scope = it.entryAttributes['gradle_scope']
-
-				it.entryAttributes['test'] = scope == 'test' //|| scope == 'arq'
-			}
 		}
 	}
 }

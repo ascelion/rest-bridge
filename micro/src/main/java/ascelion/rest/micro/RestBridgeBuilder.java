@@ -3,11 +3,15 @@ package ascelion.rest.micro;
 
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Formatter;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.stream.Stream;
 
 import javax.ws.rs.client.Client;
@@ -19,9 +23,11 @@ import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.bridge.client.RestClient;
 import ascelion.rest.bridge.client.RestClientMethodException;
 
+import static ascelion.rest.micro.RestBridgeConfiguration.LOG;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.joining;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
@@ -171,6 +177,26 @@ final class RestBridgeBuilder implements RestClientBuilder
 		configureTimeouts( bld, type );
 
 		final Client client = bld.build();
+
+		if( LOG.isLoggable( Level.CONFIG ) ) {
+			try( final Formatter fmt = new Formatter() ) {
+				final Set<Class<?>> classes = new TreeSet<>( ( c1, c2 ) -> c1.getName().compareTo( c2.getName() ) );
+
+				client.getConfiguration().getClasses().stream().forEach( classes::add );
+				client.getConfiguration().getInstances().stream().map( Object::getClass ).forEach( classes::add );
+
+				classes.forEach( c -> {
+					final String cts = client.getConfiguration().getContracts( c )
+						.entrySet().stream()
+						.map( e -> format( "%s:%s", e.getKey().getSimpleName(), e.getValue() ) )
+						.collect( joining( ", " ) );
+
+					fmt.format( "%s -> %s\n", c.getName(), cts );
+				} );
+
+				LOG.log( Level.CONFIG, fmt.toString() );
+			}
+		}
 
 		RestClient rc;
 
