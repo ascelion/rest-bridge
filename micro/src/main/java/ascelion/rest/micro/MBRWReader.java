@@ -6,44 +6,37 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 
 import ascelion.rest.bridge.client.RBUtils;
 
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
+
 import org.apache.commons.io.IOUtils;
 
-final class MBRWReader implements MessageBodyWriter<Reader>, MessageBodyReader<Reader>
+final class MBRWReader extends MBRWBase<Reader>
 {
 
 	@Override
-	public boolean isReadable( Class<?> type, Type gt, Annotation[] annotations, MediaType mt )
+	boolean isAcceptedType( Class<?> type, MediaType mt )
 	{
 		return type == Reader.class;
 	}
 
 	@Override
-	public Reader readFrom( Class<Reader> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, String> headers, InputStream is ) throws IOException, WebApplicationException
+	Reader readFrom( Class<Reader> type, MediaType mt, MultivaluedMap<String, String> headers, InputStream is ) throws IOException, WebApplicationException
 	{
 		return IOUtils.toBufferedReader( new InputStreamReader( is, RBUtils.charset( mt ) ) );
 	}
 
 	@Override
-	public boolean isWriteable( Class<?> type, Type gt, Annotation[] annotations, MediaType mt )
+	void writeTo( Reader t, Class<?> type, MediaType mt, MultivaluedMap<String, Object> headers, OutputStream os ) throws IOException, WebApplicationException
 	{
-		return type == Reader.class;
-	}
-
-	@Override
-	public void writeTo( Reader t, Class<?> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, Object> headers, OutputStream os ) throws IOException, WebApplicationException
-	{
-		IOUtils.copy( t, os, RBUtils.charset( mt ) );
+		IOUtils.copy( t, os, updateMediaType( headers, mt, TEXT_PLAIN_TYPE ) );
 	}
 
 }

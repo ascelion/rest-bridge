@@ -1,8 +1,10 @@
 
 package ascelion.rest.bridge.client;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.function.Function;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
@@ -29,4 +31,6 @@ public interface RestRequestContext
 	MultivaluedMap<String, String> getHeaders();
 
 	Collection<Cookie> getCookies();
+
+	<T> Function<T, String> getConverter( Class<T> type, Annotation[] annotations );
 }

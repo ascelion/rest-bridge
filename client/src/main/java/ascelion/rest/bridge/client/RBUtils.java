@@ -176,6 +176,15 @@ public final class RBUtils
 		}
 	}
 
+	static public boolean isTextContent( MediaType mt )
+	{
+		return ( mt != null ) &&
+			( mt.equals( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
+				|| mt.getType().equals( "text" )
+				|| mt.getSubtype().contains( "xml" )
+				|| mt.getSubtype().contains( "json" ) );
+	}
+
 	static WebTarget addPathFromAnnotation( AnnotatedElement ae, WebTarget target )
 	{
 		final Path p = ae.getAnnotation( Path.class );

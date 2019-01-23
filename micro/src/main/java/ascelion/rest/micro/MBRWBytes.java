@@ -4,41 +4,34 @@ package ascelion.rest.micro;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE;
 
 import org.apache.commons.io.IOUtils;
 
-final class MBRWBytes implements MessageBodyWriter<byte[]>, MessageBodyReader<byte[]>
+final class MBRWBytes extends MBRWBase<byte[]>
 {
 
 	@Override
-	public boolean isReadable( Class<?> type, Type gt, Annotation[] annotations, MediaType mt )
+	boolean isAcceptedType( Class<?> type, MediaType mt )
 	{
 		return type == byte[].class;
 	}
 
 	@Override
-	public byte[] readFrom( Class<byte[]> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, String> headers, InputStream is ) throws IOException, WebApplicationException
+	byte[] readFrom( Class<byte[]> type, MediaType mt, MultivaluedMap<String, String> headers, InputStream is ) throws IOException
 	{
 		return IOUtils.toByteArray( is );
 	}
 
 	@Override
-	public boolean isWriteable( Class<?> type, Type gt, Annotation[] annotations, MediaType mt )
+	void writeTo( byte[] t, Class<?> type, MediaType mt, MultivaluedMap<String, Object> headers, OutputStream os ) throws IOException
 	{
-		return type == byte[].class;
-	}
+		updateMediaType( headers, mt, APPLICATION_OCTET_STREAM_TYPE );
 
-	@Override
-	public void writeTo( byte[] t, Class<?> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, Object> headers, OutputStream os ) throws IOException, WebApplicationException
-	{
 		IOUtils.write( t, os );
 	}
 
