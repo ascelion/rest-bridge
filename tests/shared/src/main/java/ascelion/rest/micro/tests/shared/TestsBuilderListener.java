@@ -33,8 +33,8 @@ public class TestsBuilderListener implements RestClientBuilderListener
 	@Override
 	public void onNewBuilder( RestClientBuilder b )
 	{
-		b.register( new RestClientTrace(), Integer.MIN_VALUE );
 		b.register( new ContentTypeFilter(), Integer.MAX_VALUE );
+		b.register( new RestClientTrace(), Integer.MAX_VALUE );
 
 		b.property( RestClientProperties.DEFAULT_CONTENT_TYPE, MediaType.APPLICATION_JSON_TYPE );
 	}

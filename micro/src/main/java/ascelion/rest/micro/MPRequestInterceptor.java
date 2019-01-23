@@ -50,6 +50,13 @@ public class MPRequestInterceptor implements RequestInterceptor
 		ofNullable( rc.getInterfaceType().getAnnotation( RegisterClientHeaders.class ) )
 			.ifPresent( a -> headersFactory( rc, a ) );
 
+		try {
+			org.jboss.resteasy.spi.ResteasyProviderFactory.pushContext( HttpHeaders.class, this.headers.get() );
+		}
+		catch( final NoClassDefFoundError e ) {
+			;
+		}
+
 		return rc;
 	}
 
@@ -57,6 +64,13 @@ public class MPRequestInterceptor implements RequestInterceptor
 	public void after( RestRequestContext rc )
 	{
 		this.headers.set( null );
+
+		try {
+			org.jboss.resteasy.spi.ResteasyProviderFactory.popContextData( HttpHeaders.class );
+		}
+		catch( final NoClassDefFoundError e ) {
+			;
+		}
 	}
 
 	private void headersFactory( RestRequestContext rc, RegisterClientHeaders a )
