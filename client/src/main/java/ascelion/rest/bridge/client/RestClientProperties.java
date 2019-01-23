@@ -9,7 +9,7 @@ public final class RestClientProperties
 {
 
 	static public final AsyncInterceptor<Object> NO_ASYNC_INTERCEPTOR = () -> null;
-	static public final Function<RestRequestContext, RestRequestContext> NO_REQUEST_INTERCEPTOR = rc -> rc;
+	static public final RequestInterceptor NO_REQUEST_INTERCEPTOR = rc -> rc;
 	static public final Function<Response, Throwable> NO_RESPONSE_HANDLER = rsp -> null;
 
 	/**

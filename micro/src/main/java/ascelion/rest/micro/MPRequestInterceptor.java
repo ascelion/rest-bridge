@@ -5,13 +5,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
 import ascelion.rest.bridge.client.RBUtils;
+import ascelion.rest.bridge.client.RequestInterceptor;
 import ascelion.rest.bridge.client.RestRequestContext;
 
 import static java.util.Optional.ofNullable;
@@ -22,14 +22,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 
-public class MPRequestInterceptor implements Function<RestRequestContext, RestRequestContext>
+public class MPRequestInterceptor implements RequestInterceptor
 {
 
-	private final ThreadLocalValue<HttpHeaders> tlHeaders = ThreadLocalProxy.create( HttpHeaders.class );
+	private final ThreadLocalValue<HttpHeaders> headers = ThreadLocalProxy.create( HttpHeaders.class );
 
 	@Override
-	public RestRequestContext apply( RestRequestContext rc )
+	public RestRequestContext before( RestRequestContext rc )
 	{
+		if( this.headers.isAbsent() ) {
+			this.headers.set( new HttpHeadersImpl( rc ) );
+		}
+
 		final Method met = rc.getJavaMethod();
 
 		Stream.of( met.getAnnotationsByType( ClientHeaderParam.class ) )
@@ -52,9 +56,15 @@ public class MPRequestInterceptor implements Function<RestRequestContext, RestRe
 		return rc;
 	}
 
+	@Override
+	public void after( RestRequestContext rc )
+	{
+		this.headers.set( null );
+	}
+
 	private void headersFactory( RestRequestContext rc, RegisterClientHeaders a )
 	{
-		final MultivaluedMap<String, String> incHeaders = this.tlHeaders.get().getRequestHeaders();
+		final MultivaluedMap<String, String> incHeaders = this.headers.get().getRequestHeaders();
 		final MultivaluedMap<String, String> headers = RBUtils.newInstance( a.value() )
 			.update( incHeaders, rc.getHeaders() );
 

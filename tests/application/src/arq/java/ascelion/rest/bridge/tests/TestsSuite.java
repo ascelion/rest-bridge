@@ -17,6 +17,6 @@ import org.junit.runners.Suite.SuiteClasses;
 	ValidatedRestTest.class,
 	ValidatedTest.class,
 } )
-public abstract class TestsSuite
+public class TestsSuite
 {
 }

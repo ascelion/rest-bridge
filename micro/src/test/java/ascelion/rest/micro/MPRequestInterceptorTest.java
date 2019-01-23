@@ -68,7 +68,7 @@ public class MPRequestInterceptorTest
 	public void run()
 	{
 		try {
-			this.reqi.apply( this.rc );
+			this.reqi.before( this.rc );
 
 			// verify class headers
 			Stream.of( ClientHeaderParamClient.class.getAnnotationsByType( ClientHeaderParam.class ) )

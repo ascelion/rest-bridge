@@ -18,7 +18,7 @@ final class RestClientData
 	final Class<?> type;
 	final Configuration conf;
 	final ConvertersFactory cvsf;
-	final Function<RestRequestContext, RestRequestContext> reqi;
+	final RequestInterceptor reqi;
 	final Function<Response, Throwable> rsph;
 	final Executor exec;
 	final AsyncInterceptor<Object> aint;

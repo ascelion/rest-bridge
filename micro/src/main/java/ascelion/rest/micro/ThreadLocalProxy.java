@@ -12,6 +12,7 @@ import static java.lang.reflect.Proxy.newProxyInstance;
 import static org.apache.commons.lang3.reflect.MethodUtils.getMatchingMethod;
 
 import com.google.common.collect.MapMaker;
+import lombok.RequiredArgsConstructor;
 
 final class ThreadLocalProxy<T> implements InvocationHandler
 {
@@ -24,26 +25,35 @@ final class ThreadLocalProxy<T> implements InvocationHandler
 		return (ThreadLocalValue<X>) newProxyInstance( currentThread().getContextClassLoader(), itfs, ih );
 	}
 
+	@RequiredArgsConstructor
+	static class Instance<X>
+	{
+
+		final X instance;
+		final boolean set;
+	}
+
 	static private final Map<Class<?>, ThreadLocal<?>> TLS = new MapMaker().weakKeys().makeMap();
 
-	private final ThreadLocal<T> tl;
+	private final ThreadLocal<Instance<T>> tl;
 	private final Map<Method, InvocationHandler> handlers = new HashMap<>();
 
 	private ThreadLocalProxy( Class<T> type )
 	{
-		this.tl = (ThreadLocal<T>) TLS.computeIfAbsent( type, t -> new ThreadLocal<T>()
+		this.tl = (ThreadLocal<Instance<T>>) TLS.computeIfAbsent( type, t -> new ThreadLocal<Instance<T>>()
 		{
 
 			@Override
-			protected T initialValue()
+			protected Instance<T> initialValue()
 			{
-				return Injectables.getDefault( type );
+				return new Instance<>( Injectables.getDefault( type ), false );
 			};
 		} );
 
 		this.handlers.put( getMatchingMethod( ThreadLocalValue.class, "set", type ), ( o, m, a ) -> tlv_set( o, a[0] ) );
 		this.handlers.put( getMatchingMethod( ThreadLocalValue.class, "get" ), ( o, m, a ) -> o );
-		this.handlers.put( getMatchingMethod( ThreadLocalValue.class, "isPresent" ), ( o, m, a ) -> this.tl.get() != null );
+		this.handlers.put( getMatchingMethod( ThreadLocalValue.class, "isPresent" ), ( o, m, a ) -> this.tl.get().set );
+		this.handlers.put( getMatchingMethod( ThreadLocalValue.class, "isAbsent" ), ( o, m, a ) -> !this.tl.get().set );
 
 		Stream.of( type.getMethods() )
 			.forEach( m -> this.handlers.put( m, this::invokeThreadLocal ) );
@@ -64,7 +74,7 @@ final class ThreadLocalProxy<T> implements InvocationHandler
 			this.tl.remove();
 		}
 		else {
-			this.tl.set( (T) a );
+			this.tl.set( new Instance<>( (T) a, true ) );
 		}
 
 		return null;
@@ -77,6 +87,6 @@ final class ThreadLocalProxy<T> implements InvocationHandler
 
 	private Object invokeThreadLocal( Object proxy, Method method, Object[] args ) throws Throwable
 	{
-		return method.invoke( this.tl.get(), args );
+		return method.invoke( this.tl.get().instance, args );
 	}
 }

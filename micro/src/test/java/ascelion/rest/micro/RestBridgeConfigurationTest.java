@@ -10,6 +10,7 @@ import javax.ws.rs.core.Configuration;
 import ascelion.rest.bridge.etc.RestClientTrace;
 import ascelion.rest.bridge.tests.api.SLF4JHandler;
 
+import static ascelion.rest.micro.RestBridgeConfiguration.LOG;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -30,8 +31,6 @@ import org.slf4j.LoggerFactory;
 public class RestBridgeConfigurationTest
 {
 
-	static private final String CAT = "ascelion.rest.bridge.micro.CONFIG";
-
 	@Parameterized.Parameters( name = "{0}" )
 	static public Object data()
 	{
@@ -47,7 +46,7 @@ public class RestBridgeConfigurationTest
 	{
 		SLF4JHandler.install();
 
-		( (Logger) LoggerFactory.getLogger( CAT ) ).setLevel( Level.ALL );
+		( (Logger) LoggerFactory.getLogger( LOG.getName() ) ).setLevel( Level.ALL );
 	}
 
 	@Rule
@@ -69,7 +68,7 @@ public class RestBridgeConfigurationTest
 		this.cf.register( RestClientTrace.class );
 
 		if( this.checkLog ) {
-			final List<ILoggingEvent> events = this.rule.getEvents( CAT, Level.WARN );
+			final List<ILoggingEvent> events = this.rule.getEvents( LOG.getName(), Level.WARN );
 
 			assertThat( events, hasSize( 1 ) );
 
@@ -92,7 +91,7 @@ public class RestBridgeConfigurationTest
 		this.cf.register( i2 );
 
 		if( this.checkLog ) {
-			final List<ILoggingEvent> events = this.rule.getEvents( CAT, Level.WARN );
+			final List<ILoggingEvent> events = this.rule.getEvents( LOG.getName(), Level.WARN );
 
 			assertThat( events, hasSize( 1 ) );
 

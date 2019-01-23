@@ -60,6 +60,8 @@ public class CheckLogRule implements TestRule
 
 	private void setUp()
 	{
+		this.logger.info( "Reseting log system" );
+
 		this.logger.detachAndStopAllAppenders();
 		this.logger.addAppender( this.appender );
 		this.logger.setLevel( Level.ALL );

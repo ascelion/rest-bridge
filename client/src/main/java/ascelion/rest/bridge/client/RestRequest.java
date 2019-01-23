@@ -112,15 +112,17 @@ final class RestRequest<T> implements Callable<T>
 	{
 		RestClient.invokedMethod( this.rc.getJavaMethod() );
 
-		this.rcd.reqi.apply( this.rc );
+		final RestRequestContext newRc = this.rcd.reqi.before( this.rc );
+		final Invocation.Builder b = newRc.getTarget().request();
 
-		final Invocation.Builder b = this.rc.getTarget().request();
-
-		this.rc.getHeaders().forEach( ( k, v ) -> v.forEach( x -> b.header( k, x ) ) );
-		this.rc.getCookies().forEach( b::cookie );
+		newRc.getHeaders().forEach( ( k, v ) -> v.forEach( x -> b.header( k, x ) ) );
+		newRc.getCookies().forEach( b::cookie );
 
 		if( this.accepts != null ) {
 			b.accept( this.accepts );
+		}
+		else {
+			b.accept( defaultContentType() );
 		}
 
 		final Response rsp;
@@ -151,6 +153,8 @@ final class RestRequest<T> implements Callable<T>
 			}
 		}
 		finally {
+			this.rcd.reqi.after( newRc );
+
 			RestClient.invokedMethod( null );
 		}
 

@@ -43,7 +43,8 @@ import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 final class RestBridgeConfiguration implements Configurable<RestBridgeConfiguration>, Configuration
 {
 
-	private static final Logger L = Logger.getLogger( "ascelion.rest.bridge.micro.CONFIG" );
+	static final Logger LOG = Logger.getLogger( "ascelion.rest.bridge.micro.CONFIG" );
+
 	private static Set<Class<?>> SUPPORTED;
 
 	static {
@@ -92,7 +93,7 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 	public RestBridgeConfiguration register( Class<?> type )
 	{
 		if( this.registrations.containsKey( type ) ) {
-			L.warning( format( "Component of type %s has been already registered", type.getName() ) );
+			LOG.warning( format( "Component of type %s has been already registered", type.getName() ) );
 
 			return this;
 		}
@@ -143,7 +144,7 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 		final Class<?> type = component.getClass();
 
 		if( this.registrations.containsKey( type ) ) {
-			L.warning( format( "Component of type %s has been already registered", type.getName() ) );
+			LOG.warning( format( "Component of type %s has been already registered", type.getName() ) );
 
 			return this;
 		}
@@ -265,7 +266,11 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 
 		clone.properties.putAll( this.properties );
 		clone.registrations.putAll( this.registrations );
-		clone.registrations.values().forEach( reg -> reg.updateInstance( null ) );
+		clone.registrations.values().forEach( reg -> {
+			if( reg.updateInstance( null ) && reg.isFeature() ) {
+				clone.handleFeature( (Feature) reg.getInstance() );
+			}
+		} );
 
 		return clone;
 	}
@@ -291,21 +296,21 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 
 			if( SUPPORTED.contains( c ) ) {
 				if( c.isAssignableFrom( type ) ) {
-					L.fine( format( "Setting priority %d for contract %s of %s", e.getValue(), c.getName(), type.getName() ) );
+					LOG.fine( format( "Setting priority %d for contract %s of %s", e.getValue(), c.getName(), type.getName() ) );
 
 					map.put( c, e.getValue() );
 				}
 				else {
-					L.warning( format( "Component %s is not assignable from %s", type.getName(), type.getName() ) );
+					LOG.warning( format( "Component %s is not assignable from %s", type.getName(), type.getName() ) );
 				}
 			}
 			else {
-				L.warning( format( "Unsupported contract: %s", c.getName() ) );
+				LOG.warning( format( "Unsupported contract: %s", c.getName() ) );
 			}
 		}
 
 		if( map.isEmpty() ) {
-			L.warning( format( "Skipping registration of %s", type.getName() ) );
+			LOG.warning( format( "Skipping registration of %s", type.getName() ) );
 
 			return reg;
 		}
