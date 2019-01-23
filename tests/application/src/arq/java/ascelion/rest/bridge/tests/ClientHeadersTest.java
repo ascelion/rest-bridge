@@ -21,7 +21,7 @@ extends Deployments
 			.baseUri( this.target.resolve( API.BASE ) )
 			.build( ClientHeaders.class );
 
-		assertThat( client.getHeaderValue(), equalTo( "Forward: V1" ) );
+		assertThat( client.getHeaderValue(), equalTo( "VVVV" ) );
 	}
 
 }

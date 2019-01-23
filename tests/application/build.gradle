@@ -20,8 +20,9 @@ dependencies {
 	implementation project( ':tests:interfaces' )
 	implementation project( ':tests:shared' )
 	implementation project( ':client' )
-	
+
 	implementation 'ch.qos.logback:logback-classic'
+	implementation 'org.apache.commons:commons-lang3'
 
 	implementation 'org.glassfish.jersey.core:jersey-server'
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
@@ -92,6 +93,7 @@ check.dependsOn tasks.register( 'arq', Test ) {
 	group = 'verification'
 	description = 'Run the Arquillian tests.'
 	testClassesDirs = sourceSets.arq.output
+	forkEvery = 1
 
 	classpath = files()
 	classpath += sourceSets.main.output

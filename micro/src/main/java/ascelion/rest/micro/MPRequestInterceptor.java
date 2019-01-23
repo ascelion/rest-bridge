@@ -21,6 +21,7 @@ import static org.apache.commons.lang3.reflect.MethodUtils.getMatchingMethod;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
+import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 
 public class MPRequestInterceptor implements RequestInterceptor
 {
@@ -46,10 +47,6 @@ public class MPRequestInterceptor implements RequestInterceptor
 			.forEach( p -> addHeader( rc, p ) );
 		;
 
-		getAllInterfaces( rc.getInterface().getClass() ).stream()
-			.filter( t -> t.isAssignableFrom( rc.getInterfaceType() ) )
-			.flatMap( t -> Stream.of( t.getAnnotationsByType( RegisterClientHeaders.class ) ) );
-
 		ofNullable( rc.getInterfaceType().getAnnotation( RegisterClientHeaders.class ) )
 			.ifPresent( a -> headersFactory( rc, a ) );
 
@@ -65,7 +62,11 @@ public class MPRequestInterceptor implements RequestInterceptor
 	private void headersFactory( RestRequestContext rc, RegisterClientHeaders a )
 	{
 		final MultivaluedMap<String, String> incHeaders = this.headers.get().getRequestHeaders();
-		final MultivaluedMap<String, String> headers = RBUtils.newInstance( a.value() )
+		final ClientHeadersFactory factory = RBUtils.newInstance( a.value() );
+
+		new TypeDesc<>( factory ).inject( factory );
+
+		final MultivaluedMap<String, String> headers = factory
 			.update( incHeaders, rc.getHeaders() );
 
 		rc.getHeaders().putAll( headers );
