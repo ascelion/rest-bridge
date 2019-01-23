@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import javax.ws.rs.core.Context;
 
 import static java.util.Arrays.stream;
+import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.reflect.MethodUtils.getMatchingAccessibleMethod;
 
 final class TypeDesc<T>
@@ -15,6 +16,12 @@ final class TypeDesc<T>
 
 	final Class<T> type;
 	private final Collection<PropDesc<?>> props = new ArrayList<>();
+
+	@SuppressWarnings( "rawtypes" )
+	TypeDesc( T type )
+	{
+		this( requireNonNull( (Class) type.getClass() ) );
+	}
 
 	TypeDesc( Class<T> type )
 	{

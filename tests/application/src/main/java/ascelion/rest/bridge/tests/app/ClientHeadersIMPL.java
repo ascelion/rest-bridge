@@ -3,11 +3,12 @@ package ascelion.rest.bridge.tests.app;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -17,16 +18,17 @@ import org.eclipse.microprofile.rest.client.RestClientBuilder;
 public class ClientHeadersIMPL implements ClientHeaders
 {
 
-	static private final Logger L = Logger.getLogger( "ClientHeadersTrace" );
-
 	static public class ClientHeaderFilter implements ClientRequestFilter
 	{
+
+		@Context
+		private HttpHeaders headers;
 
 		@Override
 		public void filter( ClientRequestContext rc ) throws IOException
 		{
 			final Response rsp = Response.ok()
-				.entity( rc.getHeaderString( "H1" ) )
+				.entity( rc.getHeaderString( NAME ) )
 				.type( MediaType.TEXT_PLAIN )
 				.build();
 
