@@ -7,12 +7,14 @@ dependencies {
 	externalApi 'javax.json.bind:javax.json.bind-api'
 	externalApi 'javax.json:javax.json-api'
 	externalApi 'javax.enterprise:cdi-api'
+	externalApi 'javax.annotation:javax.annotation-api'
 	externalApi 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 	externalApi 'org.eclipse.microprofile.config:microprofile-config-api'
 
 	compileOnly 'org.eclipse:yasson'
 	compileOnly 'org.glassfish.jersey.core:jersey-common'
-
+	compileOnly 'org.jboss.resteasy:resteasy-jaxrs'
+	
 	implementation project( ':tests:interfaces' )
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'org.apache.commons:commons-io'

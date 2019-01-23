@@ -5,7 +5,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.util.Formatter;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -40,7 +39,8 @@ import lombok.RequiredArgsConstructor;
 public final class RestClientTrace implements ClientRequestFilter, ClientResponseFilter, WriterInterceptor
 {
 
-	static private final String REQ_ST_PROP = "ascelion.rest.micro.tests.shared.trace.request.stream";
+	static private final String REQ_ST_PROP = "ascelion.rest.bridge.trace.request.stream";
+	static private final String REQ_OK_PROP = "ascelion.rest.bridge.trace.request.ok";
 
 	@RequiredArgsConstructor
 	static class OLogStream extends OutputStream
@@ -111,15 +111,12 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 			return;
 		}
 
-		final Method method = RestClient.invokedMethod();
-
 		ID.incrementAndGet();
-
 		final Formatter fmt = new Formatter();
 
 		printLine( fmt, INI_PREFIX, "==================================" );
-		if( method != null ) {
-			printLine( fmt, INI_PREFIX, "%s", method );
+		if( RestClient.invokedMethod() != null ) {
+			printLine( fmt, INI_PREFIX, "%s", RestClient.invokedMethod() );
 		}
 		printLine( fmt, REQ_PREFIX, "%s %s", reqx.getMethod(), reqx.getUri() );
 		printHeaders( fmt, REQ_PREFIX, reqx.getStringHeaders() );
@@ -137,6 +134,8 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 		else {
 			doLog( fmt );
 		}
+
+		reqx.setProperty( REQ_OK_PROP, true );
 	}
 
 	@Override
@@ -165,19 +164,35 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 
 		final Formatter fmt = new Formatter();
 
+		final Boolean reqok = (Boolean) reqx.getProperty( REQ_OK_PROP );
+
+		if( reqok == null || !reqok ) {
+			printLine( fmt, INI_PREFIX, "??????????????????????????????????" );
+			if( RestClient.invokedMethod() != null ) {
+				printLine( fmt, INI_PREFIX, "%s", RestClient.invokedMethod() );
+			}
+			printLine( fmt, REQ_PREFIX, "%s %s", reqx.getMethod(), reqx.getUri() );
+			printHeaders( fmt, REQ_PREFIX, reqx.getStringHeaders() );
+		}
+
 		printLine( fmt, INI_PREFIX, "----------------------------------" );
 		printLine( fmt, RSP_PREFIX, "%03d %s", rspx.getStatus(), rspx.getStatusInfo().getReasonPhrase() );
 		printHeaders( fmt, RSP_PREFIX, rspx.getHeaders() );
 
-		if( rspx.hasEntity() ) {
+		if( rspx.getEntityStream() != null ) {
 			final MediaType mt = mediaType( rspx.getHeaderString( CONTENT_TYPE ), reqx.getConfiguration() );
 
 			if( RestClientTrace.isTextContent( mt ) ) {
-				final byte[] body = toByteArray( rspx.getEntityStream() );
+				try {
+					final byte[] body = toByteArray( rspx.getEntityStream() );
 
-				printBody( fmt, RSP_PREFIX, body, mt );
+					rspx.setEntityStream( new ByteArrayInputStream( body ) );
 
-				rspx.setEntityStream( new ByteArrayInputStream( body ) );
+					printBody( fmt, RSP_PREFIX, body, mt );
+				}
+				catch( final Exception e ) {
+					printLine( fmt, RSP_PREFIX, "*** cannot read body: %s", e.getMessage() );
+				}
 			}
 		}
 
@@ -231,5 +246,4 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 			return null;
 		}
 	}
-
 }
