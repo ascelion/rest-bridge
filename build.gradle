@@ -53,15 +53,14 @@ subprojects { sub ->
 		ignoreFailures = booleanProperty 'ignoreFailures'
 		enableAssertions = true
 		scanForTestClasses = true
+		forkEvery = 1
 
 		testLogging {
 			exceptionFormat 'full'
 			showStandardStreams = true
 		}
-		reports {
-			html.enabled = true
-		}
 
+		debug = booleanProperty( 'arq.debug' )
 //		systemProperty "force", UUID.randomUUID()
 	}
 

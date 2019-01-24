@@ -16,7 +16,7 @@ public interface RestRequestContext
 
 	Configuration getConfiguration();
 
-	Object getInterface();
+	Object getImplementation();
 
 	Class<?> getInterfaceType();
 

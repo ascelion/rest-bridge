@@ -19,12 +19,12 @@ public class ArquillianUnit
 extends Arquillian
 {
 
-	static {
-		Stream.of( System.getProperty( "java.class.path", "" )
-			.split( ":" ) )
-			.sorted()
-			.forEach( System.out::println );
-	}
+//	static {
+//		stream( System.getProperty( "java.class.path", "" )
+//			.split( ":" ) )
+//				.sorted()
+//				.forEach( System.out::println );
+//	}
 
 	public ArquillianUnit( Class<?> klass ) throws InitializationError
 	{

@@ -60,7 +60,7 @@ public class MPRequestInterceptorTest
 	{
 		when( this.rc.getJavaMethod() ).thenReturn( this.method );
 		when( this.rc.getHeaders() ).thenReturn( this.headers );
-		when( this.rc.getInterface() ).thenReturn( this.client );
+		when( this.rc.getImplementation() ).thenReturn( this.client );
 		when( this.rc.getInterfaceType() ).thenReturn( (Class) ClientHeaderParamClient.class );
 	}
 

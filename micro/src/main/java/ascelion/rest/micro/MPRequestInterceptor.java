@@ -24,7 +24,6 @@ import static java.util.Arrays.stream;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ClassUtils.getAllInterfaces;
-import static org.apache.commons.lang3.reflect.MethodUtils.getMatchingMethod;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
@@ -56,7 +55,7 @@ public class MPRequestInterceptor implements RequestInterceptor
 
 		final Map<String, Runnable> actions = new TreeMap<>();
 
-		getAllInterfaces( rc.getInterface().getClass() ).stream()
+		getAllInterfaces( rc.getImplementation().getClass() ).stream()
 			.filter( t -> t.isAssignableFrom( rc.getInterfaceType() ) )
 			.flatMap( t -> stream( t.getAnnotationsByType( ClientHeaderParam.class ) ) )
 			.forEach( a -> actions.put( a.name(), () -> setHeader( rc, a ) ) );
@@ -150,9 +149,11 @@ public class MPRequestInterceptor implements RequestInterceptor
 
 	private String[] translateHeader( RestRequestContext rc, String name, boolean required, String value )
 	{
-		if( value != null && value.length() > 2 && value.startsWith( "{" ) && value.endsWith( "}" ) ) {
+		final String methodName = ClientHeadersValidator.getMethodName( value );
+
+		if( methodName != null ) {
 			try {
-				return evalMethod( rc, name, value, required );
+				return evalMethod( rc, name, methodName, required );
 			}
 			catch( final Throwable e ) {
 				throw new EvalException( e );
@@ -163,21 +164,16 @@ public class MPRequestInterceptor implements RequestInterceptor
 		}
 	}
 
-	private String[] evalMethod( RestRequestContext rc, String name, String value, boolean required ) throws IllegalAccessException, InvocationTargetException
+	private String[] evalMethod( RestRequestContext rc, String headerName, String methodName, boolean required ) throws IllegalAccessException, InvocationTargetException
 	{
-		final Method eval = lookupMethod( rc, value.substring( 1, value.length() - 1 ) );
-
-		if( eval == null ) {
-			return new String[0];
-		}
-
+		final Method eval = ClientHeadersValidator.lookupMethod( rc.getInterfaceType(), methodName );
 		Object result = null;
 
 		if( Modifier.isStatic( eval.getModifiers() ) ) {
-			result = eval.getParameterCount() == 0 ? eval.invoke( null ) : eval.invoke( null, name );
+			result = eval.getParameterCount() == 0 ? eval.invoke( null ) : eval.invoke( null, headerName );
 		}
 		else {
-			result = eval.getParameterCount() == 0 ? eval.invoke( rc.getInterface() ) : eval.invoke( rc.getInterface(), name );
+			result = eval.getParameterCount() == 0 ? eval.invoke( rc.getImplementation() ) : eval.invoke( rc.getImplementation(), headerName );
 		}
 
 		if( result == null ) {
@@ -188,28 +184,6 @@ public class MPRequestInterceptor implements RequestInterceptor
 		}
 		else {
 			return new String[] { (String) result };
-		}
-	}
-
-	private Method lookupMethod( RestRequestContext rc, String name )
-	{
-		final int dot = name.lastIndexOf( '.' );
-
-		if( dot > 0 ) {
-			final Class<?> cls = RBUtils.safeLoadClass( name.substring( 0, dot ) );
-
-			if( cls == null ) {
-				return null;
-			}
-
-			name = name.substring( dot + 1 );
-
-			return ofNullable( getMatchingMethod( cls, name ) )
-				.orElse( getMatchingMethod( cls, name, String.class ) );
-		}
-		else {
-			return ofNullable( getMatchingMethod( rc.getInterfaceType(), name ) )
-				.orElse( getMatchingMethod( rc.getInterfaceType(), name, String.class ) );
 		}
 	}
 
