@@ -93,7 +93,6 @@ check.dependsOn tasks.register( 'arq', Test ) {
 	group = 'verification'
 	description = 'Run the Arquillian tests.'
 	testClassesDirs = sourceSets.arq.output
-	forkEvery = 1
 
 	classpath = files()
 	classpath += sourceSets.main.output

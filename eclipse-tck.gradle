@@ -14,7 +14,6 @@ sourceSets {
 dependencies
 {
 	arqImplementation 'javax.ws.rs:javax.ws.rs-api'
-	arqImplementation 'javax.json.bind:javax.json.bind-api'
 	arqImplementation 'javax.interceptor:javax.interceptor-api'
 	arqImplementation 'javax.json:javax.json-api'
 	arqImplementation 'javax.json.bind:javax.json.bind-api'
@@ -50,11 +49,8 @@ check.dependsOn tasks.register( 'arq', Test ) {
 	classpath += configurations.arqRuntimeClasspath
 
 	reports {
-		html.enabled = false
 		junitXml.enabled = false
 	}
-
-	debug = booleanProperty( 'arq.debug' )
 
 	useTestNG() {
 		useDefaultListeners = true

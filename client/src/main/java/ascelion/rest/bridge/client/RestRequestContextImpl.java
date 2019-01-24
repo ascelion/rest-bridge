@@ -48,7 +48,7 @@ final class RestRequestContextImpl implements RestRequestContext
 	}
 
 	@Override
-	public Object getInterface()
+	public Object getImplementation()
 	{
 		return this.proxy;
 	}
