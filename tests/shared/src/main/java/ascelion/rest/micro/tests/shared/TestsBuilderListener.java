@@ -11,6 +11,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.bridge.client.RestClient;
 import ascelion.rest.bridge.etc.RestClientTrace;
 
@@ -33,7 +34,10 @@ public class TestsBuilderListener implements RestClientBuilderListener
 			final Method m = RestClient.invokedMethod();
 
 			if( m != null && rsp.getMediaType() == null && rsp.getStatus() != Response.Status.NO_CONTENT.getStatusCode() ) {
-				final String type = m.getReturnType().getSimpleName().toLowerCase();
+				final String type = RBUtils.genericType( m.getDeclaringClass(), m )
+					.getRawType()
+					.getSimpleName()
+					.toLowerCase();
 
 				switch( type ) {
 					case "response":
