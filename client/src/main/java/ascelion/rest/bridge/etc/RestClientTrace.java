@@ -25,19 +25,50 @@ import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.bridge.client.RestClient;
 
 import static ascelion.rest.bridge.client.RestClientProperties.DEFAULT_CONTENT_TYPE;
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.joining;
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static org.apache.commons.io.IOUtils.readLines;
 import static org.apache.commons.io.IOUtils.toByteArray;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public final class RestClientTrace implements ClientRequestFilter, ClientResponseFilter, WriterInterceptor
 {
+
+	@RequiredArgsConstructor
+	@EqualsAndHashCode
+	static class Header implements Comparable<Header>
+	{
+
+		final String name;
+		final String value;
+
+		@Override
+		public int compareTo( Header that )
+		{
+			if( that == null ) {
+				return 1;
+			}
+
+			final int dif1 = String.CASE_INSENSITIVE_ORDER.compare( this.name, that.name );
+
+			if( dif1 != 0 ) {
+				return dif1;
+			}
+
+			return String.CASE_INSENSITIVE_ORDER.compare( this.value, that.value );
+		}
+
+		@Override
+		public String toString()
+		{
+			return format( "%s: %s", this.name, this.value );
+		}
+	}
 
 	static private final String REQ_ST_PROP = "ascelion.rest.bridge.trace.request.stream";
 	static private final String REQ_OK_PROP = "ascelion.rest.bridge.trace.request.ok";
@@ -204,8 +235,9 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 	private void printHeaders( Formatter fmt, String prefix, MultivaluedMap<String, String> multivaluedMap )
 	{
 		multivaluedMap.entrySet().stream()
-			.sorted( ( e1, e2 ) -> CASE_INSENSITIVE_ORDER.compare( e1.getKey(), e2.getKey() ) )
-			.forEach( e -> printLine( fmt, prefix, "%s: %s", e.getKey(), e.getValue().stream().collect( joining( ", " ) ) ) );
+			.flatMap( e -> e.getValue().stream().map( v -> new Header( e.getKey(), v ) ) )
+			.sorted()
+			.forEach( h -> printLine( fmt, prefix, "%s", h ) );
 		;
 	}
 
