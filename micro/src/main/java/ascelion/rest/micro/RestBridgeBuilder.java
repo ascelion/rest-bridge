@@ -39,8 +39,8 @@ final class RestBridgeBuilder implements RestClientBuilder
 
 	private final RestBridgeConfiguration configuration = new RestBridgeConfiguration( this );
 	private URL baseUrl;
-	private long connectTimeout = 0;
-	private long readTimeout = 0;
+	private Long connectTimeout;
+	private Long readTimeout;
 	private ExecutorService executorService;
 
 	@Override
@@ -229,7 +229,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 		Stream.of( type.getAnnotationsByType( RegisterProvider.class ) )
 			.forEach( a -> cfg.register( a.value(), RBUtils.getPriority( a.value(), a.priority() ) ) );
 
-		MP.getConfig( type, "providers" )
+		MP.getConfig( type, String.class, "providers" )
 			.map( s -> Stream.of( s.split( "," ) ) )
 			.orElse( Stream.empty() )
 			.map( RBUtils::safeLoadClass )
@@ -259,7 +259,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 				continue;
 			}
 
-			final int priority = Integer.valueOf( MP.getConfig( name ).get() );
+			final int priority = Integer.valueOf( MP.getConfig( Integer.class, name ).get() );
 
 			cfg.register( prov, priority );
 		}
@@ -267,26 +267,18 @@ final class RestBridgeBuilder implements RestClientBuilder
 
 	private <T> void configureTimeouts( ClientBuilder bld, Class<T> type )
 	{
-		try {
-			final long to = MP.getConfig( type, "connectTimeout" )
-				.map( Long::parseLong )
-				.orElse( this.connectTimeout );
+		final Long cto = ofNullable( this.connectTimeout )
+			.orElse( MP.getConfig( type, Long.class, "connectTimeout" ).orElse( null ) );
 
-			bld.connectTimeout( to, TimeUnit.MILLISECONDS );
-		}
-		catch( final NumberFormatException e ) {
-			throw new IllegalStateException( format( "%s: unable to parse connectTimeout from configuration", type.getName() ), e );
+		if( cto != null ) {
+			bld.connectTimeout( cto, TimeUnit.MILLISECONDS );
 		}
 
-		try {
-			final long to = MP.getConfig( type, "readTimeout" )
-				.map( Long::parseLong )
-				.orElse( this.readTimeout );
+		final Long rto = ofNullable( this.readTimeout )
+			.orElse( MP.getConfig( type, Long.class, "readTimeout" ).orElse( null ) );
 
-			bld.readTimeout( to, TimeUnit.MILLISECONDS );
-		}
-		catch( final NumberFormatException e ) {
-			throw new IllegalStateException( format( "%s: unable to parse readTimeout from configuration", type.getName() ), e );
+		if( rto != null ) {
+			bld.readTimeout( rto, TimeUnit.MILLISECONDS );
 		}
 	}
 }

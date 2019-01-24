@@ -14,14 +14,14 @@ import org.eclipse.microprofile.config.ConfigProvider;
 public final class MP
 {
 
-	static public Optional<String> getConfig( Class<?> type, String what )
+	static public <T> Optional<T> getConfig( Class<?> service, Class<T> type, String what )
 	{
-		return getConfig( format( "%s/mp-rest/%s", type.getName(), what ) );
+		return getConfig( type, format( "%s/mp-rest/%s", service.getName(), what ) );
 	}
 
-	static public Optional<String> getConfig( String name )
+	static public <T> Optional<T> getConfig( Class<T> type, String name )
 	{
-		return getConfig().map( c -> c.getOptionalValue( name, String.class ) ).orElse( Optional.empty() );
+		return getConfig().map( c -> c.getOptionalValue( name, type ) ).orElse( Optional.empty() );
 	}
 
 	static public Optional<Config> getConfig()
