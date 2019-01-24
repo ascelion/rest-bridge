@@ -15,6 +15,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.joining;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 
 import lombok.AccessLevel;
@@ -116,7 +117,12 @@ final class RestRequest<T> implements Callable<T>
 
 		final Invocation.Builder b = this.rc.getTarget().request();
 
-		this.rc.getHeaders().forEach( ( k, v ) -> v.forEach( x -> b.header( k, x ) ) );
+		this.rc.getHeaders().forEach( ( k, v ) -> {
+			// Jersey concatenates header values while Resteasy sends multiple headers
+			// On the other hand, use of Wiremock in MP-TCK expects concatenated values
+			// (or it is a wiremock issue)
+			b.header( k, v.stream().collect( joining( "," ) ) );
+		} );
 		this.rc.getCookies().forEach( b::cookie );
 
 		if( this.accepts != null ) {
