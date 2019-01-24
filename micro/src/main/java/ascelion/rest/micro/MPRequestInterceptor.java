@@ -45,7 +45,7 @@ public class MPRequestInterceptor implements RequestInterceptor
 	private final ThreadLocalValue<HttpHeaders> headers = ThreadLocalProxy.create( HttpHeaders.class );
 
 	@Override
-	public RestRequestContext before( RestRequestContext rc )
+	public void before( RestRequestContext rc )
 	{
 		if( this.headers.isAbsent() ) {
 			this.headers.set( new HttpHeadersImpl( rc ) );
@@ -92,8 +92,6 @@ public class MPRequestInterceptor implements RequestInterceptor
 		catch( final NoClassDefFoundError e ) {
 			;
 		}
-
-		return rc;
 	}
 
 	@Override

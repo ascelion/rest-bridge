@@ -8,7 +8,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -62,10 +61,10 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 		final RestClientBuilder bld = RBUtils.newInstance( RestClientBuilder.class, RestClientBuilder::newBuilder );
 
 		final String uriA = trimToNull( this.type.getAnnotation( RegisterRestClient.class ).baseUri() );
-		final String uriW = MP.getConfig( "*/mp-rest/uri" ).orElse( uriA );
-		final String urlW = MP.getConfig( "*/mp-rest/url" ).orElse( null );
-		final String uri = MP.getConfig( this.type, "uri" ).orElse( uriW );
-		final String url = MP.getConfig( this.type, "url" ).orElse( urlW );
+		final String uriW = MP.getConfig( String.class, "*/mp-rest/uri" ).orElse( uriA );
+		final String urlW = MP.getConfig( String.class, "*/mp-rest/url" ).orElse( null );
+		final String uri = MP.getConfig( this.type, String.class, "uri" ).orElse( uriW );
+		final String url = MP.getConfig( this.type, String.class, "url" ).orElse( urlW );
 
 		if( uri == null && url == null ) {
 			throw new IllegalStateException( format( "%s: unable to determine base URI/URL from configuration", this.type.getName() ) );
@@ -153,10 +152,7 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 
 	private Class<? extends Annotation> lookupScope()
 	{
-		final Optional<Class<? extends Annotation>> c = MP.getConfig( this.type, "scope" )
-			.map( RBUtils::rtLoadClass );
-
-		return c.orElse( inferScope() );
+		return MP.getConfig( this.type, Class.class, "scope" ).orElse( inferScope() );
 	}
 
 	private Class<? extends Annotation> inferScope()

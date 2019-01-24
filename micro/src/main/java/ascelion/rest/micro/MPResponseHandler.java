@@ -11,8 +11,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Response;
 
-import ascelion.rest.bridge.client.RestClient;
 import ascelion.rest.bridge.client.RBUtils;
+import ascelion.rest.bridge.client.RestClient;
 
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 
@@ -27,7 +27,7 @@ final class MPResponseHandler implements Function<Response, Throwable>
 	{
 		this.providers = RBUtils.providers( cf, ResponseExceptionMapper.class );
 
-		final String dis = MP.getConfig( CONFIG_KEY_DISABLE_DEFAULT_MAPPER )
+		final String dis = MP.getConfig( String.class, CONFIG_KEY_DISABLE_DEFAULT_MAPPER )
 			.orElse( Objects.toString( cf.getProperty( CONFIG_KEY_DISABLE_DEFAULT_MAPPER ), "false" ) );
 
 		if( !Boolean.valueOf( dis ) ) {
