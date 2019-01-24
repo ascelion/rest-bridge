@@ -5,7 +5,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.security.PrivilegedAction;
 import java.util.Collection;
@@ -13,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -27,8 +30,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
+import static io.leangen.geantyref.GenericTypeReflector.getExactReturnType;
 import static java.lang.Thread.currentThread;
 import static java.security.AccessController.doPrivileged;
 import static java.util.Arrays.stream;
@@ -183,6 +188,19 @@ public final class RBUtils
 				|| mt.getType().equals( "text" )
 				|| mt.getSubtype().contains( "xml" )
 				|| mt.getSubtype().contains( "json" ) );
+	}
+
+	static public <T> GenericType<T> genericType( Class<?> type, Method method )
+	{
+		final Type rt = getExactReturnType( method, type );
+		final GenericType<?> gt = new GenericType<>( rt );
+
+		if( gt.getRawType() == CompletionStage.class ) {
+			return new GenericType<>( ( (ParameterizedType) gt.getType() ).getActualTypeArguments()[0] );
+		}
+		else {
+			return new GenericType<>( rt );
+		}
 	}
 
 	static WebTarget addPathFromAnnotation( AnnotatedElement ae, WebTarget target )

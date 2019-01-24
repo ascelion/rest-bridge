@@ -5,7 +5,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.security.PrivilegedAction;
@@ -31,7 +30,6 @@ import static ascelion.rest.bridge.client.RBUtils.findAnnotation;
 import static ascelion.rest.bridge.client.RBUtils.getHttpMethod;
 import static ascelion.rest.bridge.client.RBUtils.pathElements;
 import static io.leangen.geantyref.GenericTypeReflector.getExactParameterTypes;
-import static io.leangen.geantyref.GenericTypeReflector.getExactReturnType;
 import static java.lang.String.format;
 import static java.security.AccessController.doPrivileged;
 import static java.util.stream.Collectors.joining;
@@ -77,22 +75,8 @@ final class RestMethod
 		this.rcd = rcd;
 		this.javaMethod = method;
 		this.httpMethod = getHttpMethod( method );
-
-		final Type rt = getExactReturnType( this.javaMethod, rcd.type );
-		GenericType<?> gt = new GenericType<>( rt );
-
-		if( gt.getRawType() == CompletionStage.class ) {
-			this.async = true;
-
-			gt = new GenericType<>( ( (ParameterizedType) gt.getType() ).getActualTypeArguments()[0] );
-		}
-		else {
-			this.async = false;
-
-			gt = new GenericType<>( rt );
-		}
-
-		this.returnType = gt;
+		this.returnType = RBUtils.genericType( rcd.type, method );
+		this.async = CompletionStage.class.equals( method.getReturnType() );
 
 		final String paths = Stream.of( method.getAnnotation( Path.class ), rcd.type.getAnnotation( Path.class ) )
 			.filter( Objects::nonNull )
