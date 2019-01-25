@@ -9,6 +9,8 @@ import java.util.function.Function;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 public interface RestRequestContext
@@ -19,6 +21,8 @@ public interface RestRequestContext
 	Object getImplementation();
 
 	Class<?> getInterfaceType();
+
+	Object[] getArguments();
 
 	Object getArgumentAt( int index );
 
@@ -33,4 +37,12 @@ public interface RestRequestContext
 	Collection<Cookie> getCookies();
 
 	<T> Function<T, String> getConverter( Class<T> type, Annotation[] annotations );
+
+	<T> GenericType<T> getReturnType();
+
+	MediaType getContentType();
+
+	String getHttpMethod();
+
+	boolean isAsync();
 }

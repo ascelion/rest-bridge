@@ -11,6 +11,8 @@ import javax.ws.rs.core.GenericType;
 import ascelion.rest.bridge.tests.api.BeanData;
 import ascelion.rest.bridge.tests.api.Validated;
 
+import static org.mockito.Mockito.mock;
+
 import lombok.SneakyThrows;
 import org.junit.Rule;
 import org.junit.Test;
@@ -164,8 +166,8 @@ public class ValidationActionTest
 	{
 		final Method method = findMethod( methodName );
 		final RestClientData rcd = new RestClientData( Object.class, null, null, null, null, null, null, null );
-		final RestRequestContextImpl rc = new RestRequestContextImpl( rcd, Object.class.getMethod( "hashCode" ), this.target, null, arguments );
-		final RestRequest<?> req = new RestRequest<>( rcd, this.client, new GenericType<>( Object.class ), false, "GET", rc );
+		final RestRequestContextImpl rc = new RestRequestContextImpl( rcd, method, new GenericType<>( Object.class ), false, "GET", this.target, mock( Validated.class ), arguments );
+		final RestRequest<?> req = new RestRequest<>( rc );
 		final ValidationAction action = new ValidationAction( method );
 
 		action.execute( req );

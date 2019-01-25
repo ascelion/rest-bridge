@@ -7,14 +7,10 @@ import java.util.concurrent.CompletableFuture;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 
@@ -25,82 +21,17 @@ import lombok.RequiredArgsConstructor;
 final class RestRequest<T> implements Callable<T>
 {
 
-	private final RestClientData rcd;
-	final Object proxy;
-	private final GenericType<T> returnType;
-	private final boolean async;
-	private final String httpMethod;
 	final RestRequestContextImpl rc;
-
-	private String[] accepts;
-	private String contentType;
-	private Object entity;
-
-	void consumes( String[] value )
-	{
-		if( value.length > 0 ) {
-			this.contentType = value[0];
-		}
-	}
-
-	void cookie( Cookie c )
-	{
-		this.rc.getCookies().add( c );
-	}
-
-	void entity( Object entity )
-	{
-		if( this.entity != null ) {
-			// TODO review this, could it be caught in the initialisation stage?
-			throw new IllegalStateException( "The request entity has been already set" );
-		}
-
-		this.entity = entity;
-	}
-
-	void form( String name, String value )
-	{
-		Form form;
-
-		try {
-			if( this.entity == null ) {
-				this.entity = form = new Form();
-			}
-			else {
-				form = (Form) this.entity;
-			}
-		}
-		catch( final ClassCastException e ) {
-			// TODO review this, could it be caught in the initialisation stage?
-			throw new IllegalStateException( "Trying to mix a non-form entity with a Form" );
-		}
-
-		form.param( name, value );
-	}
-
-	void produces( String[] value )
-	{
-		this.accepts = value;
-	}
 
 	@Override
 	public T call() throws Exception
 	{
-		if( this.contentType == null && this.entity != null ) {
-			if( this.entity instanceof Form ) {
-				this.contentType = MediaType.APPLICATION_FORM_URLENCODED;
-			}
-			else {
-				this.contentType = defaultContentType();
-			}
-		}
-
-		if( this.async ) {
-			final Object ais = this.rcd.aint.prepare();
+		if( this.rc.isAsync() ) {
+			final Object ais = this.rc.rcd.aint.prepare();
 
 			final CompletableFuture<T> fut = new CompletableFuture<>();
 
-			this.rcd.exec.execute( () -> invokeAsync( ais, fut ) );
+			this.rc.rcd.exec.execute( () -> invokeAsync( ais, fut ) );
 
 			return (T) fut;
 		}
@@ -113,7 +44,7 @@ final class RestRequest<T> implements Callable<T>
 	{
 		RestClient.invokedMethod( this.rc.getJavaMethod() );
 
-		this.rcd.reqi.before( this.rc );
+		this.rc.rcd.reqi.before( this.rc );
 
 		final Invocation.Builder b = this.rc.getTarget().request();
 
@@ -125,25 +56,25 @@ final class RestRequest<T> implements Callable<T>
 		} );
 		this.rc.getCookies().forEach( b::cookie );
 
-		if( this.accepts != null ) {
-			b.accept( this.accepts );
-		}
+		b.accept( this.rc.produces.toArray( new MediaType[0] ) );
 
 		final Response rsp;
 
 		try {
-			if( this.entity != null ) {
-				final Entity<?> e = Entity.entity( this.entity, this.contentType );
+			final MediaType ct = this.rc.getContentType();
 
-				rsp = b.method( this.httpMethod, e );
+			if( this.rc.entity != null ) {
+				final Entity<?> e = Entity.entity( this.rc.entity, ct );
+
+				rsp = b.method( this.rc.getHttpMethod(), e );
 			}
 			else {
-				if( this.contentType != null ) {
+				if( ct != null ) {
 					// Micro TCK uses a GET with a Content-Type, so let's keep it happy!
-					b.header( HttpHeaders.CONTENT_TYPE, this.contentType );
+					b.header( HttpHeaders.CONTENT_TYPE, ct );
 				}
 
-				rsp = b.method( this.httpMethod );
+				rsp = b.method( this.rc.getHttpMethod() );
 			}
 		}
 		catch( final ProcessingException e ) {
@@ -157,12 +88,12 @@ final class RestRequest<T> implements Callable<T>
 			}
 		}
 		finally {
-			this.rcd.reqi.after( this.rc );
+			this.rc.rcd.reqi.after( this.rc );
 
 			RestClient.invokedMethod( null );
 		}
 
-		final Throwable ex = this.rcd.rsph.apply( rsp );
+		final Throwable ex = this.rc.rcd.rsph.apply( rsp );
 
 		if( ex != null ) {
 			ex.fillInStackTrace();
@@ -174,7 +105,7 @@ final class RestRequest<T> implements Callable<T>
 			throw(Exception) ex;
 		}
 
-		final Class<?> rawType = this.returnType.getRawType();
+		final Class<?> rawType = this.rc.getReturnType().getRawType();
 
 		if( rawType == Response.class ) {
 			return (T) rsp;
@@ -188,7 +119,7 @@ final class RestRequest<T> implements Callable<T>
 				return null;
 			}
 			else {
-				return rsp.readEntity( this.returnType );
+				return rsp.readEntity( this.rc.getReturnType() );
 			}
 		}
 		finally {
@@ -198,7 +129,7 @@ final class RestRequest<T> implements Callable<T>
 
 	private void invokeAsync( Object ais, CompletableFuture<T> fut )
 	{
-		this.rcd.aint.before( ais );
+		this.rc.rcd.aint.before( ais );
 
 		try {
 			fut.complete( invoke() );
@@ -207,14 +138,7 @@ final class RestRequest<T> implements Callable<T>
 			fut.completeExceptionally( e );
 		}
 		finally {
-			this.rcd.aint.after( ais );
+			this.rc.rcd.aint.after( ais );
 		}
-	}
-
-	private String defaultContentType()
-	{
-		return ofNullable( this.rcd.conf.getProperty( RestClientProperties.DEFAULT_CONTENT_TYPE ) )
-			.map( Object::toString )
-			.orElse( MediaType.APPLICATION_OCTET_STREAM );
 	}
 }

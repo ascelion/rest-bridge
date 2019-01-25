@@ -49,9 +49,9 @@ public final class RestClient
 	@Setter
 	private RequestInterceptor requestInterceptor = NO_REQUEST_INTERCEPTOR;
 	@Setter
-	private Function<Response, Throwable> responseHandler = NO_RESPONSE_HANDLER;
-	@Setter
 	private AsyncInterceptor<?> asyncInterceptor = NO_ASYNC_INTERCEPTOR;
+	@Setter
+	private Function<Response, Throwable> responseHandler = NO_RESPONSE_HANDLER;
 	@Setter
 	private Executor executor = Executors.newCachedThreadPool();
 
@@ -74,17 +74,17 @@ public final class RestClient
 		this.cvsf = new ConvertersFactory( client );
 
 		final Object reqi = client.getConfiguration().getProperty( REQUEST_INTERCEPTOR );
-		final Object rsph = client.getConfiguration().getProperty( RESPONSE_HANDLER );
 		final Object aint = client.getConfiguration().getProperty( ASYNC_INTERCEPTOR );
+		final Object rsph = client.getConfiguration().getProperty( RESPONSE_HANDLER );
 
 		if( reqi != null ) {
 			this.requestInterceptor = (RequestInterceptor) reqi;
 		}
-		if( rsph != null ) {
-			this.responseHandler = (Function<Response, Throwable>) rsph;
-		}
 		if( aint != null ) {
 			this.asyncInterceptor = (AsyncInterceptor<?>) aint;
+		}
+		if( rsph != null ) {
+			this.responseHandler = (Function<Response, Throwable>) rsph;
 		}
 	}
 

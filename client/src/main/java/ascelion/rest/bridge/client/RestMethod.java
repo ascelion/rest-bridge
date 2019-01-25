@@ -28,7 +28,7 @@ import javax.ws.rs.core.GenericType;
 import static ascelion.rest.bridge.client.RBUtils.addPathFromAnnotation;
 import static ascelion.rest.bridge.client.RBUtils.findAnnotation;
 import static ascelion.rest.bridge.client.RBUtils.getHttpMethod;
-import static ascelion.rest.bridge.client.RBUtils.pathElements;
+import static ascelion.rest.bridge.client.RBUtils.pathParameters;
 import static io.leangen.geantyref.GenericTypeReflector.getExactParameterTypes;
 import static java.lang.String.format;
 import static java.security.AccessController.doPrivileged;
@@ -83,7 +83,7 @@ final class RestMethod
 			.map( Path::value )
 			.collect( joining() );
 
-		pathElements( paths ).forEach( p -> this.pathElements.put( p, false ) );
+		pathParameters( paths ).forEach( p -> this.pathElements.put( p, false ) );
 
 		final Parameter[] params = method.getParameters();
 
@@ -117,7 +117,7 @@ final class RestMethod
 		this.pathElements.entrySet().stream()
 			.filter( e -> !e.getValue() )
 			.findFirst().ifPresent( e -> {
-				throw new RestClientMethodException( format( "Missing @PathParam for element %s", e.getKey() ), method );
+				throw new RestClientMethodException( format( "Missing @PathParam for %s", e.getKey() ), method );
 			} );
 
 		if( this.httpMethod == null ) {
@@ -204,8 +204,8 @@ final class RestMethod
 	Callable<?> request( Object proxy, Object... arguments ) throws URISyntaxException
 	{
 		final WebTarget actualTarget = addPathFromAnnotation( this.javaMethod, this.rcd.tsup.get() );
-		final RestRequestContextImpl rc = new RestRequestContextImpl( this.rcd, this.javaMethod, actualTarget, proxy, arguments );
-		final RestRequest<?> req = new RestRequest<>( this.rcd, proxy, this.returnType, this.async, this.httpMethod, rc );
+		final RestRequestContextImpl rc = new RestRequestContextImpl( this.rcd, this.javaMethod, this.returnType, this.async, this.httpMethod, actualTarget, proxy, arguments );
+		final RestRequest<?> req = new RestRequest<>( rc );
 		Callable<?> res = null;
 
 		for( final Action a : this.actions ) {

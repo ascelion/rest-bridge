@@ -27,10 +27,10 @@ extends AnnotationAction<CookieParam>
 		if( v instanceof Cookie ) {
 			final Cookie c = (Cookie) v;
 
-			req.cookie( new Cookie( this.annotation.value(), c.getValue(), c.getPath(), c.getDomain(), c.getVersion() ) );
+			req.rc.cookie( new Cookie( this.annotation.value(), c.getValue(), c.getPath(), c.getDomain(), c.getVersion() ) );
 		}
 		else {
-			req.cookie( new Cookie( this.annotation.value(), this.param.converter.apply( v ) ) );
+			req.rc.cookie( new Cookie( this.annotation.value(), this.param.converter.apply( v ) ) );
 		}
 	}
 }

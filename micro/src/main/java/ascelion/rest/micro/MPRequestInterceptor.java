@@ -147,7 +147,7 @@ public class MPRequestInterceptor implements RequestInterceptor
 
 	private String[] translateHeader( RestRequestContext rc, String name, boolean required, String value )
 	{
-		final String methodName = ClientHeadersValidator.getMethodName( value );
+		final String methodName = RBUtils.getExpression( value );
 
 		if( methodName != null ) {
 			try {

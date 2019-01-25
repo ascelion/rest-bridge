@@ -65,11 +65,11 @@ public class AnnotationActionTest
 	public void setUp()
 	{
 		final ConvertersFactory cvsf = new ConvertersFactory( this.mc.client );
-		final RestClientData rbt = new RestClientData(	Interface.class, this.mc.configuration,
+		final RestClientData rcd = new RestClientData(	Interface.class, this.mc.configuration,
 														cvsf, NO_REQUEST_INTERCEPTOR, NO_RESPONSE_HANDLER, null,
 														NO_ASYNC_INTERCEPTOR, () -> this.mc.methodTarget );
 
-		this.met = new RestMethod( rbt, Interface.class.getMethod( "get" ) );
+		this.met = new RestMethod( rcd, Interface.class.getMethod( "get" ) );
 		this.actions = (List<Action>) readDeclaredField( this.met, "actions", true );
 
 		this.actions.clear();
@@ -180,14 +180,14 @@ public class AnnotationActionTest
 	@SneakyThrows
 	public void produces()
 	{
-		final Map<String, Object> map = singletonMap( PARAM_VALUE, new String[] { ANNOTATION_VALUE } );
+		final Map<String, Object> map = singletonMap( PARAM_VALUE, new String[] { MediaType.TEXT_HTML } );
 		final Produces ann = TypeFactory.annotation( Produces.class, map );
 
 		addAction( new ProducesAction( ann, -1 ) );
 
-		final String[] accepts = new String[1];
+		final MediaType[] accepts = new MediaType[1];
 
-		when( this.mc.bld.accept( (String[]) any() ) )
+		when( this.mc.bld.accept( (MediaType[]) any() ) )
 			.then( ic -> {
 				System.arraycopy( ic.getArguments(), 0, accepts, 0, 1 );
 
@@ -196,7 +196,7 @@ public class AnnotationActionTest
 
 		callMock();
 
-		assertThat( asList( accepts ), hasItem( ANNOTATION_VALUE ) );
+		assertThat( asList( (Object[]) accepts ), hasItem( MediaType.TEXT_HTML_TYPE ) );
 	}
 
 	@Test

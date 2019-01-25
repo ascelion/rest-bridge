@@ -2,13 +2,16 @@
 package ascelion.rest.micro.cdi;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import javax.enterprise.context.Dependent;
@@ -17,17 +20,21 @@ import javax.enterprise.inject.Default;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
+import javax.enterprise.inject.spi.Interceptor;
 import javax.enterprise.inject.spi.PassivationCapable;
 
 import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.micro.MP;
 
 import static java.lang.String.format;
+import static java.util.Arrays.stream;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -47,12 +54,20 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 	private final BeanManager bm;
 	private final Class<T> type;
 	private final Class<? extends Annotation> scope;
+	private final Map<Method, Interceptor<?>> invokers = new ConcurrentHashMap<>();
 
 	RestBridgeBean( BeanManager bm, Class<T> type )
 	{
 		this.bm = bm;
 		this.type = type;
 		this.scope = lookupScope();
+
+		final Annotation[] clb = getInterceptorBindings( type.getAnnotations() );
+
+		stream( type.getMethods() )
+			.map( m -> new ImmutablePair<>( m, ArrayUtils.addAll( clb, getInterceptorBindings( m.getAnnotations() ) ) ) )
+			.filter( p -> p.right.length > 0 )
+			.forEach( p -> this.invokers.put( p.left, null ) );
 	}
 
 	@Override
@@ -167,5 +182,12 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 		}
 
 		return scopes.isEmpty() ? Dependent.class : scopes.iterator().next();
+	}
+
+	private Annotation[] getInterceptorBindings( Annotation[] annotations )
+	{
+		return stream( annotations )
+			.filter( a -> this.bm.isInterceptorBinding( a.annotationType() ) )
+			.toArray( Annotation[]::new );
 	}
 }

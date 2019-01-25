@@ -9,9 +9,11 @@
 		</encoder>
 	</appender>
 
-	<logger name="ascelion.rest.bridge.TRAFFIC" level="OFF" />
+	<logger name="ascelion.rest.bridge.TRAFFIC" level="ALL" />
 	<logger name="ascelion.rest.bridge.tests.SERVER" level="OFF" />
 	<logger name="ascelion.rest.bridge.micro.CONFIG" level="OFF" />
+
+	<logger name="org.jboss.weld" level="ALL" />
 
 	<root level="ERROR">
 		<appender-ref ref="CONSOLE" />
