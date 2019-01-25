@@ -29,13 +29,6 @@ import org.eclipse.microprofile.rest.client.spi.RestClientListener;
 public final class ClientHeadersValidator implements RestClientListener
 {
 
-	static String getMethodName( String value )
-	{
-		return value.length() > 2 && value.startsWith( "{" ) && value.endsWith( "}" )
-			? value.substring( 1, value.length() - 1 )
-			: null;
-	}
-
 	static Method lookupMethod( Class<?> type, String name )
 	{
 		final int dot = name.lastIndexOf( '.' );
@@ -112,7 +105,7 @@ public final class ClientHeadersValidator implements RestClientListener
 
 	private String invalidMethod( Class<?> type, String[] value )
 	{
-		final Set<String> set = stream( value ).map( v -> getMethodName( v ) )
+		final Set<String> set = stream( value ).map( v -> RBUtils.getExpression( v ) )
 			.collect( toSet() );
 
 		if( set.contains( null ) ) {

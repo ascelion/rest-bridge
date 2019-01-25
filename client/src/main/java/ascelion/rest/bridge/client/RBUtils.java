@@ -203,6 +203,30 @@ public final class RBUtils
 		}
 	}
 
+	static public String getExpression( String value )
+	{
+		return value.length() > 2 && value.startsWith( "{" ) && value.endsWith( "}" )
+			? value.substring( 1, value.length() - 1 )
+			: null;
+	}
+
+	static public String trimSlashes( String value )
+	{
+		final StringBuilder sb = new StringBuilder( value );
+
+		while( sb.length() > 0 && sb.charAt( 0 ) == '/' ) {
+			sb.delete( 0, 1 );
+		}
+
+		int z;
+
+		while( ( z = sb.length() ) > 0 && sb.charAt( z - 1 ) == '/' ) {
+			sb.delete( z - 1, z );
+		}
+
+		return sb.toString();
+	}
+
 	static WebTarget addPathFromAnnotation( AnnotatedElement ae, WebTarget target )
 	{
 		final Path p = ae.getAnnotation( Path.class );
@@ -246,7 +270,7 @@ public final class RBUtils
 		return Optional.ofNullable( cls.getAnnotation( type ) );
 	}
 
-	static Set<String> pathElements( String path )
+	static Set<String> pathParameters( String path )
 	{
 		final Set<String> elements = new LinkedHashSet<>();
 		int index = path.indexOf( '{' );

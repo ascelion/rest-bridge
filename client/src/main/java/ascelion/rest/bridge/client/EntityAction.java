@@ -19,7 +19,7 @@ extends Action
 	@Override
 	public RestRequest<?> execute( RestRequest<?> req )
 	{
-		req.entity( this.param.currentValue( req ) );
+		req.rc.entity( this.param.currentValue( req ) );
 
 		return req;
 	}

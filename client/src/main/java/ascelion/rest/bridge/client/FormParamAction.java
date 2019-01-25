@@ -23,7 +23,7 @@ extends AnnotationAction<FormParam>
 	@Override
 	<T> void visitElement( RestRequest<?> req, T v )
 	{
-		req.form( this.annotation.value(), this.param.converter.apply( v ) );
+		req.rc.form( this.annotation.value(), this.param.converter.apply( v ) );
 	}
 
 }
