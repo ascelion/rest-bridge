@@ -12,7 +12,7 @@ final class INTHeaderParam extends INTParamBase<HeaderParam>
 	}
 
 	@Override
-	void visitAnnotationValue( RestRequestContextImpl rc, Object v )
+	void visitAnnotationValue( RestRequestContext rc, Object v )
 	{
 		rc.header( this.annotation.value(), this.param.cvt.toString( v ) );
 	}

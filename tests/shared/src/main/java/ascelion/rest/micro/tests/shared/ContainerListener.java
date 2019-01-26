@@ -1,6 +1,8 @@
 
 package ascelion.rest.micro.tests.shared;
 
+import ascelion.rest.bridge.tests.api.API;
+
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.jboss.arquillian.container.spi.event.StartContainer;
 import org.jboss.arquillian.container.spi.event.StopContainer;
@@ -13,7 +15,11 @@ public class ContainerListener
 
 	public void startContainer( @Observes StartContainer event ) throws Exception
 	{
-		this.wms = new WireMockServer( 8765 );
+		final int port = API.reservePort();
+
+		System.setProperty( "wiremock.server.port", Integer.toString( port ) );
+
+		this.wms = new WireMockServer( port );
 
 		this.wms.start();
 	}

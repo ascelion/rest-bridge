@@ -1,5 +1,5 @@
 
-package ascelion.rest.bridge.etc;
+package ascelion.utils.jaxrs;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;

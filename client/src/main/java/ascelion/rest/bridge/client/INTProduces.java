@@ -12,7 +12,7 @@ final class INTProduces extends INTAnnotBase<Produces>
 	}
 
 	@Override
-	void before( RestRequestContextImpl rc )
+	protected void before( RestRequestContext rc )
 	{
 		rc.produces( this.annotation.value() );
 	}

@@ -17,6 +17,7 @@ import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
@@ -46,4 +47,9 @@ public abstract class Deployments
 	@ArquillianResource
 	protected URI target;
 
+	@Before
+	public final void setUpProvider()
+	{
+		TestClientProvider.getInstance().reset();
+	}
 }

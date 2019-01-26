@@ -26,7 +26,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 @RunWith( Parameterized.class )
-public class MPRequestInterceptorTest
+public class ClientHeadersRITest
 {
 
 	@Parameterized.Parameters( name = "{1}" )
@@ -42,15 +42,15 @@ public class MPRequestInterceptorTest
 	public MockitoRule rule = MockitoJUnit.rule();
 	public Method method;
 
-	private final MPRequestInterceptor reqi = new MPRequestInterceptor();
 	private final MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
 
 	@Mock( answer = Answers.CALLS_REAL_METHODS )
 	private ClientHeaderParamClient client;
 	@Mock
 	private RestRequestContext rc;
+	private ClientHeadersRI chri;
 
-	public MPRequestInterceptorTest( Method method, String name )
+	public ClientHeadersRITest( Method method, String name )
 	{
 		this.method = method;
 	}
@@ -62,13 +62,15 @@ public class MPRequestInterceptorTest
 		when( this.rc.getHeaders() ).thenReturn( this.headers );
 		when( this.rc.getImplementation() ).thenReturn( this.client );
 		when( this.rc.getInterfaceType() ).thenReturn( (Class) ClientHeaderParamClient.class );
+
+		this.chri = new ClientHeadersRI( this.rc.getInterfaceType(), this.rc.getJavaMethod() );
 	}
 
 	@Test
 	public void run()
 	{
 		try {
-			this.reqi.before( this.rc );
+			this.chri.before( this.rc );
 
 			// verify class headers
 			Stream.of( ClientHeaderParamClient.class.getAnnotationsByType( ClientHeaderParam.class ) )

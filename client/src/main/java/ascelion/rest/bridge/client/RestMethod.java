@@ -5,34 +5,37 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
-import java.net.URISyntaxException;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import javax.validation.Valid;
 import javax.ws.rs.*;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import static ascelion.rest.bridge.client.RBUtils.addPathFromAnnotation;
+import ascelion.utils.chain.InterceptorChain;
+
 import static ascelion.rest.bridge.client.RBUtils.findAnnotation;
 import static ascelion.rest.bridge.client.RBUtils.getHttpMethod;
 import static ascelion.rest.bridge.client.RBUtils.pathParameters;
-import static io.leangen.geantyref.GenericTypeReflector.getExactParameterTypes;
 import static java.lang.String.format;
 import static java.security.AccessController.doPrivileged;
+import static java.util.Arrays.stream;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
+import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static org.apache.commons.lang3.reflect.FieldUtils.getAllFieldsList;
 import static org.apache.commons.lang3.reflect.FieldUtils.readField;
 
@@ -41,100 +44,104 @@ import lombok.SneakyThrows;
 final class RestMethod
 {
 
-	static <T extends Annotation> T getAnnotation( Class<?> cls, Class<T> annCls )
-	{
-		T a = cls.getAnnotation( annCls );
-
-		if( a != null ) {
-			return a;
-		}
-
-		for( final Class<?> c : cls.getInterfaces() ) {
-			a = getAnnotation( c, annCls );
-
-			if( a != null ) {
-				return a;
-			}
-		}
-
-		return null;
-	}
-
-	//	static private final Logger L = LoggerFactory.getLogger( RestMethod.class );
-
 	private final RestClientData rcd;
 	private final Method javaMethod;
-	private final GenericType<?> returnType;
-	private final boolean async;
 	private final String httpMethod;
-	private final List<Action> actions = new ArrayList<>( 8 );
-	private final Map<String, Boolean> pathElements = new LinkedHashMap<>();
+	private final GenericType<Object> returnType;
+	private final boolean async;
+
+	private final InterceptorChain<RestRequestContext> chain = new InterceptorChain<>();
+
+	private final Map<String, Boolean> missingPaths;
+	private final String methodURI;
+	private RestParam entityParam;
 
 	RestMethod( RestClientData rcd, Method method )
 	{
 		this.rcd = rcd;
 		this.javaMethod = method;
-		this.httpMethod = getHttpMethod( method );
-		this.returnType = RBUtils.genericType( rcd.type, method );
-		this.async = CompletionStage.class.equals( method.getReturnType() );
+		this.httpMethod = getHttpMethod( this.javaMethod );
+		this.returnType = RBUtils.genericType( this.rcd.type, this.javaMethod );
+		this.async = CompletionStage.class.equals( this.javaMethod.getReturnType() );
 
-		final String paths = Stream.of( method.getAnnotation( Path.class ), rcd.type.getAnnotation( Path.class ) )
+		this.methodURI = Stream.of( this.rcd.type.getAnnotation( Path.class ), this.javaMethod.getAnnotation( Path.class ) )
 			.filter( Objects::nonNull )
 			.map( Path::value )
-			.collect( joining() );
+			.map( RBUtils::trimSlashes )
+			.collect( joining( "/", "/", "" ) );
 
-		pathParameters( paths ).forEach( p -> this.pathElements.put( p, false ) );
+		this.missingPaths = pathParameters( this.methodURI )
+			.stream().collect( toMap( x -> x, x -> true ) );
 
-		final Parameter[] params = method.getParameters();
+		rcd.riFactories.forEach( f -> stream( f.create( rcd.type, this.javaMethod ) )
+			.forEach( this.chain::add ) );
 
-		this.actions.add( new ValidationAction( method ) );
+		this.chain.add( new INTRequestValidation() );
+
+		ofNullable( this.javaMethod.getAnnotation( Valid.class ) )
+			.ifPresent( a -> this.chain.add( new INTResponseValidation() ) );
+		findAnnotation( Produces.class, this.javaMethod, this.rcd.type )
+			.ifPresent( a -> this.chain.add( new INTProduces( a ) ) );
+		findAnnotation( Consumes.class, this.javaMethod, this.rcd.type )
+			.ifPresent( a -> this.chain.add( new INTConsumes( a ) ) );
+
+		final Parameter[] params = this.javaMethod.getParameters();
 
 		for( int q = 0, z = params.length; q < z; q++ ) {
 			final int index = q;
 			final Annotation[] annotations = params[index].getAnnotations();
-			final Function<Object, String> cvt = (Function) rcd.cvsf.getConverter( params[index].getType(), annotations );
-			final ActionParam p = new ActionParam( index, params[index].getType(), annotations, req -> req.rc.getArgumentAt( index ), cvt );
+			final LazyParamConverter<?> cvt = rcd.cvsf.getConverter( params[index].getType(), annotations );
+			final RestParam p = new RestParam( index, params[index].getType(), cvt, params[index].getAnnotation( DefaultValue.class ), rc -> rc.getArgumentAt( index ) );
 
-			if( collectActions( annotations, p ) ) {
-				this.actions.stream()
-					.filter( EntityAction.class::isInstance )
-					.forEach( a -> {
-						throw new RestClientMethodException( "An entity is already present at parameter " + a.param.index, this.javaMethod );
-					} );
+			if( createInterceptors( annotations, p ) ) {
+				if( this.entityParam != null ) {
+					throw new RestClientMethodException( "An entity is already present at parameter " + this.entityParam.index, this.javaMethod );
+				}
 
-				final Type entityType = getExactParameterTypes( this.javaMethod, this.rcd.type )[index];
-				final EntityAction entityAction = new EntityAction( p, entityType );
+				this.entityParam = p;
 
-				this.actions.add( entityAction );
+				this.chain.add( new INTEntity( p ) );
 			}
 		}
 
-		findAnnotation( Produces.class, method, rcd.type )
-			.ifPresent( a -> this.actions.add( new ProducesAction( a, this.actions.size() ) ) );
-		findAnnotation( Consumes.class, method, rcd.type )
-			.ifPresent( a -> this.actions.add( new ConsumesAction( a, this.actions.size() ) ) );
+		final String missing = this.missingPaths.entrySet().stream()
+			.filter( Map.Entry::getValue )
+			.map( Map.Entry::getKey )
+			.collect( joining( "}, {" ) );
 
-		this.pathElements.entrySet().stream()
-			.filter( e -> !e.getValue() )
-			.findFirst().ifPresent( e -> {
-				throw new RestClientMethodException( format( "Missing @PathParam for %s", e.getKey() ), method );
-			} );
+		if( missing.length() > 0 ) {
+			throw new RestClientMethodException( format( "Missing @PathParam for {%s}", missing ), this.javaMethod );
+		}
 
 		if( this.httpMethod == null ) {
 //			resource methods that have a @Path annotation,
 //			but no HTTP method are considered sub-resource locators.
-			this.actions.add( new SubresourceAction( this.actions.size(), this.javaMethod.getReturnType(), rcd ) );
+			this.chain.add( new INTSubResource( this.rcd, this.returnType.getRawType() ) );
 		}
-
-		Collections.sort( this.actions );
+		else {
+			if( this.async ) {
+				this.chain.add( new INTAsync() );
+			}
+		}
 	}
 
-	private boolean collectActions( Annotation[] annotations, ActionParam p )
+	Object request( Object proxy, Object... arguments ) throws Exception
+	{
+		WebTarget target = this.rcd.tsup.get();
+
+		target = target.path( this.methodURI );
+
+		final RestRequestContext rc = new RestRequestContext( this.rcd, this.javaMethod, this.returnType, this.async, this.httpMethod, target, proxy, arguments );
+
+		return this.chain.around( rc, () -> invoke( rc ) );
+	}
+
+	private boolean createInterceptors( Annotation[] annotations, RestParam p )
 	{
 		boolean entityCandidate = true;
 
 		for( final Annotation a : annotations ) {
-			if( !collectActions( a, p ) ) {
+			if( !createInterceptors( a, p ) ) {
 				entityCandidate = false;
 			}
 		}
@@ -142,55 +149,57 @@ final class RestMethod
 		return entityCandidate;
 	}
 
-	private boolean collectActions( Annotation annot, ActionParam param )
+	private boolean createInterceptors( Annotation annotation, RestParam param )
 	{
-		if( CookieParam.class.isInstance( annot ) ) {
-			this.actions.add( new CookieParamAction( (CookieParam) annot, param ) );
+		if( CookieParam.class.isInstance( annotation ) ) {
+			this.chain.add( new INTCookieParam( (CookieParam) annotation, param ) );
 
 			return false;
 		}
-		if( FormParam.class.isInstance( annot ) ) {
-			this.actions.add( new FormParamAction( (FormParam) annot, param ) );
+		if( FormParam.class.isInstance( annotation ) ) {
+			this.chain.add( new INTFormParam( (FormParam) annotation, param ) );
 
 			return false;
 		}
-		if( MatrixParam.class.isInstance( annot ) ) {
-			this.actions.add( new MatrixParamAction( (MatrixParam) annot, param ) );
+		if( MatrixParam.class.isInstance( annotation ) ) {
+			this.chain.add( new INTMatrixParam( (MatrixParam) annotation, param ) );
 
 			return false;
 		}
-		if( PathParam.class.isInstance( annot ) ) {
-			final PathParam v = (PathParam) annot;
+		if( PathParam.class.isInstance( annotation ) ) {
+			final PathParam v = (PathParam) annotation;
 
-			if( this.pathElements.containsKey( v.value() ) ) {
-				this.pathElements.put( v.value(), true );
+			if( this.missingPaths.containsKey( v.value() ) ) {
+				this.missingPaths.put( v.value(), false );
 			}
 			else {
 				throw new RestClientMethodException( format( "Unknown path element %s", v.value() ), this.javaMethod );
 			}
 
-			this.actions.add( new PathParamAction( v, param ) );
+			this.chain.add( new INTPathParam( v, param ) );
 
 			return false;
 		}
-		if( QueryParam.class.isInstance( annot ) ) {
-			this.actions.add( new QueryParamAction( (QueryParam) annot, param ) );
+		if( QueryParam.class.isInstance( annotation ) ) {
+			this.chain.add( new INTQueryParam( (QueryParam) annotation, param ) );
 
 			return false;
 		}
-		if( HeaderParam.class.isInstance( annot ) ) {
-			this.actions.add( new HeaderParamAction( (HeaderParam) annot, param ) );
+		if( HeaderParam.class.isInstance( annotation ) ) {
+			this.chain.add( new INTHeaderParam( (HeaderParam) annotation, param ) );
 
 			return false;
 		}
-		if( BeanParam.class.isInstance( annot ) ) {
+		if( BeanParam.class.isInstance( annotation ) ) {
 			final Iterable<Field> fields = doPrivileged( (PrivilegedAction<Iterable<Field>>) () -> getAllFieldsList( param.type ) );
 			boolean entityCandidate = true;
 
 			for( final Field field : fields ) {
-				final Function<RestRequest<?>, Object> sup = req -> readFieldValue( req, param, field );
+				final Function<RestRequestContext, Object> arg = rc -> readFieldValue( rc, param, field );
+				final LazyParamConverter<?> cvt = this.rcd.cvsf.getConverter( field.getType(), field.getAnnotations() );
+				final RestParam par = new RestParam( param.index, field.getType(), cvt, field.getAnnotation( DefaultValue.class ), arg );
 
-				if( !collectActions( field.getAnnotations(), new ActionParam( param.index, field.getType(), field.getAnnotations(), sup, param.converter ) ) ) {
+				if( !createInterceptors( field.getAnnotations(), par ) ) {
 					entityCandidate = false;
 				}
 			}
@@ -201,28 +210,98 @@ final class RestMethod
 		return true;
 	}
 
-	Callable<?> request( Object proxy, Object... arguments ) throws URISyntaxException
-	{
-		final WebTarget actualTarget = addPathFromAnnotation( this.javaMethod, this.rcd.tsup.get() );
-		final RestRequestContextImpl rc = new RestRequestContextImpl( this.rcd, this.javaMethod, this.returnType, this.async, this.httpMethod, actualTarget, proxy, arguments );
-		final RestRequest<?> req = new RestRequest<>( rc );
-		Callable<?> res = null;
-
-		for( final Action a : this.actions ) {
-			res = a.execute( req );
-		}
-
-		return res;
-	}
-
 	@SneakyThrows
-	private Object readFieldValue( RestRequest<?> req, ActionParam param, Field field )
+	private Object readFieldValue( RestRequestContext rc, RestParam param, Field field )
 	{
 		try {
-			return doPrivileged( (PrivilegedExceptionAction<?>) () -> readField( field, param.currentValue( req ), true ) );
+			return doPrivileged( (PrivilegedExceptionAction<?>) () -> readField( field, param.argument.apply( rc ), true ) );
 		}
 		catch( final PrivilegedActionException e ) {
 			throw e.getCause();
 		}
 	}
+
+	private Object invoke( RestRequestContext rc ) throws Exception
+	{
+		RestClient.invokedMethod( rc.getJavaMethod() );
+
+		final Invocation.Builder b = rc.getTarget().request();
+
+		rc.getHeaders().forEach( ( k, v ) -> {
+			// Jersey concatenates header values while Resteasy sends multiple headers
+			// On the other hand, use of Wiremock in MP-TCK expects concatenated values
+			// (or it is a wiremock issue)
+			b.header( k, v.stream().collect( joining( "," ) ) );
+		} );
+		rc.getCookies().forEach( b::cookie );
+
+		b.accept( rc.produces.toArray( new MediaType[0] ) );
+
+		final Response rsp;
+
+		try {
+			final MediaType ct = rc.getContentType();
+
+			if( rc.entity != null ) {
+				final Entity<?> e = Entity.entity( rc.entity, ct );
+
+				rsp = b.method( rc.getHttpMethod(), e );
+			}
+			else {
+				if( ct != null ) {
+					// Micro TCK uses a GET with a Content-Type, so let's keep it happy!
+					b.header( HttpHeaders.CONTENT_TYPE, ct );
+				}
+
+				rsp = b.method( rc.getHttpMethod() );
+			}
+		}
+		catch( final ProcessingException e ) {
+			final Throwable c = e.getCause();
+
+			if( c instanceof RuntimeException ) {
+				throw(RuntimeException) c;
+			}
+			else {
+				throw e;
+			}
+		}
+		finally {
+			RestClient.invokedMethod( null );
+		}
+
+		final Throwable ex = rc.rcd.rsph.apply( rsp );
+
+		if( ex != null ) {
+			ex.fillInStackTrace();
+
+			if( ex instanceof Error ) {
+				throw(Error) ex;
+			}
+
+			throw(Exception) ex;
+		}
+
+		final Class<?> rawType = rc.getReturnType().getRawType();
+
+		if( rawType == Response.class ) {
+			return rsp;
+		}
+
+		try {
+			if( rawType == void.class || rawType == Void.class ) {
+				return null;
+			}
+			if( rsp.getStatus() == NO_CONTENT.getStatusCode() ) {
+				return null;
+			}
+			else {
+				return rsp.readEntity( rc.getReturnType() );
+			}
+		}
+		finally {
+			rsp.close();
+		}
+	}
+
 }

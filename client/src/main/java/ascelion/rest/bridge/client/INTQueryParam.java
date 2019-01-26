@@ -12,7 +12,7 @@ final class INTQueryParam extends INTParamBase<QueryParam>
 	}
 
 	@Override
-	void visitAnnotationValue( RestRequestContextImpl rc, Object v )
+	void visitAnnotationValue( RestRequestContext rc, Object v )
 	{
 		rc.query( this.annotation.value(), this.param.cvt.toString( v ) );
 	}

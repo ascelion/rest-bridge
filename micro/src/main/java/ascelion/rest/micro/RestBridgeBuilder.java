@@ -211,7 +211,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 			rc.setExecutor( this.executorService );
 		}
 
-		rc.setRequestInterceptor( new MPRequestInterceptor() );
+//		rc.setRequestInterceptor( new MPRequestInterceptor() );
 		rc.setResponseHandler( new MPResponseHandler( this.configuration ) );
 		rc.setAsyncInterceptor( new MPAsyncInterceptor( cfg ) );
 

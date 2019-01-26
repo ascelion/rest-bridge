@@ -26,21 +26,21 @@ extends AbstractTestCase<BeanResource>
 	{
 		assertNotNull( ent );
 
-		assertEquals( "path1", ent.getPathParam1() );
-		assertEquals( "path2", ent.getPathParam2() );
-		assertEquals( "query1", ent.getQueryParam1() );
-		assertEquals( "query2", ent.getQueryParam2() );
-		assertEquals( "header1", ent.getHeaderParam1() );
-		assertEquals( "header2", ent.getHeaderParam2() );
+		assertEquals( "path1Val", ent.getPathParam1() );
+		assertEquals( "path2Val", ent.getPathParam2() );
+		assertEquals( "query1Val", ent.getQueryParam1() );
+		assertEquals( "query2Val", ent.getQueryParam2() );
+		assertEquals( "header1Val", ent.getHeaderParam1() );
+		assertEquals( "header2Val", ent.getHeaderParam2() );
 	}
 
 	static private BeanParamData createBean()
 	{
-		final BeanParamData request = new BeanParamData( "path2", "header2", "query2" );
+		final BeanParamData request = new BeanParamData( "path2Val", "header2Val", "query2Val" );
 
-		request.setPathParam1( "path1" );
-		request.setHeaderParam1( "header1" );
-		request.setQueryParam1( "query1" );
+		request.setPathParam1( "path1Val" );
+		request.setHeaderParam1( "header1Val" );
+		request.setQueryParam1( "query1Val" );
 
 		return request;
 	}
@@ -65,17 +65,17 @@ extends AbstractTestCase<BeanResource>
 			.path( API.BASE )
 			.path( "beans" )
 			.path( "{path1}/{path2}" )
-			.resolveTemplate( "path1", "path1" )
-			.resolveTemplate( "path2", "path2" )
-			.queryParam( "query1", "query1" )
-			.queryParam( "query2", "query2" )
+			.resolveTemplate( "path1", "path1Val" )
+			.resolveTemplate( "path2", "path2Val" )
+			.queryParam( "query1", "query1Val" )
+			.queryParam( "query2", "query2Val" )
 
 		;
 
 		final Builder b = w.request( MediaType.APPLICATION_JSON );
 
-		b.header( "header1", "header1" );
-		b.header( "header2", "header2" );
+		b.header( "header1", "header1Val" );
+		b.header( "header2", "header2Val" );
 
 		final Response resp = b.method( "GET" );
 

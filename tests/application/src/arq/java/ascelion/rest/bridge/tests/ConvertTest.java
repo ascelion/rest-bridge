@@ -46,7 +46,7 @@ extends AbstractTestCase<Convert>
 
 		final Response rsp = w.request().get();
 
-		assertThat( rsp.getStatusInfo(), is( Response.Status.OK ) );
+		assertThat( rsp.getStatus(), is( Response.Status.OK.getStatusCode() ) );
 		assertThat( rsp.readEntity( String.class ), is( now ) );
 	}
 

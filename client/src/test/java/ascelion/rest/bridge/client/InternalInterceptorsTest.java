@@ -3,10 +3,7 @@ package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 
 import javax.ws.rs.Consumes;
@@ -22,10 +19,12 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import ascelion.utils.chain.InterceptorChain;
+
 import static ascelion.rest.bridge.client.RestClientProperties.NO_ASYNC_INTERCEPTOR;
-import static ascelion.rest.bridge.client.RestClientProperties.NO_REQUEST_INTERCEPTOR;
 import static ascelion.rest.bridge.client.RestClientProperties.NO_RESPONSE_HANDLER;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonMap;
 import static org.apache.commons.lang3.reflect.FieldUtils.readDeclaredField;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -50,29 +49,34 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith( MockitoJUnitRunner.class )
-public class AnnotationActionTest
+public class InternalInterceptorsTest
 {
 
 	private static final String ANNOTATION_VALUE = "name";
 	private static final String PARAM_VALUE = "value";
 
 	private final MockClient mc = new MockClient();
+	private LazyParamConverter<Object> cvt;
 	private RestMethod met;
-	private List<Action> actions;
+	private InterceptorChain<RestRequestContext> chain;
 
 	@Before
 	@SneakyThrows
 	public void setUp()
 	{
-		final ConvertersFactory cvsf = new ConvertersFactory( this.mc.client );
+		final ConvertersFactory cvsf = new ConvertersFactoryImpl( this.mc.client );
 		final RestClientData rcd = new RestClientData(	Interface.class, this.mc.configuration,
-														cvsf, NO_REQUEST_INTERCEPTOR, NO_RESPONSE_HANDLER, null,
+														cvsf, emptySet(), NO_RESPONSE_HANDLER, null,
 														NO_ASYNC_INTERCEPTOR, () -> this.mc.methodTarget );
 
+		this.cvt = cvsf.getConverter( Object.class, new Annotation[0] );
 		this.met = new RestMethod( rcd, Interface.class.getMethod( "get" ) );
-		this.actions = (List<Action>) readDeclaredField( this.met, "actions", true );
 
-		this.actions.clear();
+		this.chain = (InterceptorChain<RestRequestContext>) readDeclaredField( this.met, "chain", true );
+
+		final Collection<?> wrappers = (Collection<?>) readDeclaredField( this.chain, "wrappers", true );
+
+		wrappers.clear();
 	}
 
 	@Test
@@ -82,8 +86,8 @@ public class AnnotationActionTest
 		final Map<String, Object> map = singletonMap( PARAM_VALUE, new String[] { "type/subtype" } );
 		final Consumes ann = TypeFactory.annotation( Consumes.class, map );
 
-		createAction( FormParam.class, FormParamAction::new );
-		addAction( new ConsumesAction( ann, -1 ) );
+		this.chain.add( new INTConsumes( ann ) );
+		createInterceptor( FormParam.class, INTFormParam::new );
 
 		final Object[] arguments = new Object[2];
 
@@ -107,10 +111,10 @@ public class AnnotationActionTest
 	@SneakyThrows
 	public void cookieParam()
 	{
-		createAction( CookieParam.class, CookieParamAction::new );
+		createInterceptor( CookieParam.class, INTCookieParam::new );
 
-		final RestRequest<?> req = callMock();
-		final Collection<Cookie> cookies = req.rc.getCookies();
+		final RestRequestContext rc = callMock();
+		final Collection<Cookie> cookies = rc.getCookies();
 
 		assertThat( cookies, hasSize( 1 ) );
 
@@ -122,7 +126,7 @@ public class AnnotationActionTest
 	@Test
 	public void formParam()
 	{
-		createAction( FormParam.class, FormParamAction::new );
+		createInterceptor( FormParam.class, INTFormParam::new );
 
 		final Object[] arguments = new Object[2];
 
@@ -150,10 +154,10 @@ public class AnnotationActionTest
 	@SneakyThrows
 	public void headerParam()
 	{
-		createAction( HeaderParam.class, HeaderParamAction::new );
+		createInterceptor( HeaderParam.class, INTHeaderParam::new );
 
-		final RestRequest<?> req = callMock();
-		final MultivaluedMap<String, String> headers = req.rc.getHeaders();
+		final RestRequestContext rc = callMock();
+		final MultivaluedMap<String, String> headers = rc.getHeaders();
 
 		assertThat( headers, hasEntry( ANNOTATION_VALUE, asList( PARAM_VALUE ) ) );
 
@@ -167,7 +171,7 @@ public class AnnotationActionTest
 	@Test
 	public void pathParam()
 	{
-		createAction( PathParam.class, PathParamAction::new );
+		createInterceptor( PathParam.class, INTPathParam::new );
 
 		when( this.mc.methodTarget.resolveTemplate( any( String.class ), any( String.class ), any( boolean.class ) ) ).thenReturn( this.mc.methodTarget );
 
@@ -183,7 +187,7 @@ public class AnnotationActionTest
 		final Map<String, Object> map = singletonMap( PARAM_VALUE, new String[] { MediaType.TEXT_HTML } );
 		final Produces ann = TypeFactory.annotation( Produces.class, map );
 
-		addAction( new ProducesAction( ann, -1 ) );
+		this.chain.add( new INTProduces( ann ) );
 
 		final MediaType[] accepts = new MediaType[1];
 
@@ -202,7 +206,7 @@ public class AnnotationActionTest
 	@Test
 	public void queryParam()
 	{
-		createAction( QueryParam.class, QueryParamAction::new );
+		createInterceptor( QueryParam.class, INTQueryParam::new );
 
 		when( this.mc.methodTarget.queryParam( any( String.class ), any( String.class ) ) ).thenReturn( this.mc.methodTarget );
 
@@ -212,29 +216,27 @@ public class AnnotationActionTest
 	}
 
 	@SneakyThrows
-	private <T extends Callable<?>> T callMock()
+	private RestRequestContext callMock()
 	{
-		final Callable<T> req = (Callable<T>) this.met.request( mock( Interface.class ) );
+		final RestRequestContext[] rrc = new RestRequestContext[1];
 
-		req.call();
+		this.chain.add( cx -> {
+			rrc[0] = cx.getData();
 
-		return (T) req;
+			return cx.proceed();
+		} );
+		this.met.request( mock( Interface.class ) );
+
+		return rrc[0];
 	}
 
 	@SneakyThrows
-	private <A extends Annotation, X extends Action> void createAction( Class<A> annoType, BiFunction<A, ActionParam, X> create )
+	private <A extends Annotation, X extends RestRequestInterceptor> void createInterceptor( Class<A> annoType, BiFunction<A, RestParam, X> create )
 	{
 		final Map<String, Object> map = singletonMap( PARAM_VALUE, ANNOTATION_VALUE );
 		final A ann = TypeFactory.annotation( annoType, map );
-		final ActionParam param = new ActionParam( Action.HEAD, Object.class, new Annotation[0], x -> PARAM_VALUE, x -> (String) x );
+		final RestParam param = new RestParam( 0, Object.class, this.cvt, null, x -> PARAM_VALUE );
 
-		addAction( create.apply( ann, param ) );
-	}
-
-	private void addAction( Action action )
-	{
-		this.actions.add( action );
-
-		Collections.sort( this.actions );
+		this.chain.add( create.apply( ann, param ) );
 	}
 }

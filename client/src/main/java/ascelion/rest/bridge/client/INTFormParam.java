@@ -12,7 +12,7 @@ final class INTFormParam extends INTParamBase<FormParam>
 	}
 
 	@Override
-	void visitAnnotationValue( RestRequestContextImpl rc, Object v )
+	void visitAnnotationValue( RestRequestContext rc, Object v )
 	{
 		rc.form( this.annotation.value(), this.param.cvt.toString( v ) );
 	}

@@ -12,7 +12,7 @@ final class INTMatrixParam extends INTParamBase<MatrixParam>
 	}
 
 	@Override
-	void visitAnnotationValue( RestRequestContextImpl rc, Object v )
+	void visitAnnotationValue( RestRequestContext rc, Object v )
 	{
 		rc.matrix( this.annotation.value(), this.param.cvt.toString( v ) );
 	}

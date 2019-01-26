@@ -13,7 +13,7 @@ import javax.ws.rs.core.Response;
 
 import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.bridge.client.RestClient;
-import ascelion.rest.bridge.etc.RestClientTrace;
+import ascelion.utils.jaxrs.RestClientTrace;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.spi.RestClientBuilderListener;

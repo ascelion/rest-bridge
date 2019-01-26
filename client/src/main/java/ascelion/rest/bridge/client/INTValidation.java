@@ -5,7 +5,7 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.validation.executable.ExecutableValidator;
 
-abstract class INTValidation extends INTBase
+abstract class INTValidation extends RestRequestInterceptorBase
 {
 
 	final ExecutableValidator xv;

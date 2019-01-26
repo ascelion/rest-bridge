@@ -83,7 +83,9 @@ extends AbortTestCase<AsyncAPI>
 	public void delete()
 	{
 		try {
-			this.client.delete().toCompletableFuture().get();
+			this.client.delete()
+				.toCompletableFuture()
+				.get();
 		}
 		catch( final Exception e ) {
 			checkException( e );

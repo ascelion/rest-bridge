@@ -10,6 +10,7 @@ import javax.ws.rs.core.GenericType;
 
 import ascelion.rest.bridge.tests.api.BeanData;
 import ascelion.rest.bridge.tests.api.Validated;
+import ascelion.utils.chain.InterceptorChain;
 
 import static org.mockito.Mockito.mock;
 
@@ -166,11 +167,12 @@ public class ValidationActionTest
 	{
 		final Method method = findMethod( methodName );
 		final RestClientData rcd = new RestClientData( Object.class, null, null, null, null, null, null, null );
-		final RestRequestContextImpl rc = new RestRequestContextImpl( rcd, method, new GenericType<>( Object.class ), false, "GET", this.target, mock( Validated.class ), arguments );
-		final RestRequest<?> req = new RestRequest<>( rc );
-		final ValidationAction action = new ValidationAction( method );
+		final RestRequestContext rc = new RestRequestContext( rcd, method, new GenericType<>( Object.class ), false, "GET", this.target, mock( Validated.class ), arguments );
+		final INTRequestValidation rri = new INTRequestValidation();
+		final InterceptorChain<RestRequestContext> chain = new InterceptorChain<>();
 
-		action.execute( req );
+		chain.add( rri );
+		chain.around( rc, () -> null );
 	}
 
 	private Method findMethod( String methodName )
