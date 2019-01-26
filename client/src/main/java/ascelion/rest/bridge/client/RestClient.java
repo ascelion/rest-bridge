@@ -90,7 +90,8 @@ public final class RestClient
 
 	public <X> X getInterface( Class<X> type )
 	{
-		final Supplier<WebTarget> sup = () -> RBUtils.addPathFromAnnotation( type, this.client.target( this.target ) );
+//		final Supplier<WebTarget> sup = () -> RBUtils.addPathFromAnnotation( type, this.client.target( this.target ) );
+		final Supplier<WebTarget> sup = () -> this.client.target( this.target );
 		final RestClientData rcd = new RestClientData(	type, this.client.getConfiguration(), this.cvsf,
 														this.requestInterceptor, this.responseHandler, this.executor,
 														(AsyncInterceptor<Object>) this.asyncInterceptor, sup );

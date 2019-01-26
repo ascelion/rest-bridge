@@ -36,7 +36,8 @@ public final class InterceptorChain<X>
 		@SuppressWarnings( "rawtypes" )
 		public Object proceed() throws Exception
 		{
-			return this.interceptors.next().around( this );
+			return this.interceptors.next()
+				.around( this );
 		}
 	}
 
