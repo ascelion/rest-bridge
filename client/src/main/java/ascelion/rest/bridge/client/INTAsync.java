@@ -3,15 +3,15 @@ package ascelion.rest.bridge.client;
 
 import ascelion.rest.bridge.client.InterceptorChain.Context;
 
-final class INTAsync implements InterceptorChain.Interceptor<RestRequestContextImpl>
+final class INTAsync implements InterceptorChain.Interceptor<RestRequestContext>
 {
 
 	static final int PRIORITY = -3000;
 
 	@Override
-	public Object around( Context<RestRequestContextImpl> context ) throws Exception
+	public Object around( Context<RestRequestContext> context ) throws Exception
 	{
-		final RestRequestContextImpl rc = context.getData();
+		final RestRequestContext rc = context.getData();
 
 		return null;
 	}

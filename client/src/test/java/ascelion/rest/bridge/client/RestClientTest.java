@@ -236,14 +236,6 @@ public class RestClientTest
 	}
 
 	@Test
-	public void missingPath()
-	{
-		final RestClient rc = new RestClient( this.client, this.target );
-
-		rc.getInterface( InterfaceWithMissingPath.class );
-	}
-
-	@Test
 	public void changeURI()
 	{
 		final URI t1 = this.target.resolve( "t1" );

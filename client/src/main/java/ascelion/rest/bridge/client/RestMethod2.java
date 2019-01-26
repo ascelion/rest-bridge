@@ -16,8 +16,13 @@ import java.util.stream.Stream;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import static ascelion.rest.bridge.client.RBUtils.findAnnotation;
 import static ascelion.rest.bridge.client.RBUtils.getHttpMethod;
@@ -27,6 +32,7 @@ import static java.security.AccessController.doPrivileged;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
+import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static org.apache.commons.lang3.reflect.FieldUtils.getAllFieldsList;
 import static org.apache.commons.lang3.reflect.FieldUtils.readField;
 
@@ -44,7 +50,7 @@ final class RestMethod2
 	private final InterceptorChain<RestRequestContext> chain = new InterceptorChain<>();
 
 	private final Map<String, Boolean> missingPaths;
-	private final UriBuilder methodURI;
+	private final String methodURI;
 	private RestParam entityParam;
 
 	RestMethod2( RestClientData rcd, Method method )
@@ -55,13 +61,13 @@ final class RestMethod2
 		this.returnType = RBUtils.genericType( this.rcd.type, this.javaMethod );
 		this.async = CompletionStage.class.equals( this.javaMethod.getReturnType() );
 
-		this.methodURI = UriBuilder.fromPath( Stream.of( this.javaMethod.getAnnotation( Path.class ), this.rcd.type.getAnnotation( Path.class ) )
+		this.methodURI = Stream.of( this.javaMethod.getAnnotation( Path.class ), this.rcd.type.getAnnotation( Path.class ) )
 			.filter( Objects::nonNull )
 			.map( Path::value )
 			.map( RBUtils::trimSlashes )
-			.collect( joining( "/", "/", "" ) ) );
+			.collect( joining( "/", "/", "" ) );
 
-		this.missingPaths = pathParameters( this.methodURI.toTemplate() )
+		this.missingPaths = pathParameters( this.methodURI )
 			.stream().collect( toMap( x -> x, x -> true ) );
 
 		this.chain.add( new INTRequestValidation() );
@@ -94,12 +100,33 @@ final class RestMethod2
 		final String missing = this.missingPaths.entrySet().stream()
 			.filter( Map.Entry::getValue )
 			.map( Map.Entry::getKey )
-			.collect( joining( "}, {", "{", "}" ) );
+			.collect( joining( "}, {" ) );
 
 		if( missing.length() > 0 ) {
-			throw new RestClientMethodException( format( "Missing @PathParam for %s", missing ), this.javaMethod );
+			throw new RestClientMethodException( format( "Missing @PathParam for {%s}", missing ), this.javaMethod );
 		}
 
+		if( this.httpMethod == null ) {
+//			resource methods that have a @Path annotation,
+//			but no HTTP method are considered sub-resource locators.
+			this.chain.add( new INTSubResource( this.rcd, this.returnType.getRawType() ) );
+		}
+		else {
+			if( this.async ) {
+				this.chain.add( new INTAsync() );
+			}
+		}
+	}
+
+	Object request( Object proxy, Object... arguments ) throws Exception
+	{
+		WebTarget target = this.rcd.tsup.get();
+
+		target = target.path( this.methodURI );
+
+		final RestRequestContextImpl rc = new RestRequestContextImpl( this.rcd, this.javaMethod, this.returnType, this.async, this.httpMethod, target, proxy, arguments );
+
+		return this.chain.around( rc, () -> invoke( rc ) );
 	}
 
 	private boolean createInterceptors( Annotation[] annotations, RestParam p )
@@ -183,6 +210,93 @@ final class RestMethod2
 		}
 		catch( final PrivilegedActionException e ) {
 			throw e.getCause();
+		}
+	}
+
+	private Object invoke( RestRequestContextImpl rc ) throws Exception
+	{
+		RestClient.invokedMethod( rc.getJavaMethod() );
+
+		rc.rcd.reqi.before( rc );
+
+		final Invocation.Builder b = rc.getTarget().request();
+
+		rc.getHeaders().forEach( ( k, v ) -> {
+			// Jersey concatenates header values while Resteasy sends multiple headers
+			// On the other hand, use of Wiremock in MP-TCK expects concatenated values
+			// (or it is a wiremock issue)
+			b.header( k, v.stream().collect( joining( "," ) ) );
+		} );
+		rc.getCookies().forEach( b::cookie );
+
+		b.accept( rc.produces.toArray( new MediaType[0] ) );
+
+		final Response rsp;
+
+		try {
+			final MediaType ct = rc.getContentType();
+
+			if( rc.entity != null ) {
+				final Entity<?> e = Entity.entity( rc.entity, ct );
+
+				rsp = b.method( rc.getHttpMethod(), e );
+			}
+			else {
+				if( ct != null ) {
+					// Micro TCK uses a GET with a Content-Type, so let's keep it happy!
+					b.header( HttpHeaders.CONTENT_TYPE, ct );
+				}
+
+				rsp = b.method( rc.getHttpMethod() );
+			}
+		}
+		catch( final ProcessingException e ) {
+			final Throwable c = e.getCause();
+
+			if( c instanceof RuntimeException ) {
+				throw(RuntimeException) c;
+			}
+			else {
+				throw e;
+			}
+		}
+		finally {
+			rc.rcd.reqi.after( rc );
+
+			RestClient.invokedMethod( null );
+		}
+
+		final Throwable ex = rc.rcd.rsph.apply( rsp );
+
+		if( ex != null ) {
+			ex.fillInStackTrace();
+
+			if( ex instanceof Error ) {
+				throw(Error) ex;
+			}
+
+			throw(Exception) ex;
+		}
+
+		final Class<?> rawType = rc.getReturnType().getRawType();
+
+		if( rawType == Response.class ) {
+			return rsp;
+		}
+
+		try {
+			if( rawType == void.class || rawType == Void.class ) {
+				return null;
+			}
+			if( rsp.getStatus() == NO_CONTENT.getStatusCode() ) {
+				return null;
+			}
+			else {
+				return rsp.readEntity( rc.getReturnType() );
+			}
+		}
+		finally {
+			rsp.close();
 		}
 	}
 
