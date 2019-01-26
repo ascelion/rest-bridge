@@ -1,7 +1,7 @@
 
 package ascelion.rest.micro;
 
-import ascelion.rest.bridge.etc.JSR310ParamConverters;
+import ascelion.utils.jaxrs.JSR310ParamConverters;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.spi.RestClientBuilderListener;

@@ -15,7 +15,7 @@ extends TestClientProvider<JerseyClientBuilder>
 
 	public JerseyBridgeProvider()
 	{
-		super( new JerseyClientBuilder() );
+		super( JerseyClientBuilder::new );
 	}
 
 	@Override

@@ -3,6 +3,8 @@ package ascelion.rest.bridge.client;
 
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -15,9 +17,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import static ascelion.rest.bridge.client.RestClientProperties.ASYNC_INTERCEPTOR;
 import static ascelion.rest.bridge.client.RestClientProperties.NO_ASYNC_INTERCEPTOR;
-import static ascelion.rest.bridge.client.RestClientProperties.NO_REQUEST_INTERCEPTOR;
 import static ascelion.rest.bridge.client.RestClientProperties.NO_RESPONSE_HANDLER;
-import static ascelion.rest.bridge.client.RestClientProperties.REQUEST_INTERCEPTOR;
 import static ascelion.rest.bridge.client.RestClientProperties.RESPONSE_HANDLER;
 
 import lombok.Setter;
@@ -46,8 +46,7 @@ public final class RestClient
 	@Setter
 	private URI target;
 	private final ConvertersFactory cvsf;
-	@Setter
-	private RequestInterceptor requestInterceptor = NO_REQUEST_INTERCEPTOR;
+	private final Collection<RestRequestInterceptor.Factory> riFactories = new ArrayList<>();
 	@Setter
 	private AsyncInterceptor<?> asyncInterceptor = NO_ASYNC_INTERCEPTOR;
 	@Setter
@@ -71,15 +70,11 @@ public final class RestClient
 			this.target = UriBuilder.fromUri( target ).path( base ).build();
 		}
 
-		this.cvsf = new ConvertersFactory( client );
+		this.cvsf = new ConvertersFactoryImpl( client );
 
-		final Object reqi = client.getConfiguration().getProperty( REQUEST_INTERCEPTOR );
 		final Object aint = client.getConfiguration().getProperty( ASYNC_INTERCEPTOR );
 		final Object rsph = client.getConfiguration().getProperty( RESPONSE_HANDLER );
 
-		if( reqi != null ) {
-			this.requestInterceptor = (RequestInterceptor) reqi;
-		}
 		if( aint != null ) {
 			this.asyncInterceptor = (AsyncInterceptor<?>) aint;
 		}
@@ -93,7 +88,7 @@ public final class RestClient
 //		final Supplier<WebTarget> sup = () -> RBUtils.addPathFromAnnotation( type, this.client.target( this.target ) );
 		final Supplier<WebTarget> sup = () -> this.client.target( this.target );
 		final RestClientData rcd = new RestClientData(	type, this.client.getConfiguration(), this.cvsf,
-														this.requestInterceptor, this.responseHandler, this.executor,
+														this.riFactories, this.responseHandler, this.executor,
 														(AsyncInterceptor<Object>) this.asyncInterceptor, sup );
 		final RestClientIH ih = new RestClientIH( rcd );
 

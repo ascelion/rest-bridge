@@ -4,21 +4,18 @@ package ascelion.rest.micro;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
 import ascelion.rest.bridge.client.RBUtils;
-import ascelion.rest.bridge.client.RequestInterceptor;
 import ascelion.rest.bridge.client.RestRequestContext;
+import ascelion.rest.bridge.client.RestRequestInterceptorBase;
 
 import static java.util.Arrays.stream;
 import static java.util.Optional.ofNullable;
@@ -30,7 +27,7 @@ import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 
-public class MPRequestInterceptor implements RequestInterceptor
+final class ClientHeadersRI extends RestRequestInterceptorBase
 {
 
 	static class EvalException extends RuntimeException
@@ -43,6 +40,10 @@ public class MPRequestInterceptor implements RequestInterceptor
 	}
 
 	private final ThreadLocalValue<HttpHeaders> headers = ThreadLocalProxy.create( HttpHeaders.class );
+
+	ClientHeadersRI( Class<?> type, Method method )
+	{
+	}
 
 	@Override
 	public void before( RestRequestContext rc )
@@ -65,22 +66,6 @@ public class MPRequestInterceptor implements RequestInterceptor
 			.forEach( a -> actions.put( a.name(), () -> setHeader( rc, a ) ) );
 		;
 
-		// repeat HeaderParamAction, definitely need a refactoring
-		for( int x = 0; x < met.getParameterCount(); x++ ) {
-			final Parameter p = met.getParameters()[x];
-			final HeaderParam a = p.getAnnotation( HeaderParam.class );
-
-			if( a != null ) {
-				final Object v = rc.getArgumentAt( x );
-
-				actions.put( a.value(), () -> {
-					final Function<Object, String> c = (Function) rc.getConverter( p.getType(), p.getAnnotations() );
-
-					rc.getHeaders().putSingle( a.value(), c.apply( v ) );
-				} );
-			}
-		}
-
 		actions.values().forEach( Runnable::run );
 
 		ofNullable( rc.getInterfaceType().getAnnotation( RegisterClientHeaders.class ) )
@@ -95,7 +80,7 @@ public class MPRequestInterceptor implements RequestInterceptor
 	}
 
 	@Override
-	public void after( RestRequestContext rc )
+	public void after( RestRequestContext rc, Object result, Exception ex )
 	{
 		this.headers.set( null );
 

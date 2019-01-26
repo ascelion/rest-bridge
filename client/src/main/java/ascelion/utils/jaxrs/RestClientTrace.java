@@ -1,5 +1,5 @@
 
-package ascelion.rest.bridge.etc;
+package ascelion.utils.jaxrs;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

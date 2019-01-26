@@ -10,7 +10,7 @@ final class INTRequestValidation extends INTValidation
 {
 
 	@Override
-	void before( RestRequestContextImpl rc )
+	protected void before( RestRequestContext rc )
 	{
 		if( this.xv == null ) {
 			return;

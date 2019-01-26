@@ -7,8 +7,8 @@ import java.util.function.Supplier;
 import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 
-import ascelion.rest.bridge.etc.RestClientTrace;
 import ascelion.rest.bridge.tests.api.SLF4JHandler;
+import ascelion.utils.jaxrs.RestClientTrace;
 
 import static ascelion.rest.micro.RestBridgeConfiguration.LOG;
 import static org.hamcrest.Matchers.containsString;

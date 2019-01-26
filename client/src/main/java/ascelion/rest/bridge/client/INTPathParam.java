@@ -12,7 +12,7 @@ final class INTPathParam extends INTParamBase<PathParam>
 	}
 
 	@Override
-	void visitAnnotationValue( RestRequestContextImpl rc, Object v )
+	void visitAnnotationValue( RestRequestContext rc, Object v )
 	{
 		rc.path( this.annotation.value(), this.param.cvt.toString( v ) );
 	}

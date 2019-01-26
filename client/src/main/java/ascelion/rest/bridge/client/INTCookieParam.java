@@ -13,7 +13,7 @@ class INTCookieParam extends INTParamBase<CookieParam>
 	}
 
 	@Override
-	void visitAnnotationValue( RestRequestContextImpl rc, Object value )
+	void visitAnnotationValue( RestRequestContext rc, Object value )
 	{
 		if( value instanceof Cookie ) {
 			final Cookie c = (Cookie) value;

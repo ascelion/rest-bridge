@@ -12,7 +12,7 @@ final class INTConsumes extends INTAnnotBase<Consumes>
 	}
 
 	@Override
-	void before( RestRequestContextImpl rc )
+	protected void before( RestRequestContext rc )
 	{
 		rc.consumes( this.annotation.value() );
 	}

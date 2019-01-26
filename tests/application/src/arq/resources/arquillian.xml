@@ -16,7 +16,8 @@
 
 	<container qualifier="jetty" default="true">
 		<configuration>
-			<property name="bindHttpPort">9090</property>
+			<property name="bindHttpPort">0</property>
+			<property name="headerBufferSize">65536</property>
 		</configuration>
 	</container>
 </arquillian>

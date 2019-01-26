@@ -34,7 +34,7 @@ final class RestClientIH
 	}
 
 	private final RestClientData rcd;
-	private final Map<Method, RestMethod2> methods = new HashMap<>();
+	private final Map<Method, RestMethod> methods = new HashMap<>();
 
 	RestClientIH( RestClientData rcd )
 	{
@@ -90,7 +90,7 @@ final class RestClientIH
 
 	private void addMethod( Method m )
 	{
-		final RestMethod2 x = new RestMethod2( this.rcd, m );
+		final RestMethod x = new RestMethod( this.rcd, m );
 
 		this.methods.put( m, x );
 	}
@@ -101,7 +101,7 @@ final class RestClientIH
 			return method.invoke( this, arguments );
 		}
 
-		final RestMethod2 met = this.methods.get( method );
+		final RestMethod met = this.methods.get( method );
 
 		if( met != null ) {
 			return met.request( proxy, arguments );

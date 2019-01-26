@@ -1,12 +1,13 @@
 
-package ascelion.rest.bridge.client;
+package ascelion.utils.chain;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import ascelion.rest.bridge.client.InterceptorChain.Context;
-import ascelion.rest.bridge.client.InterceptorChain.Interceptor;
+import ascelion.utils.chain.InterceptorChain;
+import ascelion.utils.chain.InterceptorChainContext;
+import ascelion.utils.chain.InterceptorChainWrapper;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -19,7 +20,7 @@ public class InterceptorChainTest
 {
 
 	@RequiredArgsConstructor
-	static class INT implements Interceptor<AtomicInteger>
+	static class INT implements InterceptorChainWrapper<AtomicInteger>
 	{
 
 		final AtomicInteger i;
@@ -29,7 +30,7 @@ public class InterceptorChainTest
 		final List<Integer> called;
 
 		@Override
-		public Object around( Context<AtomicInteger> context ) throws Exception
+		public Object around( InterceptorChainContext<AtomicInteger> context ) throws Exception
 		{
 			this.i.incrementAndGet();
 

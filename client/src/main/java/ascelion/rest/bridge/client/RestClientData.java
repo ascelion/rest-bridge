@@ -1,6 +1,7 @@
 
 package ascelion.rest.bridge.client;
 
+import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -18,7 +19,7 @@ final class RestClientData
 	final Class<?> type;
 	final Configuration conf;
 	final ConvertersFactory cvsf;
-	final RequestInterceptor reqi;
+	final Collection<RestRequestInterceptor.Factory> riFactories;
 	final Function<Response, Throwable> rsph;
 	final Executor exec;
 	final AsyncInterceptor<Object> aint;
@@ -29,7 +30,7 @@ final class RestClientData
 		this.type = type;
 		this.conf = rcd.conf;
 		this.cvsf = rcd.cvsf;
-		this.reqi = rcd.reqi;
+		this.riFactories = rcd.riFactories;
 		this.rsph = rcd.rsph;
 		this.exec = rcd.exec;
 		this.aint = rcd.aint;

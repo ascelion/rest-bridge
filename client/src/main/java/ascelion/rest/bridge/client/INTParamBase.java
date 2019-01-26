@@ -23,7 +23,7 @@ abstract class INTParamBase<A extends Annotation> extends INTAnnotBase<A>
 	}
 
 	@Override
-	final void before( RestRequestContextImpl rc )
+	protected final void before( RestRequestContext rc )
 	{
 		final Object value = this.param.argument.apply( rc );
 		final Collection<Object> values = new ArrayList<>();
@@ -53,7 +53,7 @@ abstract class INTParamBase<A extends Annotation> extends INTAnnotBase<A>
 		}
 	}
 
-	void visitAnnotationValue( RestRequestContextImpl rc, Object v )
+	void visitAnnotationValue( RestRequestContext rc, Object v )
 	{
 	}
 }

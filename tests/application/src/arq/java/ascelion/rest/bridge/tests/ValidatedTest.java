@@ -107,13 +107,13 @@ extends AbstractTestCase<Validated>
 	@Test
 	public void beanValidNotNull_WithValid()
 	{
-		runTest( this.client::beanValidNotNull, new BeanData( "value" ) );
+		runTest( this.client::beanValidNotNull, new BeanData( "field-value" ) );
 	}
 
 	@Test
 	public void notNullFormParam_WithNotNull()
 	{
-		runTest( this.client::notNullFormParam, "value" );
+		runTest( this.client::notNullFormParam, "param-value" );
 	}
 
 	@Test

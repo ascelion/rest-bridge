@@ -16,7 +16,7 @@ extends TestClientProvider<ResteasyClientBuilder>
 
 	public ResteasyProxyProvider()
 	{
-		super( new ResteasyClientBuilder() );
+		super( ResteasyClientBuilder::new );
 	}
 
 	@Override

@@ -6,7 +6,7 @@ import java.lang.annotation.Annotation;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-abstract class INTAnnotBase<A extends Annotation> extends INTBase
+abstract class INTAnnotBase<A extends Annotation> extends RestRequestInterceptorBase
 {
 
 	final A annotation;

@@ -43,7 +43,7 @@ public class AsyncSuspendedIMPL
 	{
 		this.exec.submit( () -> {
 			this.api.delete();
-			rsp.resume( Response.ok() );
+			rsp.resume( Response.ok().build() );
 		} );
 	}
 
