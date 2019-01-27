@@ -19,14 +19,8 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import ascelion.utils.chain.InterceptorChain;
-
-import static ascelion.rest.bridge.client.RestClientProperties.NO_ASYNC_INTERCEPTOR;
-import static ascelion.rest.bridge.client.RestClientProperties.NO_RESPONSE_HANDLER;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonMap;
-import static org.apache.commons.lang3.reflect.FieldUtils.readDeclaredField;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.hasEntry;
@@ -58,25 +52,16 @@ public class InternalInterceptorsTest
 	private final MockClient mc = new MockClient();
 	private LazyParamConverter<Object> cvt;
 	private RestMethod met;
-	private InterceptorChain<RestRequestContext> chain;
 
 	@Before
 	@SneakyThrows
 	public void setUp()
 	{
-		final ConvertersFactory cvsf = new ConvertersFactoryImpl( this.mc.client );
-		final RestClientData rcd = new RestClientData(	Interface.class, this.mc.configuration,
-														cvsf, emptySet(), NO_RESPONSE_HANDLER, null,
-														NO_ASYNC_INTERCEPTOR, () -> this.mc.methodTarget );
+		final RestServiceInfo rsi = new RestServiceInfo( this.mc.rci, Interface.class );
+		final RestMethodInfo rmi = new RestMethodInfo( rsi, Interface.class.getMethod( "get" ) );
 
-		this.cvt = cvsf.getConverter( Object.class, new Annotation[0] );
-		this.met = new RestMethod( rcd, Interface.class.getMethod( "get" ) );
-
-		this.chain = (InterceptorChain<RestRequestContext>) readDeclaredField( this.met, "chain", true );
-
-		final Collection<?> wrappers = (Collection<?>) readDeclaredField( this.chain, "wrappers", true );
-
-		wrappers.clear();
+		this.cvt = this.mc.rci.getConvertersFactory().getConverter( Object.class, new Annotation[0] );
+		this.met = new RestMethod( rmi, this.mc.rci );
 	}
 
 	@Test
@@ -86,7 +71,7 @@ public class InternalInterceptorsTest
 		final Map<String, Object> map = singletonMap( PARAM_VALUE, new String[] { "type/subtype" } );
 		final Consumes ann = TypeFactory.annotation( Consumes.class, map );
 
-		this.chain.add( new INTConsumes( ann ) );
+		this.met.chain.add( new INTConsumes( ann ) );
 		createInterceptor( FormParam.class, INTFormParam::new );
 
 		final Object[] arguments = new Object[2];
@@ -173,11 +158,11 @@ public class InternalInterceptorsTest
 	{
 		createInterceptor( PathParam.class, INTPathParam::new );
 
-		when( this.mc.methodTarget.resolveTemplate( any( String.class ), any( String.class ), any( boolean.class ) ) ).thenReturn( this.mc.methodTarget );
+		when( this.mc.target.resolveTemplate( any( String.class ), any( String.class ), any( boolean.class ) ) ).thenReturn( this.mc.target );
 
 		callMock();
 
-		verify( this.mc.methodTarget, times( 1 ) ).resolveTemplate( eq( ANNOTATION_VALUE ), eq( PARAM_VALUE ), eq( true ) );
+		verify( this.mc.target, times( 1 ) ).resolveTemplate( eq( ANNOTATION_VALUE ), eq( PARAM_VALUE ), eq( true ) );
 	}
 
 	@Test
@@ -187,7 +172,7 @@ public class InternalInterceptorsTest
 		final Map<String, Object> map = singletonMap( PARAM_VALUE, new String[] { MediaType.TEXT_HTML } );
 		final Produces ann = TypeFactory.annotation( Produces.class, map );
 
-		this.chain.add( new INTProduces( ann ) );
+		this.met.chain.add( new INTProduces( ann ) );
 
 		final MediaType[] accepts = new MediaType[1];
 
@@ -208,23 +193,33 @@ public class InternalInterceptorsTest
 	{
 		createInterceptor( QueryParam.class, INTQueryParam::new );
 
-		when( this.mc.methodTarget.queryParam( any( String.class ), any( String.class ) ) ).thenReturn( this.mc.methodTarget );
+		when( this.mc.target.queryParam( any( String.class ), any( String.class ) ) ).thenReturn( this.mc.target );
 
 		callMock();
 
-		verify( this.mc.methodTarget, times( 1 ) ).queryParam( eq( ANNOTATION_VALUE ), eq( PARAM_VALUE ) );
+		verify( this.mc.target, times( 1 ) ).queryParam( eq( ANNOTATION_VALUE ), eq( PARAM_VALUE ) );
 	}
 
 	@SneakyThrows
 	private RestRequestContext callMock()
 	{
 		final RestRequestContext[] rrc = new RestRequestContext[1];
+		final RestRequestInterceptor rci = new RestRequestInterceptorBase()
+		{
 
-		this.chain.add( cx -> {
-			rrc[0] = cx.getData();
+			@Override
+			protected void before( RestRequestContext rc )
+			{
+				rrc[0] = rc;
+			}
 
-			return cx.proceed();
-		} );
+			@Override
+			public int priority()
+			{
+				return PRIORITY_HEAD;
+			}
+		};
+		this.met.chain.add( rci );
 		this.met.request( mock( Interface.class ) );
 
 		return rrc[0];
@@ -237,6 +232,6 @@ public class InternalInterceptorsTest
 		final A ann = TypeFactory.annotation( annoType, map );
 		final RestParam param = new RestParam( 0, Object.class, this.cvt, null, x -> PARAM_VALUE );
 
-		this.chain.add( create.apply( ann, param ) );
+		this.met.chain.add( create.apply( ann, param ) );
 	}
 }

@@ -7,12 +7,12 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
+import com.google.common.collect.MapMaker;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -67,7 +67,22 @@ public final class SimpleTypeBuilder
 		}
 	}
 
-	private final Map<Class<?>, Function<String, ?>> builders = new ConcurrentHashMap<>( BUILDERS );
+	private final Map<Class<?>, Function<String, ?>> builders = new MapMaker().weakKeys().makeMap();
+
+	public SimpleTypeBuilder()
+	{
+		this.builders.putAll( BUILDERS );
+	}
+
+	public void addBuilder( Class<?> type, Function<String, ?> bld )
+	{
+		this.builders.put( type, bld );
+	}
+
+	public <T> Function<String, ?> getBuilder( Class<T> type )
+	{
+		return this.builders.computeIfAbsent( type, this::newBuilder );
+	}
 
 	public <T> T createFromPlainText( Class<T> type, String value )
 	{
@@ -77,8 +92,13 @@ public final class SimpleTypeBuilder
 			return null;
 		}
 
-		return (T) this.builders.computeIfAbsent( type, this::newBuilder )
-			.apply( value );
+		final Function<String, T> bld = (Function<String, T>) getBuilder( type );
+
+		if( bld == null ) {
+			throw new RuntimeException( format( "Cannot construct %s from string", type ) );
+		}
+
+		return bld.apply( value );
 	}
 
 	private <T> Function<String, T> newBuilder( Class<T> type )
@@ -99,6 +119,6 @@ public final class SimpleTypeBuilder
 			}
 		}
 
-		throw new RuntimeException( format( "Cannot construct %s from string", type ) );
+		return null;
 	}
 }

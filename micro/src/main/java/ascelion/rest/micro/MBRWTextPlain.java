@@ -30,7 +30,7 @@ final class MBRWTextPlain implements MessageBodyReader<Object>, MessageBodyWrite
 	@Override
 	public boolean isReadable( Class<?> type, Type gt, Annotation[] annotations, MediaType mt )
 	{
-		return isAccepted( type, mt );
+		return isAccepted( type, mt ) && ( STB.getBuilder( type ) != null );
 	}
 
 	@Override

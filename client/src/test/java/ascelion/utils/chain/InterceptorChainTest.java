@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import ascelion.utils.chain.InterceptorChain;
 import ascelion.utils.chain.InterceptorChainContext;
-import ascelion.utils.chain.InterceptorChainWrapper;
+import ascelion.utils.chain.AroundInterceptor;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -20,7 +20,7 @@ public class InterceptorChainTest
 {
 
 	@RequiredArgsConstructor
-	static class INT implements InterceptorChainWrapper<AtomicInteger>
+	static class INT implements AroundInterceptor<AtomicInteger>
 	{
 
 		final AtomicInteger i;

@@ -61,9 +61,9 @@ public class ClientHeadersRITest
 		when( this.rc.getJavaMethod() ).thenReturn( this.method );
 		when( this.rc.getHeaders() ).thenReturn( this.headers );
 		when( this.rc.getImplementation() ).thenReturn( this.client );
-		when( this.rc.getInterfaceType() ).thenReturn( (Class) ClientHeaderParamClient.class );
+		when( this.rc.getServiceType() ).thenReturn( (Class) ClientHeaderParamClient.class );
 
-		this.chri = new ClientHeadersRI( this.rc.getInterfaceType(), this.rc.getJavaMethod() );
+		this.chri = new ClientHeadersRI( this.rc.getServiceType(), this.rc.getJavaMethod() );
 	}
 
 	@Test

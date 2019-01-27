@@ -17,4 +17,9 @@ final class INTProduces extends INTAnnotBase<Produces>
 		rc.produces( this.annotation.value() );
 	}
 
+	@Override
+	public int priority()
+	{
+		return PRIORITY_PARAMETERS - 2;
+	}
 }

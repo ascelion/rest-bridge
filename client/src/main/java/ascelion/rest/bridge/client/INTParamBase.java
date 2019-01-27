@@ -5,6 +5,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 import lombok.SneakyThrows;
@@ -23,7 +24,7 @@ abstract class INTParamBase<A extends Annotation> extends INTAnnotBase<A>
 	}
 
 	@Override
-	protected final void before( RestRequestContext rc )
+	protected void before( RestRequestContext rc )
 	{
 		final Object value = this.param.argument.apply( rc );
 		final Collection<Object> values = new ArrayList<>();
@@ -55,5 +56,19 @@ abstract class INTParamBase<A extends Annotation> extends INTAnnotBase<A>
 
 	void visitAnnotationValue( RestRequestContext rc, Object v )
 	{
+	}
+
+	@Override
+	public String about()
+	{
+		return format( "%s(%s)", getClass().getSimpleName(), aboutParam() );
+	}
+
+	abstract String aboutParam();
+
+	@Override
+	public int priority()
+	{
+		return PRIORITY_PARAMETERS;
 	}
 }

@@ -23,10 +23,4 @@ final class INTResponseValidation extends INTValidation
 		}
 	}
 
-	@Override
-	public int priority()
-	{
-		return PRIORITY_TAIL;
-	}
-
 }

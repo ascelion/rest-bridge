@@ -3,7 +3,11 @@ package ascelion.rest.micro;
 
 import java.util.Collection;
 
-import static org.apache.commons.lang3.reflect.FieldUtils.readDeclaredField;
+import javax.ws.rs.core.Context;
+
+import ascelion.utils.etc.PropDescriptor;
+import ascelion.utils.etc.TypeDescriptor;
+
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
@@ -16,8 +20,8 @@ public class TypeDescTest
 	@Test
 	public void run() throws IllegalAccessException
 	{
-		final TypeDesc<ReturnWithAllClientHeadersFilter> desc = new TypeDesc<>( ReturnWithAllClientHeadersFilter.class );
-		final Collection<PropDesc<?>> props = (Collection<PropDesc<?>>) readDeclaredField( desc, "props", true );
+		final TypeDescriptor desc = new TypeDescriptor( ReturnWithAllClientHeadersFilter.class );
+		final Collection<PropDescriptor<?>> props = desc.getProperties( Context.class );
 
 		assertThat( props, hasSize( 1 ) );
 	}

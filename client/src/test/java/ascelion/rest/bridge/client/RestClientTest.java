@@ -264,7 +264,7 @@ public class RestClientTest
 
 		assertThat( api.get(), equalTo( "t1" ) );
 
-		rc.setTarget( t2 );
+		rc.setBaseURI( t2 );
 
 		assertThat( api.get(), equalTo( "t2" ) );
 	}
@@ -293,12 +293,38 @@ public class RestClientTest
 		}
 	}
 
+	@Test( expected = IOException.class )
+	public void ioException() throws Throwable
+	{
+		final IOException ex = new IOException( "thrown" );
+		final ClientRequestFilter flt = cx -> {
+			ex.fillInStackTrace();
+
+			throw ex;
+		};
+
+		this.client.register( flt, Integer.MIN_VALUE );
+
+		final RestClient rc = new RestClient( this.client, this.target );
+		final Interface api = rc.getInterface( Interface.class );
+
+		try {
+			api.get();
+		}
+		catch( final ProcessingException e ) {
+			assertThat( e.getCause(), sameInstance( ex ) );
+
+			throw e.getCause();
+		}
+	}
+
 	@Test( expected = RuntimeException.class )
-	public void rtException()
+	public void rtException() throws Throwable
 	{
 		final RuntimeException ex = new RuntimeException( "thrown" );
 		final ClientRequestFilter flt = cx -> {
 			ex.fillInStackTrace();
+
 			throw ex;
 		};
 

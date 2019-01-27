@@ -17,4 +17,9 @@ final class INTConsumes extends INTAnnotBase<Consumes>
 		rc.consumes( this.annotation.value() );
 	}
 
+	@Override
+	public int priority()
+	{
+		return PRIORITY_PARAMETERS - 2;
+	}
 }
