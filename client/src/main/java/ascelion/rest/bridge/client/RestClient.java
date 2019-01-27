@@ -12,17 +12,22 @@ import java.util.function.Supplier;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+
+import ascelion.rest.bridge.client.RestRequestInterceptor.Factory;
 
 import static ascelion.rest.bridge.client.RestClientProperties.ASYNC_INTERCEPTOR;
 import static ascelion.rest.bridge.client.RestClientProperties.NO_ASYNC_INTERCEPTOR;
 import static ascelion.rest.bridge.client.RestClientProperties.NO_RESPONSE_HANDLER;
 import static ascelion.rest.bridge.client.RestClientProperties.RESPONSE_HANDLER;
+import static java.util.Collections.unmodifiableCollection;
 
+import lombok.Getter;
 import lombok.Setter;
 
-public final class RestClient
+public final class RestClient implements RestClientInfo, RestClientInternals
 {
 
 	static private final ThreadLocal<Method> METHOD = new ThreadLocal<>();
@@ -43,16 +48,21 @@ public final class RestClient
 	}
 
 	private final Client client;
+	@Getter
 	@Setter
-	private URI target;
-	private final ConvertersFactory cvsf;
-	private final Collection<RestRequestInterceptor.Factory> riFactories = new ArrayList<>();
+	private URI baseURI;
+
+	private final Collection<RestRequestInterceptor.Factory> rriFactories = new ArrayList<>();
 	@Setter
+	@Getter
 	private AsyncInterceptor<?> asyncInterceptor = NO_ASYNC_INTERCEPTOR;
 	@Setter
+	@Getter
 	private Function<Response, Throwable> responseHandler = NO_RESPONSE_HANDLER;
 	@Setter
+	@Getter
 	private Executor executor = Executors.newCachedThreadPool();
+	private final ConvertersFactory convertersFactory;
 
 	public RestClient( Client client, URI target )
 	{
@@ -64,13 +74,13 @@ public final class RestClient
 		this.client = client;
 
 		if( base == null || base.isEmpty() ) {
-			this.target = target;
+			this.baseURI = target;
 		}
 		else {
-			this.target = UriBuilder.fromUri( target ).path( base ).build();
+			this.baseURI = UriBuilder.fromUri( target ).path( base ).build();
 		}
 
-		this.cvsf = new ConvertersFactoryImpl( client );
+		this.convertersFactory = new ConvertersFactoryImpl( client );
 
 		final Object aint = client.getConfiguration().getProperty( ASYNC_INTERCEPTOR );
 		final Object rsph = client.getConfiguration().getProperty( RESPONSE_HANDLER );
@@ -81,17 +91,44 @@ public final class RestClient
 		if( rsph != null ) {
 			this.responseHandler = (Function<Response, Throwable>) rsph;
 		}
+
+		this.rriFactories.add( new DefaultRRIFactory() );
+	}
+
+	@Override
+	public Supplier<WebTarget> getTarget()
+	{
+		return () -> this.client.target( this.baseURI );
+	}
+
+	@Override
+	public Configuration getConfiguration()
+	{
+		return this.client.getConfiguration();
+	}
+
+	@Override
+	public ConvertersFactory getConvertersFactory()
+	{
+		return this.convertersFactory;
+	}
+
+	public void addRRIFactory( RestRequestInterceptor.Factory f )
+	{
+		this.rriFactories.add( f );
 	}
 
 	public <X> X getInterface( Class<X> type )
 	{
-//		final Supplier<WebTarget> sup = () -> RBUtils.addPathFromAnnotation( type, this.client.target( this.target ) );
-		final Supplier<WebTarget> sup = () -> this.client.target( this.target );
-		final RestClientData rcd = new RestClientData(	type, this.client.getConfiguration(), this.cvsf,
-														this.riFactories, this.responseHandler, this.executor,
-														(AsyncInterceptor<Object>) this.asyncInterceptor, sup );
-		final RestClientIH ih = new RestClientIH( rcd );
+		final RestServiceInfo rsi = new RestServiceInfo( this, type );
+		final RestService rs = new RestService( rsi, this );
 
-		return ih.newProxy();
+		return rs.newProxy();
+	}
+
+	@Override
+	public Collection<Factory> rriFactories()
+	{
+		return unmodifiableCollection( this.rriFactories );
 	}
 }

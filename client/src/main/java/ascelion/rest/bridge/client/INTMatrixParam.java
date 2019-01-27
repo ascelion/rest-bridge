@@ -16,4 +16,10 @@ final class INTMatrixParam extends INTParamBase<MatrixParam>
 	{
 		rc.matrix( this.annotation.value(), this.param.cvt.toString( v ) );
 	}
+
+	@Override
+	String aboutParam()
+	{
+		return this.annotation != null ? this.annotation.value() : null;
+	}
 }

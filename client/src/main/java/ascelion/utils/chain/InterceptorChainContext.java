@@ -1,3 +1,4 @@
+
 package ascelion.utils.chain;
 
 import java.util.Collection;
@@ -14,22 +15,25 @@ public final class InterceptorChainContext<X>
 
 	@Getter
 	private final X data;
-	private final Iterator<InterceptorChainWrapper<X>> interceptors;
+	private final Iterator<AroundInterceptor<X>> interceptors;
 
 	InterceptorChainContext( X data, Collection<Invocation<X>> interceptors, Callable<?> action )
 	{
 		this.data = data;
 
-		final Stream<InterceptorChainWrapper<X>> last = Stream.of( context -> action.call() );
+		final Stream<AroundInterceptor<X>> last = Stream.of( context -> action.call() );
 
-		this.interceptors = Stream.concat( interceptors.stream().map( i -> i.w ), last ).iterator();
+		this.interceptors = Stream.concat( interceptors.stream().map( i -> i.a ), last ).iterator();
 	}
 
-	@SuppressWarnings( "rawtypes" )
 	public Object proceed() throws Exception
 	{
-		return this.interceptors.next()
-			.around( this );
+		AroundInterceptor<X> next;
+
+		while( ( next = this.interceptors.next() ).disabled() ) {
+			;
+		}
+
+		return next.around( this );
 	}
 }
-

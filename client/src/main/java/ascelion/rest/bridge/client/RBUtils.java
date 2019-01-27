@@ -3,13 +3,14 @@ package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -33,9 +34,10 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
+import static ascelion.utils.etc.Secured.runPrivileged;
+import static ascelion.utils.etc.Secured.runPrivilegedWithException;
 import static io.leangen.geantyref.GenericTypeReflector.getExactReturnType;
 import static java.lang.Thread.currentThread;
-import static java.security.AccessController.doPrivileged;
 import static java.util.Arrays.stream;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
@@ -49,28 +51,37 @@ import org.apache.commons.lang3.ClassUtils.Interfaces;
 public final class RBUtils
 {
 
-	static public ClassLoader threadClassLoader()
+	static public ClassLoader currentClassLoader()
 	{
-		return doPrivileged( (PrivilegedAction<ClassLoader>) () -> currentThread().getContextClassLoader() );
+		return runPrivileged( () -> {
+			return ofNullable( currentThread().getContextClassLoader() )
+				.orElse( RBUtils.class.getClassLoader() );
+		} );
 	}
 
 	static public <T> Class<T> safeLoadClass( String name )
 	{
 		try {
-			return (Class<T>) threadClassLoader().loadClass( name.trim() );
+			return (Class<T>) runPrivilegedWithException( () -> currentClassLoader().loadClass( name.trim() ) );
 		}
-		catch( final ClassNotFoundException e ) {
-			return null;
+		catch( final PrivilegedActionException e ) {
+			final Throwable c = e.getCause();
+
+			if( c instanceof ClassNotFoundException ) {
+				return null;
+			}
+
+			throw wrapException( c );
 		}
 	}
 
 	static public <T> Class<T> rtLoadClass( String name )
 	{
 		try {
-			return (Class<T>) threadClassLoader().loadClass( name.trim() );
+			return runPrivilegedWithException( () -> (Class<T>) currentClassLoader().loadClass( name.trim() ) );
 		}
-		catch( final ClassNotFoundException e ) {
-			throw new IllegalArgumentException( "Cannot load class " + name.trim() );
+		catch( final PrivilegedActionException e ) {
+			throw wrapException( e.getCause() );
 		}
 	}
 
@@ -117,7 +128,7 @@ public final class RBUtils
 		return priority == -1 ? getPriority( value ) : priority;
 	}
 
-	static boolean isCDI()
+	public static boolean isCDI()
 	{
 		try {
 			CDI.current().getBeanManager();
@@ -208,23 +219,6 @@ public final class RBUtils
 		return value.length() > 2 && value.startsWith( "{" ) && value.endsWith( "}" )
 			? value.substring( 1, value.length() - 1 )
 			: null;
-	}
-
-	static public String trimSlashes( String value )
-	{
-		final StringBuilder sb = new StringBuilder( value );
-
-		while( sb.length() > 0 && sb.charAt( 0 ) == '/' ) {
-			sb.delete( 0, 1 );
-		}
-
-		int z;
-
-		while( ( z = sb.length() ) > 0 && sb.charAt( z - 1 ) == '/' ) {
-			sb.delete( z - 1, z );
-		}
-
-		return sb.toString();
 	}
 
 	static WebTarget addPathFromAnnotation( AnnotatedElement ae, WebTarget target )
@@ -330,10 +324,53 @@ public final class RBUtils
 		return httpMethod;
 	}
 
+	static public String getRequestURI( Path annotation )
+	{
+		if( annotation == null ) {
+			return "";
+		}
+
+		final StringBuilder sb = new StringBuilder( annotation.value() );
+
+		while( sb.length() > 0 && sb.charAt( 0 ) == '/' ) {
+			sb.delete( 0, 1 );
+		}
+
+		int z;
+
+		while( ( z = sb.length() ) > 0 && sb.charAt( z - 1 ) == '/' ) {
+			sb.delete( z - 1, z );
+		}
+
+		final String path = sb.toString().replaceAll( "/{2,}", "/" );
+
+		return path.isEmpty() ? "" : "/" + path;
+	}
+
 	private static String getHttpMethodName( AnnotatedElement element )
 	{
 		final HttpMethod a = element.getAnnotation( HttpMethod.class );
 
 		return a != null ? a.value() : null;
+	}
+
+	static public RuntimeException wrapException( Throwable e )
+	{
+		return wrapException( e, null );
+	}
+
+	static public RuntimeException wrapException( Throwable e, String m )
+	{
+		if( e instanceof InvocationTargetException ) {
+			return wrapException( e.getCause(), m );
+		}
+		if( e instanceof Error ) {
+			throw(Error) e;
+		}
+		if( e instanceof RuntimeException ) {
+			throw(RuntimeException) e;
+		}
+
+		return m != null ? new RuntimeException( m, e ) : new RuntimeException( e );
 	}
 }

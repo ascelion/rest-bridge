@@ -15,9 +15,9 @@ import org.junit.runners.Suite.SuiteClasses;
 @RunWith( Suite.class )
 @SuiteClasses( {
 	ProvidersSuite.JerseyBridge.class,
-	ProvidersSuite.JerseyProxy.class,
+//	ProvidersSuite.JerseyProxy.class,
 	ProvidersSuite.ResteasyBridge.class,
-	ProvidersSuite.ResteasyProxy.class,
+//	ProvidersSuite.ResteasyProxy.class,
 	ProvidersSuite.CxfBridge.class,
 } )
 public class ProvidersSuite

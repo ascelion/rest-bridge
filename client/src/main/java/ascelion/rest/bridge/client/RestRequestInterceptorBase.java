@@ -6,9 +6,6 @@ import ascelion.utils.chain.InterceptorChainContext;
 public abstract class RestRequestInterceptorBase implements RestRequestInterceptor
 {
 
-	static final int PRIORITY_HEAD = -2000;
-	static final int PRIORITY_TAIL = +2000;
-
 	@Override
 	public final Object around( InterceptorChainContext<RestRequestContext> context ) throws Exception
 	{

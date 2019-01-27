@@ -1,46 +1,76 @@
 
 package ascelion.rest.bridge.client;
 
-import javax.ws.rs.client.Client;
+import java.util.ArrayList;
+import java.util.Collection;
+
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Response;
 
+import static ascelion.rest.bridge.client.RestClientProperties.NO_RESPONSE_HANDLER;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
-import org.mockito.Answers;
-
 class MockClient
 {
 
-	final Configuration configuration;
-	final Client client;
-	final WebTarget clientTarget;
-	final WebTarget methodTarget;
+	interface RCI extends RestClientInfo, RestClientInternals
+	{
+	}
+
+	interface CFG extends Configuration, Configurable<CFG>
+	{
+
+		@Override
+		default Configuration getConfiguration()
+		{
+			return this;
+		}
+	}
+
+	final RCI rci;
+	final CFG configuration;
+	final WebTarget target;
 	final Invocation.Builder bld;
 	final Response rsp;
 
 	MockClient()
 	{
-		this.configuration = mock( Configuration.class, withSettings().lenient().defaultAnswer( Answers.CALLS_REAL_METHODS ) );
-		this.client = mock( Client.class, withSettings().lenient() );
-		this.clientTarget = mock( WebTarget.class, withSettings().lenient() );
-		this.methodTarget = mock( WebTarget.class, withSettings().lenient() );
+		this.configuration = mock( CFG.class, withSettings().lenient() );
+
+		when( this.configuration.getConfiguration() )
+			.thenReturn( this.configuration );
+
+		final ConvertersFactory cvsf = new ConvertersFactoryImpl( this.configuration );
+
+		this.rci = mock( RCI.class, withSettings().lenient() );
+		this.target = mock( WebTarget.class, withSettings().lenient() );
 		this.bld = mock( Invocation.Builder.class, withSettings().lenient() );
 		this.rsp = mock( Response.class, withSettings().lenient() );
 
-		when( this.client.getConfiguration() )
+		when( this.rci.getConfiguration() )
 			.thenReturn( this.configuration );
-		when( this.client.target( any( String.class ) ) )
-			.thenReturn( this.methodTarget );
-		when( this.methodTarget.path( any( String.class ) ) )
-			.thenReturn( this.methodTarget );
-		when( this.methodTarget.request() )
+		when( this.rci.getTarget() )
+			.thenReturn( () -> this.target );
+		when( this.rci.getResponseHandler() )
+			.thenReturn( NO_RESPONSE_HANDLER );
+		when( this.rci.getConvertersFactory() )
+			.thenReturn( cvsf );
+
+		final Collection<RestRequestInterceptor.Factory> rrif = new ArrayList<>();
+
+		when( this.rci.rriFactories() )
+			.thenReturn( rrif );
+
+		when( this.target.path( any( String.class ) ) )
+			.thenReturn( this.target );
+		when( this.target.request() )
 			.thenReturn( this.bld );
 		when( this.bld.method( any( String.class ) ) )
 			.thenReturn( this.rsp );

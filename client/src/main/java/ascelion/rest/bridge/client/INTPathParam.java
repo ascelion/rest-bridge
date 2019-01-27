@@ -16,4 +16,10 @@ final class INTPathParam extends INTParamBase<PathParam>
 	{
 		rc.path( this.annotation.value(), this.param.cvt.toString( v ) );
 	}
+
+	@Override
+	String aboutParam()
+	{
+		return this.annotation != null ? this.annotation.value() : null;
+	}
 }

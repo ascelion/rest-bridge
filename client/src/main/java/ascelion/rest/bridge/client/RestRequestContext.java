@@ -2,17 +2,14 @@
 package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -28,55 +25,36 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-public /*final*/ class RestRequestContext
+public /*final*/ class RestRequestContext extends RestMethodInfo
 {
 
-	final RestClientData rcd;
-	@Getter
-	private final Method javaMethod;
-	@Getter
-	private final Configuration configuration;
 	@Getter
 	@Setter
-	private WebTarget target;
+	private WebTarget reqTarget;
+
 	@Getter( value = AccessLevel.NONE )
 	final Object proxy;
 	private final List<Object> arguments;
-	private final GenericType<?> returnType;
-
 	@Getter
 	private final MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
 	@Getter
 	private final Collection<Cookie> cookies = new ArrayList<>();
 	final Collection<MediaType> produces = new ArrayList<>();
-	final Collection<MediaType> consumes = new ArrayList<>();
+	private final Collection<MediaType> consumes = new ArrayList<>();
 	Object entity;
-	@Getter
-	private final boolean async;
-	@Getter
-	private final String httpMethod;
 
-	RestRequestContext( RestClientData rcd, Method javaMethod, GenericType<?> returnType, boolean async, String httpMethod, WebTarget target, Object proxy, Object[] arguments )
+	RestRequestContext( RestMethodInfo rmi, Object proxy, Object[] arguments )
 	{
-		this.rcd = rcd;
-		this.javaMethod = javaMethod;
-		this.target = target;
+		super( rmi );
+
+		this.reqTarget = getTarget().get().path( rmi.getMethodURI() );
 		this.proxy = proxy;
 		this.arguments = arguments != null ? asList( arguments ) : emptyList();
-		this.configuration = rcd.conf;
-		this.returnType = returnType;
-		this.async = async;
-		this.httpMethod = httpMethod;
 	}
 
 	public Object getImplementation()
 	{
 		return this.proxy;
-	}
-
-	public Class<?> getInterfaceType()
-	{
-		return this.rcd.type;
 	}
 
 	public Object getArgumentAt( int index )
@@ -89,11 +67,6 @@ public /*final*/ class RestRequestContext
 		return type.cast( this.arguments.get( index ) );
 	}
 
-	public <T> GenericType<T> getReturnType()
-	{
-		return (GenericType<T>) this.returnType;
-	}
-
 	public Object[] getArguments()
 	{
 		return this.arguments.toArray();
@@ -101,7 +74,7 @@ public /*final*/ class RestRequestContext
 
 	public <T> ParamConverter<T> getConverter( Class<T> type, Annotation[] annotations )
 	{
-		return this.rcd.cvsf.getConverter( type, annotations );
+		return getConvertersFactory().getConverter( type, annotations );
 	}
 
 	public MediaType getContentType()
@@ -113,22 +86,27 @@ public /*final*/ class RestRequestContext
 
 	void header( String name, String value )
 	{
-		this.headers.add( name, value );
+		if( value != null ) {
+			this.headers.add( name, value );
+		}
+		else {
+			this.headers.remove( name );
+		}
 	}
 
 	void matrix( String name, String value )
 	{
-		this.target = this.target.matrixParam( name, value );
+		this.reqTarget = this.reqTarget.matrixParam( name, value );
 	}
 
 	void path( String name, String value )
 	{
-		this.target = this.target.resolveTemplate( name, value, true );
+		this.reqTarget = this.reqTarget.resolveTemplate( name, value, true );
 	}
 
 	void query( String name, String value )
 	{
-		this.target = this.target.queryParam( name, value );
+		this.reqTarget = this.reqTarget.queryParam( name, value );
 	}
 
 	void produces( String[] value )
@@ -178,7 +156,7 @@ public /*final*/ class RestRequestContext
 
 	private MediaType defaultContentType()
 	{
-		final Object mt = ofNullable( this.configuration.getProperty( RestClientProperties.DEFAULT_CONTENT_TYPE ) )
+		final Object mt = ofNullable( getConfiguration().getProperty( RestClientProperties.DEFAULT_CONTENT_TYPE ) )
 			.map( o -> ( o instanceof MediaType ) ? o : trimToNull( Objects.toString( o, null ) ) )
 			.orElse( this.entity instanceof Form ? MediaType.APPLICATION_FORM_URLENCODED_TYPE : MediaType.APPLICATION_OCTET_STREAM_TYPE );
 

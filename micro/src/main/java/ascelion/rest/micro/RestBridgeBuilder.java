@@ -22,9 +22,11 @@ import javax.ws.rs.core.Configuration;
 import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.bridge.client.RestClient;
 import ascelion.rest.bridge.client.RestClientMethodException;
+import ascelion.rest.micro.cdi.CDIRRIFactory;
 
 import static ascelion.rest.micro.RestBridgeConfiguration.LOG;
 import static java.lang.String.format;
+import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
@@ -211,7 +213,11 @@ final class RestBridgeBuilder implements RestClientBuilder
 			rc.setExecutor( this.executorService );
 		}
 
-//		rc.setRequestInterceptor( new MPRequestInterceptor() );
+		rc.addRRIFactory( new RRIFactory() );
+		if( RBUtils.isCDI() ) {
+			rc.addRRIFactory( new CDIRRIFactory() );
+		}
+
 		rc.setResponseHandler( new MPResponseHandler( this.configuration ) );
 		rc.setAsyncInterceptor( new MPAsyncInterceptor( cfg ) );
 
@@ -226,11 +232,11 @@ final class RestBridgeBuilder implements RestClientBuilder
 
 	private <T> void configureProviders( Configurable<? extends Configuration> cfg, Class<T> type )
 	{
-		Stream.of( type.getAnnotationsByType( RegisterProvider.class ) )
+		stream( type.getAnnotationsByType( RegisterProvider.class ) )
 			.forEach( a -> cfg.register( a.value(), RBUtils.getPriority( a.value(), a.priority() ) ) );
 
 		MP.getConfig( type, String.class, "providers" )
-			.map( s -> Stream.of( s.split( "," ) ) )
+			.map( s -> stream( s.split( "," ) ) )
 			.orElse( Stream.empty() )
 			.map( RBUtils::safeLoadClass )
 			.filter( Objects::nonNull )

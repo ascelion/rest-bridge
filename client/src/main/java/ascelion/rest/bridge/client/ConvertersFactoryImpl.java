@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
@@ -47,7 +47,7 @@ final class ConvertersFactoryImpl implements ConvertersFactory
 		@Override
 		public String toString( T value )
 		{
-			return value != null ? this.sup.get().toString( value ) : null;
+			return value != null ? trimToNull( this.sup.get().toString( value ) ) : null;
 		}
 
 		@Override
@@ -109,12 +109,12 @@ final class ConvertersFactoryImpl implements ConvertersFactory
 	private final Map<KEY, ParamConverter<?>> converters = new ConcurrentHashMap<>();
 	private final Configuration cf;
 
-	ConvertersFactoryImpl( Client client )
+	ConvertersFactoryImpl( Configurable<?> cf )
 	{
-		this.cf = client.getConfiguration();
+		this.cf = cf.getConfiguration();
 
 		if( !this.cf.isRegistered( DEFAULT_PCP ) ) {
-			client.register( DEFAULT_PCP, Integer.MAX_VALUE );
+			cf.register( DEFAULT_PCP, Integer.MAX_VALUE );
 		}
 	}
 

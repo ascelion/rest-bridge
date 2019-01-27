@@ -5,14 +5,10 @@ import java.lang.reflect.Method;
 import java.util.stream.Stream;
 
 import javax.validation.ConstraintViolationException;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
 
 import ascelion.rest.bridge.tests.api.BeanData;
 import ascelion.rest.bridge.tests.api.Validated;
 import ascelion.utils.chain.InterceptorChain;
-
-import static org.mockito.Mockito.mock;
 
 import lombok.SneakyThrows;
 import org.junit.Rule;
@@ -29,9 +25,9 @@ public class ValidationActionTest
 	static private final Object NULL = null;
 
 	@Mock
-	private WebTarget target;
-	@Mock
 	private Validated client;
+
+	private final MockClient mc = new MockClient();
 
 	@Rule
 	public ExpectedException ex = ExpectedException.none();
@@ -166,8 +162,10 @@ public class ValidationActionTest
 	private void runTest( String methodName, Object... arguments )
 	{
 		final Method method = findMethod( methodName );
-		final RestClientData rcd = new RestClientData( Object.class, null, null, null, null, null, null, null );
-		final RestRequestContext rc = new RestRequestContext( rcd, method, new GenericType<>( Object.class ), false, "GET", this.target, mock( Validated.class ), arguments );
+		final RestServiceInfo rsi = new RestServiceInfo( this.mc.rci, Validated.class );
+		final RestMethodInfo rmi = new RestMethodInfo( rsi, method );
+
+		final RestRequestContext rc = new RestRequestContext( rmi, this.client, arguments );
 		final INTRequestValidation rri = new INTRequestValidation();
 		final InterceptorChain<RestRequestContext> chain = new InterceptorChain<>();
 

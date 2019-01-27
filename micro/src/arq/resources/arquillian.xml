@@ -6,9 +6,10 @@
         http://jboss.org/schema/arquillian/arquillian_1_0.xsd">
 
 	<!--
-	-->
 	<engine>
 		<property name="deploymentExportExploded">true</property>
 		<property name="deploymentExportPath">build/deployments</property>
 	</engine>
+	-->
+
 </arquillian>

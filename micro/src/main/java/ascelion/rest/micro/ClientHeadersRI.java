@@ -4,28 +4,23 @@ package ascelion.rest.micro;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
-
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
 
 import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.bridge.client.RestRequestContext;
 import ascelion.rest.bridge.client.RestRequestInterceptorBase;
 
 import static java.util.Arrays.stream;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ClassUtils.getAllInterfaces;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
-import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
-import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 
 final class ClientHeadersRI extends RestRequestInterceptorBase
 {
@@ -39,70 +34,31 @@ final class ClientHeadersRI extends RestRequestInterceptorBase
 		}
 	}
 
-	private final ThreadLocalValue<HttpHeaders> headers = ThreadLocalProxy.create( HttpHeaders.class );
+	private final Collection<Consumer<RestRequestContext>> actions = new ArrayList<>();
 
 	ClientHeadersRI( Class<?> type, Method method )
 	{
-	}
+		final List<Class<?>> all = getAllInterfaces( type );
 
-	@Override
-	public void before( RestRequestContext rc )
-	{
-		if( this.headers.isAbsent() ) {
-			this.headers.set( new HttpHeadersImpl( rc ) );
-		}
+		all.add( 0, type );
 
-		final Method met = rc.getJavaMethod();
-
-		final Map<String, Runnable> actions = new TreeMap<>();
-
-		getAllInterfaces( rc.getImplementation().getClass() ).stream()
-			.filter( t -> t.isAssignableFrom( rc.getInterfaceType() ) )
+		all.stream()
 			.flatMap( t -> stream( t.getAnnotationsByType( ClientHeaderParam.class ) ) )
-			.forEach( a -> actions.put( a.name(), () -> setHeader( rc, a ) ) );
-		;
-
-		stream( met.getAnnotationsByType( ClientHeaderParam.class ) )
-			.forEach( a -> actions.put( a.name(), () -> setHeader( rc, a ) ) );
-		;
-
-		actions.values().forEach( Runnable::run );
-
-		ofNullable( rc.getInterfaceType().getAnnotation( RegisterClientHeaders.class ) )
-			.ifPresent( a -> headersFactory( rc, a ) );
-
-		try {
-			org.jboss.resteasy.spi.ResteasyProviderFactory.pushContext( HttpHeaders.class, this.headers.get() );
-		}
-		catch( final NoClassDefFoundError e ) {
-			;
-		}
+			.forEach( a -> this.actions.add( rc -> setHeader( rc, a ) ) );
+		stream( method.getAnnotationsByType( ClientHeaderParam.class ) )
+			.forEach( a -> this.actions.add( rc -> setHeader( rc, a ) ) );
 	}
 
 	@Override
-	public void after( RestRequestContext rc, Object result, Exception ex )
+	public int priority()
 	{
-		this.headers.set( null );
-
-		try {
-			org.jboss.resteasy.spi.ResteasyProviderFactory.popContextData( HttpHeaders.class );
-		}
-		catch( final NoClassDefFoundError e ) {
-			;
-		}
+		return PRIORITY_PARAMETERS - 1;
 	}
 
-	private void headersFactory( RestRequestContext rc, RegisterClientHeaders a )
+	@Override
+	protected void before( RestRequestContext rc )
 	{
-		final MultivaluedMap<String, String> incHeaders = this.headers.get().getRequestHeaders();
-		final ClientHeadersFactory factory = RBUtils.newInstance( a.value() );
-
-		new TypeDesc<>( factory ).inject( factory );
-
-		final MultivaluedMap<String, String> headers = factory
-			.update( incHeaders, rc.getHeaders() );
-
-		rc.getHeaders().putAll( headers );
+		this.actions.forEach( a -> a.accept( rc ) );
 	}
 
 	private void setHeader( RestRequestContext rc, ClientHeaderParam p )
@@ -112,7 +68,7 @@ final class ClientHeadersRI extends RestRequestInterceptorBase
 		}
 		catch( final EvalException e ) {
 			if( p.required() ) {
-				wrapException( e.getCause() );
+				throw RBUtils.wrapException( e.getCause() );
 			}
 			else {
 				rc.getHeaders().remove( p.name() );
@@ -149,7 +105,7 @@ final class ClientHeadersRI extends RestRequestInterceptorBase
 
 	private String[] evalMethod( RestRequestContext rc, String headerName, String methodName, boolean required ) throws IllegalAccessException, InvocationTargetException
 	{
-		final Method eval = ClientHeadersValidator.lookupMethod( rc.getInterfaceType(), methodName );
+		final Method eval = ClientHeadersValidator.lookupMethod( rc.getServiceType(), methodName );
 		Object result = null;
 
 		if( Modifier.isStatic( eval.getModifiers() ) ) {
@@ -169,20 +125,4 @@ final class ClientHeadersRI extends RestRequestInterceptorBase
 			return new String[] { (String) result };
 		}
 	}
-
-	private void wrapException( Throwable e )
-	{
-		if( e instanceof InvocationTargetException ) {
-			wrapException( e.getCause() );
-		}
-		if( e instanceof Error ) {
-			throw(Error) e;
-		}
-		if( e instanceof RuntimeException ) {
-			throw(RuntimeException) e;
-		}
-
-		throw new RuntimeException( e );
-	}
-
 }

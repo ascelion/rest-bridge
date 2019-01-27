@@ -24,4 +24,10 @@ class INTCookieParam extends INTParamBase<CookieParam>
 			rc.cookie( new Cookie( this.annotation.value(), this.param.cvt.toString( value ) ) );
 		}
 	}
+
+	@Override
+	String aboutParam()
+	{
+		return this.annotation != null ? this.annotation.value() : null;
+	}
 }

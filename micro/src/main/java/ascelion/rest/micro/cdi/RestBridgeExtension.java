@@ -7,9 +7,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.AfterDeploymentValidation;
+import javax.enterprise.inject.spi.AfterTypeDiscovery;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
@@ -23,7 +25,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 public class RestBridgeExtension implements Extension
 {
 
-	static final Logger L = Logger.getLogger( RestBridgeExtension.class.getName() );
+	static final Logger L = Logger.getLogger( "ascelion.rest.micro.CDI" );
 
 	private final Set<Class<?>> clients = new HashSet<>();
 	private final Collection<Throwable> errors = new ArrayList<>();
@@ -40,6 +42,12 @@ public class RestBridgeExtension implements Extension
 		else {
 			this.errors.add( new IllegalArgumentException( format( "The class %s is not an interface", type.getName() ) ) );
 		}
+	}
+
+	void afterTypeDiscovery( @Observes AfterTypeDiscovery event, BeanManager bm )
+	{
+		event.addAnnotatedType( CDIRRIFactory.class, CDIRRIFactory.class.getName() )
+			.add( new ApplicationScoped.Literal() );
 	}
 
 	void afterBeanDescovery( @Observes AfterBeanDiscovery event, BeanManager bm )

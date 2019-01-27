@@ -14,4 +14,10 @@ final class INTEntity extends RestRequestInterceptorBase
 	{
 		rc.entity( this.param.argument.apply( rc ) );
 	}
+
+	@Override
+	public int priority()
+	{
+		return PRIORITY_PARAMETERS;
+	}
 }

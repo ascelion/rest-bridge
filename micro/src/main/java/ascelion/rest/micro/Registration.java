@@ -3,9 +3,12 @@ package ascelion.rest.micro;
 
 import java.util.Map;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.HttpHeaders;
 
 import ascelion.rest.bridge.client.RBUtils;
+import ascelion.utils.etc.TypeDescriptor;
 
 import static java.util.Collections.emptyMap;
 
@@ -18,13 +21,15 @@ final class Registration<T>
 
 	static final Registration<?> NONE = new Registration<>( Void.class, emptyMap(), null );
 
-	private final TypeDesc<T> desc;
+	private final Class<T> type;
+	private final TypeDescriptor desc;
 	private final Map<Class<?>, Integer> contracts;
 	private T instance;
 
 	Registration( Class<T> type, Map<Class<?>, Integer> contracts, T instance )
 	{
-		this.desc = new TypeDesc<>( type );
+		this.type = type;
+		this.desc = new TypeDescriptor( type );
 		this.contracts = contracts;
 		this.instance = instance;
 	}
@@ -36,10 +41,10 @@ final class Registration<T>
 		}
 
 		if( instance == null ) {
-			instance = RBUtils.newInstance( this.desc.type );
+			instance = RBUtils.newInstance( this.type );
 		}
 
-		this.desc.inject( instance );
+		this.desc.injectAnnotated( Context.class, HttpHeaders.class, instance, ThreadLocalProxy.create( HttpHeaders.class ) );
 
 		this.instance = instance;
 
@@ -53,6 +58,6 @@ final class Registration<T>
 
 	boolean isFeature()
 	{
-		return Feature.class.isAssignableFrom( this.desc.type );
+		return Feature.class.isAssignableFrom( this.type );
 	}
 }

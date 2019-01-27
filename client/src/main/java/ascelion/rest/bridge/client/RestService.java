@@ -8,17 +8,24 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import ascelion.utils.chain.AroundInterceptor;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
 
 import javassist.util.proxy.ProxyFactory;
 
-final class RestClientIH
+final class RestService
 {
 
+	static private final Logger L = Logger.getLogger( "ascelion.rest.bridge.CONFIG" );
 	static private final Collection<Method> O_METHODS = asList( Object.class.getMethods() );
 	static private final Constructor<MethodHandles.Lookup> LOOKUP;
 
@@ -33,32 +40,53 @@ final class RestClientIH
 		}
 	}
 
-	private final RestClientData rcd;
+	private final RestClientInternals rci;
+	private final RestServiceInfo rsi;
 	private final Map<Method, RestMethod> methods = new HashMap<>();
 
-	RestClientIH( RestClientData rcd )
+	RestService( RestServiceInfo rsi, RestClientInternals rci )
 	{
-		this.rcd = rcd;
+		this.rci = rci;
+		this.rsi = rsi;
 
 		initMethods();
+
+		if( L.isLoggable( Level.CONFIG ) ) {
+			try( Formatter fmt = new Formatter() ) {
+
+				fmt.format( "Created %s\n", this );
+
+				this.methods.values().forEach( m -> {
+					fmt.format( "  %s\n", m );
+
+					final Collection<AroundInterceptor<RestRequestContext>> ais = m.chain.getAll();
+
+					if( ais.size() > 0 ) {
+						fmt.format( "    %s: %s\n", m.chain, ais.stream().map( AroundInterceptor::about ).collect( joining( ", " ) ) );
+					}
+				} );
+
+				L.config( fmt.toString() );
+			}
+		}
 	}
 
 	@Override
 	public String toString()
 	{
-		return String.format( "%s -> %s", this.rcd.type.getName(), this.rcd.tsup.get() );
+		return format( "%s -> %s", this.rsi.getServiceType().getName(), this.rsi.getTarget().get().getUriBuilder().toTemplate() );
 	}
 
 	<X> X newProxy()
 	{
-		if( this.rcd.type.isInterface() ) {
-			return (X) Proxy.newProxyInstance( this.rcd.type.getClassLoader(), new Class[] { this.rcd.type }, this::invoke );
+		if( this.rsi.getServiceType().isInterface() ) {
+			return (X) Proxy.newProxyInstance( this.rsi.getServiceType().getClassLoader(), new Class[] { this.rsi.getServiceType() }, this::invoke );
 		}
 		else {
 			final ProxyFactory pf = new ProxyFactory();
 
 			try {
-				pf.setSuperclass( this.rcd.type );
+				pf.setSuperclass( this.rsi.getServiceType() );
 
 				return (X) pf.create( new Class[0], new Object[0], ( self, thisMethod, proceed, args ) -> invoke( self, proceed, args ) );
 			}
@@ -66,10 +94,10 @@ final class RestClientIH
 				throw e;
 			}
 			catch( final InvocationTargetException e ) {
-				throw new RuntimeException( format( "Cannot proxy class %s", this.rcd.type.getName() ), e.getCause() );
+				throw new RuntimeException( format( "Cannot proxy class %s", this.rsi.getServiceType().getName() ), e.getCause() );
 			}
 			catch( final NoSuchMethodException | InstantiationException | IllegalAccessException e ) {
-				throw new RuntimeException( format( "Cannot proxy class %s", this.rcd.type.getName() ), e );
+				throw new RuntimeException( format( "Cannot proxy class %s", this.rsi.getServiceType().getName() ), e );
 			}
 		}
 
@@ -77,7 +105,7 @@ final class RestClientIH
 
 	private void initMethods()
 	{
-		for( final Method m : this.rcd.type.getMethods() ) {
+		for( final Method m : this.rsi.getServiceType().getMethods() ) {
 			if( O_METHODS.contains( m ) ) {
 				continue;
 			}
@@ -90,7 +118,8 @@ final class RestClientIH
 
 	private void addMethod( Method m )
 	{
-		final RestMethod x = new RestMethod( this.rcd, m );
+		final RestMethodInfo rmi = new RestMethodInfo( this.rsi, m );
+		final RestMethod x = new RestMethod( rmi, this.rci );
 
 		this.methods.put( m, x );
 	}

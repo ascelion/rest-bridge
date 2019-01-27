@@ -22,10 +22,4 @@ final class INTRequestValidation extends INTValidation
 			throw new ConstraintViolationException( cv );
 		}
 	}
-
-	@Override
-	public int priority()
-	{
-		return PRIORITY_TAIL;
-	}
 }

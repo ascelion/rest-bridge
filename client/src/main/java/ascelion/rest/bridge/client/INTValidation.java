@@ -39,4 +39,10 @@ abstract class INTValidation extends RestRequestInterceptorBase
 
 		this.xv = vf != null ? vf.getValidator().forExecutables() : null;
 	}
+
+	@Override
+	public int priority()
+	{
+		return PRIORITY_VALIDATION;
+	}
 }
