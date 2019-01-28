@@ -3,8 +3,6 @@ package ascelion.rest.bridge.client;
 
 import ascelion.utils.chain.InterceptorChain;
 
-import static java.lang.String.format;
-
 final class RestMethod
 {
 
@@ -33,7 +31,7 @@ final class RestMethod
 	@Override
 	public String toString()
 	{
-		return format( "%s: %s %s", this.rmi.getJavaMethod().getName(), this.rmi.getHttpMethod(), this.rmi.getMethodURI() );
+		return this.rmi.toString();
 	}
 
 	Object request( Object proxy, Object... arguments ) throws Exception

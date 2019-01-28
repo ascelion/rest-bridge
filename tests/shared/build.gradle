@@ -1,10 +1,12 @@
 dependencies {
+	externalApi 'javax.ws.rs:javax.ws.rs-api'
+	externalApi 'javax.annotation:javax.annotation-api'
+	externalApi 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
+	externalApi 'javax.enterprise:cdi-api'
+
 	implementation project( ':client' )
 	implementation project( ':tests:interfaces' )
 
-	implementation 'javax.ws.rs:javax.ws.rs-api'
-	implementation 'javax.annotation:javax.annotation-api'
-	implementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 	implementation 'com.fasterxml.jackson.core:jackson-annotations'
 
 	implementation 'org.apache.commons:commons-lang3'

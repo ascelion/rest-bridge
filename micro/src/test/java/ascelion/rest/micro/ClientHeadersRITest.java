@@ -2,11 +2,14 @@
 package ascelion.rest.micro;
 
 import java.lang.reflect.Method;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
+import ascelion.rest.bridge.client.RestMethodInfo;
 import ascelion.rest.bridge.client.RestRequestContext;
 
 import static org.hamcrest.Matchers.hasKey;
@@ -47,6 +50,10 @@ public class ClientHeadersRITest
 	@Mock( answer = Answers.CALLS_REAL_METHODS )
 	private ClientHeaderParamClient client;
 	@Mock
+	private RestMethodInfo mi;
+	@Mock
+	private WebTarget target;
+	@Mock
 	private RestRequestContext rc;
 	private ClientHeadersRI chri;
 
@@ -58,12 +65,15 @@ public class ClientHeadersRITest
 	@Before
 	public void setUp()
 	{
-		when( this.rc.getJavaMethod() ).thenReturn( this.method );
-		when( this.rc.getHeaders() ).thenReturn( this.headers );
-		when( this.rc.getImplementation() ).thenReturn( this.client );
-		when( this.rc.getServiceType() ).thenReturn( (Class) ClientHeaderParamClient.class );
+		when( this.mi.getJavaMethod() ).thenReturn( this.method );
+		when( this.mi.getServiceType() ).thenReturn( (Class) ClientHeaderParamClient.class );
+		when( this.mi.getTarget() ).then( a -> (Supplier<WebTarget>) () -> ClientHeadersRITest.this.target );
 
-		this.chri = new ClientHeadersRI( this.rc.getServiceType(), this.rc.getJavaMethod() );
+		when( this.rc.getMethodInfo() ).thenReturn( this.mi );
+		when( this.rc.getHeaders() ).thenReturn( this.headers );
+		when( this.rc.getService() ).thenReturn( this.client );
+
+		this.chri = new ClientHeadersRI( this.mi.getServiceType(), this.mi.getJavaMethod() );
 	}
 
 	@Test

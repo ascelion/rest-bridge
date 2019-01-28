@@ -7,11 +7,14 @@ import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
 import ascelion.utils.chain.InterceptorChain.Invocation;
+import ascelion.utils.etc.Log;
 
 import lombok.Getter;
 
 public final class InterceptorChainContext<X>
 {
+
+	static private final Log L = Log.get( "ascelion.utils.chain" );
 
 	@Getter
 	private final X data;
@@ -31,9 +34,16 @@ public final class InterceptorChainContext<X>
 		AroundInterceptor<X> next;
 
 		while( ( next = this.interceptors.next() ).disabled() ) {
-			;
+			L.trace( "%s is disabled", next.about() );
 		}
 
-		return next.around( this );
+		L.trace( "> %s", next.about() );
+
+		try {
+			return next.around( this );
+		}
+		finally {
+			L.trace( "< %s", next.about() );
+		}
 	}
 }

@@ -12,7 +12,9 @@ import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.security.PrivilegedActionException;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -38,9 +40,13 @@ import static ascelion.utils.etc.Secured.runPrivileged;
 import static ascelion.utils.etc.Secured.runPrivilegedWithException;
 import static io.leangen.geantyref.GenericTypeReflector.getExactReturnType;
 import static java.lang.Thread.currentThread;
+import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.ClassUtils.hierarchy;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.apache.commons.lang3.reflect.MethodUtils.getOverrideHierarchy;
 
 import lombok.AccessLevel;
@@ -234,34 +240,75 @@ public final class RBUtils
 		return v.isEmpty() || v.equals( "/" ) ? target : target.path( p.value() );
 	}
 
-	static <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Class<?> cls )
+	static public <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Class<?> base )
 	{
-		if( cls == null || cls == Object.class ) {
+		if( base == null || base == Object.class ) {
 			return Optional.empty();
 		}
 
-		final A a = cls.getAnnotation( type );
+		final A a = base.getAnnotation( type );
 
 		if( a != null ) {
 			return Optional.of( a );
 		}
 
-		return findAnnotation( type, cls.getSuperclass() );
+		return findAnnotation( type, base.getSuperclass() );
 	}
 
-	static <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Member memb, Class<?> cls )
+	static public <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Member memb, Class<?> base )
 	{
 		if( type == null || (Class) type == Object.class ) {
 			return Optional.empty();
 		}
 
-		final A a = ( (AnnotatedElement) memb ).getAnnotation( type );
+		if( memb instanceof AnnotatedElement ) {
+			final Optional<A> o = ofNullable( ( (AnnotatedElement) memb ).getAnnotation( type ) );
 
-		if( a != null ) {
-			return Optional.of( a );
+			if( o.isPresent() ) {
+				return o;
+			}
 		}
 
-		return Optional.ofNullable( cls.getAnnotation( type ) );
+		return findAnnotation( type, base );
+	}
+
+	static public <A extends Annotation> Set<A> findAnnotations( Class<A> type, Method method, Class<?> base )
+	{
+		final Map<AnnotatedElement, Collection<A>> result = new LinkedHashMap<>();
+
+		findAnnotations( type, method, base, result );
+
+		return result.values().stream().flatMap( Collection::stream ).collect( toCollection( LinkedHashSet::new ) );
+	}
+
+	static private <A extends Annotation> void findAnnotations( Class<A> type, Method method, Class<?> base, Map<AnnotatedElement, Collection<A>> result )
+	{
+		getOverrideHierarchy( method, Interfaces.INCLUDE ).stream()
+			.forEach( m -> {
+				result.put( m, asList( m.getAnnotationsByType( type ) ) );
+
+				stream( m.getAnnotations() )
+					.map( Annotation::annotationType )
+					.filter( t -> t != type )
+					.forEach( t -> findAnnotations( type, t, result ) );
+			} );
+
+		findAnnotations( type, base, result );
+	}
+
+	static private <A extends Annotation> void findAnnotations( Class<A> type, Class<?> base, Map<AnnotatedElement, Collection<A>> result )
+	{
+		hierarchy( base, Interfaces.INCLUDE )
+			.forEach( c -> {
+				if( c != Object.class && !result.containsKey( c ) ) {
+					result.put( c, asList( c.getAnnotationsByType( type ) ) );
+
+					stream( c.getAnnotations() )
+						.map( Annotation::annotationType )
+						.filter( t -> t != type )
+						.forEach( t -> findAnnotations( type, t, result ) );
+				}
+			} );
 	}
 
 	static Set<String> pathParameters( String path )
@@ -330,7 +377,18 @@ public final class RBUtils
 			return "";
 		}
 
-		final StringBuilder sb = new StringBuilder( annotation.value() );
+		return cleanRequestURI( annotation.value() );
+	}
+
+	static public String cleanRequestURI( String val )
+	{
+		val = trimToEmpty( val );
+
+		if( val.isEmpty() ) {
+			return val;
+		}
+
+		final StringBuilder sb = new StringBuilder( val );
 
 		while( sb.length() > 0 && sb.charAt( 0 ) == '/' ) {
 			sb.delete( 0, 1 );
@@ -349,9 +407,9 @@ public final class RBUtils
 
 	private static String getHttpMethodName( AnnotatedElement element )
 	{
-		final HttpMethod a = element.getAnnotation( HttpMethod.class );
-
-		return a != null ? a.value() : null;
+		return ofNullable( element.getAnnotation( HttpMethod.class ) )
+			.map( HttpMethod::value )
+			.orElse( null );
 	}
 
 	static public RuntimeException wrapException( Throwable e )

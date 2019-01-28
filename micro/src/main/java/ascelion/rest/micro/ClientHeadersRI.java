@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import ascelion.rest.bridge.client.RBUtils;
+import ascelion.rest.bridge.client.RestMethodInfo;
 import ascelion.rest.bridge.client.RestRequestContext;
 import ascelion.rest.bridge.client.RestRequestInterceptorBase;
 
@@ -105,14 +106,15 @@ final class ClientHeadersRI extends RestRequestInterceptorBase
 
 	private String[] evalMethod( RestRequestContext rc, String headerName, String methodName, boolean required ) throws IllegalAccessException, InvocationTargetException
 	{
-		final Method eval = ClientHeadersValidator.lookupMethod( rc.getServiceType(), methodName );
+		final RestMethodInfo mi = rc.getMethodInfo();
+		final Method eval = ClientHeadersValidator.lookupMethod( mi.getServiceType(), methodName );
 		Object result = null;
 
 		if( Modifier.isStatic( eval.getModifiers() ) ) {
 			result = eval.getParameterCount() == 0 ? eval.invoke( null ) : eval.invoke( null, headerName );
 		}
 		else {
-			result = eval.getParameterCount() == 0 ? eval.invoke( rc.getImplementation() ) : eval.invoke( rc.getImplementation(), headerName );
+			result = eval.getParameterCount() == 0 ? eval.invoke( rc.getService() ) : eval.invoke( rc.getService(), headerName );
 		}
 
 		if( result == null ) {

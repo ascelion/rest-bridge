@@ -83,7 +83,7 @@ public final class ClientHeadersValidator implements RestClientListener
 		if( dups.length() > 0 ) {
 			final String tx = format( "Multiple headers specified on %s: %s", element, dups );
 
-			RestBridgeConfiguration.LOG.severe( tx );
+			RestBridgeConfiguration.LOG.error( tx );
 
 			throw new RestClientDefinitionException( tx );
 		}
@@ -97,7 +97,7 @@ public final class ClientHeadersValidator implements RestClientListener
 		if( invalid.length() > 0 ) {
 			final String tx = format( "Invalid methods specified on %s: %s", element, invalid );
 
-			RestBridgeConfiguration.LOG.severe( tx );
+			RestBridgeConfiguration.LOG.error( tx );
 
 			throw new RestClientDefinitionException( tx );
 		}
@@ -144,7 +144,7 @@ public final class ClientHeadersValidator implements RestClientListener
 		if( dups.length() > 0 ) {
 			final String tx = format( "Multiple headers specified on %s: %s", m, dups );
 
-			RestBridgeConfiguration.LOG.severe( tx );
+			RestBridgeConfiguration.LOG.error( tx );
 
 			throw new RestClientDefinitionException( tx );
 		}

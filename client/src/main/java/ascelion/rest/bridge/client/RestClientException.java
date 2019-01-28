@@ -8,4 +8,9 @@ public class RestClientException extends RuntimeException
 	{
 		super( message );
 	}
+
+	RestClientException( String message, Throwable cause )
+	{
+		super( message, cause );
+	}
 }

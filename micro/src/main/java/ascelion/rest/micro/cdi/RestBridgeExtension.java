@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
@@ -18,6 +17,8 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.WithAnnotations;
 
+import ascelion.utils.etc.Log;
+
 import static java.lang.String.format;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
@@ -25,16 +26,18 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 public class RestBridgeExtension implements Extension
 {
 
-	static final Logger L = Logger.getLogger( "ascelion.rest.micro.CDI" );
+	static private final Log L = Log.get( "ascelion.rest.micro.CDI" );
 
 	private final Set<Class<?>> clients = new HashSet<>();
 	private final Collection<Throwable> errors = new ArrayList<>();
 
-	public void findClients( @Observes @WithAnnotations( RegisterRestClient.class ) ProcessAnnotatedType<?> pat )
+	void findClients( @Observes @WithAnnotations( RegisterRestClient.class ) ProcessAnnotatedType<?> pat )
 	{
 		final Class<?> type = pat.getAnnotatedType().getJavaClass();
 
 		if( type.isInterface() ) {
+			L.debug( "Found client %s", type.getName() );
+
 			this.clients.add( type );
 
 			pat.veto();

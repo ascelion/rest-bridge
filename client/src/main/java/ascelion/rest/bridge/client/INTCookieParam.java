@@ -4,7 +4,7 @@ package ascelion.rest.bridge.client;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.core.Cookie;
 
-class INTCookieParam extends INTParamBase<CookieParam>
+final class INTCookieParam extends INTParamBase<CookieParam>
 {
 
 	INTCookieParam( CookieParam annotation, RestParam param )

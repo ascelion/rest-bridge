@@ -16,7 +16,8 @@ final class INTResponseValidation extends INTValidation
 			return;
 		}
 
-		final Set<ConstraintViolation<Object>> cv = this.xv.validateReturnValue( rc.getImplementation(), rc.getJavaMethod(), result );
+		final RestMethodInfo mi = rc.getMethodInfo();
+		final Set<ConstraintViolation<Object>> cv = this.xv.validateReturnValue( rc.getService(), mi.getJavaMethod(), result );
 
 		if( cv.size() > 0 ) {
 			throw new ConstraintViolationException( cv );
