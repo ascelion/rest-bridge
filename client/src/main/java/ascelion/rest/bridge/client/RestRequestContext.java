@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
@@ -21,19 +22,18 @@ import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-public /*final*/ class RestRequestContext extends RestMethodInfo
+public /*final*/ class RestRequestContext
 {
 
 	@Getter
 	@Setter
 	private WebTarget reqTarget;
 
-	@Getter( value = AccessLevel.NONE )
-	final Object proxy;
+	@Getter
+	private final Object service;
 	private final List<Object> arguments;
 	@Getter
 	private final MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
@@ -42,19 +42,21 @@ public /*final*/ class RestRequestContext extends RestMethodInfo
 	final Collection<MediaType> produces = new ArrayList<>();
 	private final Collection<MediaType> consumes = new ArrayList<>();
 	Object entity;
+	@Getter
+	private final RestMethodInfo methodInfo;
 
-	RestRequestContext( RestMethodInfo rmi, Object proxy, Object[] arguments )
+	RestRequestContext( RestMethodInfo rmi, Object service, Object[] arguments )
 	{
-		super( rmi );
-
-		this.reqTarget = getTarget().get().path( rmi.getMethodURI() );
-		this.proxy = proxy;
+		this.methodInfo = rmi;
+		this.reqTarget = this.methodInfo.getTarget().get().path( rmi.getMethodURI() );
+		this.service = service;
 		this.arguments = arguments != null ? asList( arguments ) : emptyList();
 	}
 
-	public Object getImplementation()
+	@Override
+	public String toString()
 	{
-		return this.proxy;
+		return this.methodInfo.toString();
 	}
 
 	public Object getArgumentAt( int index )
@@ -74,7 +76,7 @@ public /*final*/ class RestRequestContext extends RestMethodInfo
 
 	public <T> ParamConverter<T> getConverter( Class<T> type, Annotation[] annotations )
 	{
-		return getConvertersFactory().getConverter( type, annotations );
+		return this.methodInfo.getConvertersFactory().getConverter( type, annotations );
 	}
 
 	public MediaType getContentType()
@@ -156,7 +158,8 @@ public /*final*/ class RestRequestContext extends RestMethodInfo
 
 	private MediaType defaultContentType()
 	{
-		final Object mt = ofNullable( getConfiguration().getProperty( RestClientProperties.DEFAULT_CONTENT_TYPE ) )
+		final Configuration cf = this.methodInfo.getConfiguration();
+		final Object mt = ofNullable( cf.getProperty( RestClientProperties.DEFAULT_CONTENT_TYPE ) )
 			.map( o -> ( o instanceof MediaType ) ? o : trimToNull( Objects.toString( o, null ) ) )
 			.orElse( this.entity instanceof Form ? MediaType.APPLICATION_FORM_URLENCODED_TYPE : MediaType.APPLICATION_OCTET_STREAM_TYPE );
 

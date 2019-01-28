@@ -73,7 +73,7 @@ final class DefaultRRIFactory implements RestRequestInterceptor.Factory
 
 				if( createInterceptors( annotations, p ) ) {
 					if( this.entityParam != null ) {
-						throw new RestClientMethodException( "An entity is already present at parameter " + this.entityParam.index, this.method );
+						throw new RestClientMethodException( format( "%s.%s: an entity is already present at parameter %d", this.type.getSimpleName(), this.method.getName(), this.entityParam.index ), this.method );
 					}
 
 					this.entityParam = p;

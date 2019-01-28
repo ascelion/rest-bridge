@@ -24,6 +24,7 @@ import ascelion.rest.bridge.client.RestClient;
 import ascelion.rest.bridge.client.RestClientMethodException;
 import ascelion.rest.micro.cdi.CDIRRIFactory;
 
+import static ascelion.rest.bridge.client.RestClient.newRestClient;
 import static ascelion.rest.micro.RestBridgeConfiguration.LOG;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
@@ -203,7 +204,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 		RestClient rc;
 
 		try {
-			rc = new RestClient( client, this.baseUrl.toURI() );
+			rc = newRestClient( client, this.baseUrl.toURI() );
 		}
 		catch( final URISyntaxException e ) {
 			throw new RestClientDefinitionException( e );
@@ -215,7 +216,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 
 		rc.addRRIFactory( new RRIFactory() );
 		if( RBUtils.isCDI() ) {
-			rc.addRRIFactory( new CDIRRIFactory() );
+			rc.addRRIFactory( RBUtils.newInstance( CDIRRIFactory.class ) );
 		}
 
 		rc.setResponseHandler( new MPResponseHandler( this.configuration ) );

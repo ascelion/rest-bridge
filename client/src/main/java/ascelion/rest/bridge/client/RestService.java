@@ -11,10 +11,9 @@ import java.util.Collection;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import ascelion.utils.chain.AroundInterceptor;
+import ascelion.utils.etc.Log;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -25,7 +24,7 @@ import javassist.util.proxy.ProxyFactory;
 final class RestService
 {
 
-	static private final Logger L = Logger.getLogger( "ascelion.rest.bridge.CONFIG" );
+	static final private Log L = Log.get( "ascelion.rest.bridge.CONFIG" );
 	static private final Collection<Method> O_METHODS = asList( Object.class.getMethods() );
 	static private final Constructor<MethodHandles.Lookup> LOOKUP;
 
@@ -49,9 +48,10 @@ final class RestService
 		this.rci = rci;
 		this.rsi = rsi;
 
+		newProxy(); // validate service type
 		initMethods();
 
-		if( L.isLoggable( Level.CONFIG ) ) {
+		L.debug( () -> {
 			try( Formatter fmt = new Formatter() ) {
 
 				fmt.format( "Created %s\n", this );
@@ -66,9 +66,9 @@ final class RestService
 					}
 				} );
 
-				L.config( fmt.toString() );
+				return fmt.toString();
 			}
-		}
+		} );
 	}
 
 	@Override
@@ -90,14 +90,11 @@ final class RestService
 
 				return (X) pf.create( new Class[0], new Object[0], ( self, thisMethod, proceed, args ) -> invoke( self, proceed, args ) );
 			}
-			catch( final RuntimeException e ) {
-				throw e;
-			}
 			catch( final InvocationTargetException e ) {
-				throw new RuntimeException( format( "Cannot proxy class %s", this.rsi.getServiceType().getName() ), e.getCause() );
+				throw new RestClientException( format( "Cannot proxy class %s: %s", this.rsi.getServiceType().getName(), e.getCause().getMessage() ), e.getCause() );
 			}
-			catch( final NoSuchMethodException | InstantiationException | IllegalAccessException e ) {
-				throw new RuntimeException( format( "Cannot proxy class %s", this.rsi.getServiceType().getName() ), e );
+			catch( final Exception e ) {
+				throw new RestClientException( format( "Cannot proxy class %s: %s", this.rsi.getServiceType().getName(), e.getMessage() ), e );
 			}
 		}
 

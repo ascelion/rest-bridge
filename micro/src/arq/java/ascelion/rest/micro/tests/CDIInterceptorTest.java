@@ -3,12 +3,13 @@ package ascelion.rest.micro.tests;
 
 import javax.inject.Inject;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.testng.Assert.assertEquals;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.eclipse.microprofile.rest.client.tck.interfaces.ClientWithURIAndInterceptor;
 import org.eclipse.microprofile.rest.client.tck.interfaces.Loggable;
 import org.eclipse.microprofile.rest.client.tck.interfaces.LoggableInterceptor;
 import org.eclipse.microprofile.rest.client.tck.providers.ReturnWithURLRequestFilter;
@@ -20,6 +21,7 @@ import org.jboss.shrinkwrap.api.asset.ClassLoaderAsset;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class CDIInterceptorTest extends Arquillian
@@ -34,7 +36,9 @@ public class CDIInterceptorTest extends Arquillian
 			.addClasses(
 				LogableITF.class, LogableIMPL1.class, LogableIMPL2.class,
 				Loggable.class, LoggableInterceptor.class,
-				ClientWithURIAndInterceptor.class, ReturnWithURLRequestFilter.class )
+				Secured.class, SecuredInterceptor.class,
+				BothInterceptors.class,
+				ClientWithTwoInterceptors.class, ReturnWithURLRequestFilter.class )
 			.addAsManifestResource( beansXML, "beans.xml" );
 		return ShrinkWrap.create( WebArchive.class, simpleName + ".war" )
 			.addAsLibrary( jar )
@@ -47,13 +51,18 @@ public class CDIInterceptorTest extends Arquillian
 	private LogableIMPL2 impl2;
 	@Inject
 	@RestClient
-	private ClientWithURIAndInterceptor client;
+	private ClientWithTwoInterceptors client;
+
+	@BeforeMethod
+	public void setUp()
+	{
+		LoggableInterceptor.setInvocationMessage( "" );
+		SecuredInterceptor.invoked.clear();
+	}
 
 	@Test
 	public void testIMPL1()
 	{
-		LoggableInterceptor.setInvocationMessage( "" );
-
 		assertThat( this.impl1.call(), equalTo( "HELO" ) );
 
 		assertEquals( LoggableInterceptor.getInvocationMessage(), "" );
@@ -62,8 +71,6 @@ public class CDIInterceptorTest extends Arquillian
 	@Test
 	public void testIMPL2()
 	{
-		LoggableInterceptor.setInvocationMessage( "" );
-
 		assertThat( this.impl2.call(), equalTo( "HELO" ) );
 
 		assertEquals( LoggableInterceptor.getInvocationMessage(),
@@ -71,21 +78,70 @@ public class CDIInterceptorTest extends Arquillian
 	}
 
 	@Test
-	public void testInterceptorInvoked() throws Exception
+	public void testGetLoggable() throws Exception
 	{
-		LoggableInterceptor.setInvocationMessage( "" );
-		final String expectedResponse = "GET http://localhost:5017/myBaseUri/hello";
-		assertEquals( this.client.get(), expectedResponse );
+		final String expectedResponse = "GET " + ClientWithTwoInterceptors.URI;
+		assertEquals( this.client.getLoggable(), expectedResponse );
 
 		assertEquals( LoggableInterceptor.getInvocationMessage(),
-			ClientWithURIAndInterceptor.class.getName() + ".get " + expectedResponse );
+			ClientWithTwoInterceptors.class.getName() + ".getLoggable " + expectedResponse );
+	}
+
+	@Test
+	public void testGetSecured() throws Exception
+	{
+		final String expectedResponse = "GET " + ClientWithTwoInterceptors.URI;
+		assertEquals( this.client.getSecured(), expectedResponse );
+
+		assertThat( SecuredInterceptor.invoked, hasSize( 1 ) );
+		assertThat( SecuredInterceptor.invoked, contains( "" ) );
+
+		assertEquals( LoggableInterceptor.getInvocationMessage(), "" );
+	}
+
+	@Test
+	public void testGetTwoWithValue() throws Exception
+	{
+		final String expectedResponse = "GET " + ClientWithTwoInterceptors.URI;
+		assertEquals( this.client.getTwoWithValue(), expectedResponse );
+
+		assertThat( SecuredInterceptor.invoked, hasSize( 1 ) );
+		assertThat( SecuredInterceptor.invoked, contains( "with-value" ) );
+
+		assertEquals( LoggableInterceptor.getInvocationMessage(),
+			ClientWithTwoInterceptors.class.getName() + ".getTwoWithValue " + expectedResponse );
+	}
+
+	@Test
+	public void testGetWithBoth() throws Exception
+	{
+		final String expectedResponse = "GET " + ClientWithTwoInterceptors.URI;
+		assertEquals( this.client.getWithBoth(), expectedResponse );
+
+		assertThat( SecuredInterceptor.invoked, hasSize( 1 ) );
+		assertThat( SecuredInterceptor.invoked, contains( "two" ) );
+
+		assertEquals( LoggableInterceptor.getInvocationMessage(),
+			ClientWithTwoInterceptors.class.getName() + ".getWithBoth " + expectedResponse );
+	}
+
+	@Test
+	public void testGetWithAll() throws Exception
+	{
+		final String expectedResponse = "GET " + ClientWithTwoInterceptors.URI;
+		assertEquals( this.client.getWithAll(), expectedResponse );
+
+		assertThat( SecuredInterceptor.invoked, hasSize( 2 ) );
+		assertThat( SecuredInterceptor.invoked, contains( "all", "two" ) );
+
+		assertEquals( LoggableInterceptor.getInvocationMessage(),
+			ClientWithTwoInterceptors.class.getName() + ".getWithAll " + expectedResponse );
 	}
 
 	@Test
 	public void testInterceptorNotInvokedWhenNoAnnotationApplied() throws Exception
 	{
-		LoggableInterceptor.setInvocationMessage( "" );
-		final String expectedResponse = "GET http://localhost:5017/myBaseUri/hello";
+		final String expectedResponse = "GET " + ClientWithTwoInterceptors.URI;
 		assertEquals( this.client.getNoInterceptor(), expectedResponse );
 
 		assertEquals( LoggableInterceptor.getInvocationMessage(), "" );

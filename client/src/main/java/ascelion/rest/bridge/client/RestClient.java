@@ -18,6 +18,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import ascelion.rest.bridge.client.RestRequestInterceptor.Factory;
 
+import static ascelion.rest.bridge.client.RBUtils.cleanRequestURI;
 import static ascelion.rest.bridge.client.RestClientProperties.ASYNC_INTERCEPTOR;
 import static ascelion.rest.bridge.client.RestClientProperties.NO_ASYNC_INTERCEPTOR;
 import static ascelion.rest.bridge.client.RestClientProperties.NO_RESPONSE_HANDLER;
@@ -29,6 +30,22 @@ import lombok.Setter;
 
 public final class RestClient implements RestClientInfo, RestClientInternals
 {
+
+	static public RestClient newRestClient( Client client, URI target )
+	{
+		return new ascelion.rest.bridge.client.RestClient( client, target );
+	}
+
+	static public RestClient newRestClient( Client client, URI target, String base )
+	{
+		base = cleanRequestURI( base );
+
+		if( base.length() > 0 ) {
+			target = UriBuilder.fromUri( target ).path( base ).build();
+		}
+
+		return RestClient.newRestClient( client, target );
+	}
 
 	static private final ThreadLocal<Method> METHOD = new ThreadLocal<>();
 
@@ -64,22 +81,10 @@ public final class RestClient implements RestClientInfo, RestClientInternals
 	private Executor executor = Executors.newCachedThreadPool();
 	private final ConvertersFactory convertersFactory;
 
-	public RestClient( Client client, URI target )
-	{
-		this( client, target, (String) null );
-	}
-
-	public RestClient( Client client, URI target, String base )
+	private RestClient( Client client, URI target )
 	{
 		this.client = client;
-
-		if( base == null || base.isEmpty() ) {
-			this.baseURI = target;
-		}
-		else {
-			this.baseURI = UriBuilder.fromUri( target ).path( base ).build();
-		}
-
+		this.baseURI = target;
 		this.convertersFactory = new ConvertersFactoryImpl( client );
 
 		final Object aint = client.getConfiguration().getProperty( ASYNC_INTERCEPTOR );

@@ -13,7 +13,7 @@ final class INTSetMethod extends RestRequestInterceptorBase
 	@Override
 	protected void before( RestRequestContext rc )
 	{
-		RestClient.invokedMethod( rc.getJavaMethod() );
+		RestClient.invokedMethod( rc.getMethodInfo().getJavaMethod() );
 	}
 
 	@Override

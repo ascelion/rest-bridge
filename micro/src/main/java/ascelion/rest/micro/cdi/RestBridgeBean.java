@@ -23,7 +23,6 @@ import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.micro.MP;
 
 import static java.lang.String.format;
-import static java.util.Arrays.stream;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
@@ -48,20 +47,12 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 	private final BeanManager bm;
 	private final Class<T> type;
 	private final Class<? extends Annotation> scope;
-//	private final Map<Method, Interceptor<?>> invokers = new ConcurrentHashMap<>();
 
 	RestBridgeBean( BeanManager bm, Class<T> type )
 	{
 		this.bm = bm;
 		this.type = type;
 		this.scope = lookupScope();
-
-//		final Annotation[] clb = getInterceptorBindings( type.getAnnotations() );
-
-//		stream( type.getMethods() )
-//			.map( m -> new ImmutablePair<>( m, ArrayUtils.addAll( clb, getInterceptorBindings( m.getAnnotations() ) ) ) )
-//			.filter( p -> p.right.length > 0 )
-//			.forEach( p -> this.invokers.put( p.left, null ) );
 	}
 
 	@Override
@@ -176,12 +167,5 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 		}
 
 		return scopes.isEmpty() ? Dependent.class : scopes.iterator().next();
-	}
-
-	private Annotation[] getInterceptorBindings( Annotation[] annotations )
-	{
-		return stream( annotations )
-			.filter( a -> this.bm.isInterceptorBinding( a.annotationType() ) )
-			.toArray( Annotation[]::new );
 	}
 }

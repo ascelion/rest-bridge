@@ -12,10 +12,11 @@ final class INTAsync implements RestRequestInterceptor
 	public Object around( InterceptorChainContext<RestRequestContext> context ) throws Exception
 	{
 		final RestRequestContext rc = context.getData();
-		final Object ais = rc.getAsyncInterceptor().prepare();
+		final RestMethodInfo mi = rc.getMethodInfo();
+		final Object ais = mi.getAsyncInterceptor().prepare();
 		final CompletableFuture<Object> fut = new CompletableFuture<>();
 
-		rc.getExecutor().execute( () -> invokeAsync( context, rc, ais, fut ) );
+		mi.getExecutor().execute( () -> invokeAsync( context, rc, ais, fut ) );
 
 		return fut;
 	}
@@ -28,7 +29,7 @@ final class INTAsync implements RestRequestInterceptor
 
 	private void invokeAsync( InterceptorChainContext<RestRequestContext> cx, RestRequestContext rc, Object ais, CompletableFuture<Object> fut )
 	{
-		final AsyncInterceptor<Object> asyi = (AsyncInterceptor<Object>) rc.getAsyncInterceptor();
+		final AsyncInterceptor<Object> asyi = (AsyncInterceptor<Object>) rc.getMethodInfo().getAsyncInterceptor();
 
 		asyi.before( ais );
 

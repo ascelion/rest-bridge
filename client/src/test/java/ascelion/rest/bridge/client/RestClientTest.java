@@ -27,6 +27,7 @@ import ascelion.rest.bridge.tests.api.API;
 import ascelion.rest.bridge.tests.api.SLF4JHandler;
 import ascelion.utils.jaxrs.RestClientTrace;
 
+import static ascelion.rest.bridge.client.RestClient.newRestClient;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
@@ -130,7 +131,7 @@ public class RestClientTest
 	@Test
 	public void create()
 	{
-		final RestClient rc = new RestClient( this.client, this.target );
+		final RestClient rc = newRestClient( this.client, this.target );
 		final Interface ct = rc.getInterface( Interface.class );
 
 		assertThat( ct, notNullValue() );
@@ -168,7 +169,7 @@ public class RestClientTest
 	@Ignore
 	public void dateFormat() throws Exception
 	{
-		final RestClient rc = new RestClient( this.client, this.target );
+		final RestClient rc = newRestClient( this.client, this.target );
 		final Interface ct = rc.getInterface( Interface.class );
 
 		assertThat( ct, notNullValue() );
@@ -187,7 +188,7 @@ public class RestClientTest
 	@Ignore
 	public void dateFormatDefault() throws Exception
 	{
-		final RestClient rc = new RestClient( this.client, this.target );
+		final RestClient rc = newRestClient( this.client, this.target );
 		final Interface ct = rc.getInterface( Interface.class );
 
 		assertThat( ct, notNullValue() );
@@ -208,7 +209,7 @@ public class RestClientTest
 	{
 		this.client.register( LocalDateBodyReader.class );
 
-		final RestClient rc = new RestClient( this.client, this.target );
+		final RestClient rc = newRestClient( this.client, this.target );
 		final Interface ct = rc.getInterface( Interface.class );
 
 		assertThat( ct, notNullValue() );
@@ -229,7 +230,7 @@ public class RestClientTest
 	{
 		this.client.register( LocalDateBodyReader.class );
 
-		final RestClient rc = new RestClient( this.client, this.target );
+		final RestClient rc = newRestClient( this.client, this.target );
 		final Interface ct = rc.getInterface( Interface.class );
 
 		assertThat( ct, notNullValue() );
@@ -249,7 +250,7 @@ public class RestClientTest
 	{
 		final URI t1 = this.target.resolve( "t1" );
 		final URI t2 = this.target.resolve( "t2" );
-		final RestClient rc = new RestClient( this.client, t1 );
+		final RestClient rc = newRestClient( this.client, t1 );
 
 		this.rule.stubFor( any( urlPathEqualTo( "/t1/interface" ) )
 			.willReturn(
@@ -280,7 +281,7 @@ public class RestClientTest
 
 		this.client.register( flt, Integer.MIN_VALUE );
 
-		final RestClient rc = new RestClient( this.client, this.target );
+		final RestClient rc = newRestClient( this.client, this.target );
 		final Interface api = rc.getInterface( Interface.class );
 
 		try {
@@ -305,7 +306,7 @@ public class RestClientTest
 
 		this.client.register( flt, Integer.MIN_VALUE );
 
-		final RestClient rc = new RestClient( this.client, this.target );
+		final RestClient rc = newRestClient( this.client, this.target );
 		final Interface api = rc.getInterface( Interface.class );
 
 		try {
@@ -330,7 +331,7 @@ public class RestClientTest
 
 		this.client.register( flt, Integer.MIN_VALUE );
 
-		final RestClient rc = new RestClient( this.client, this.target );
+		final RestClient rc = newRestClient( this.client, this.target );
 		final Interface api = rc.getInterface( Interface.class );
 
 		try {
@@ -350,7 +351,7 @@ public class RestClientTest
 			.connectTimeout( 2, TimeUnit.SECONDS )
 			.build();
 
-		final RestClient rc = new RestClient( clt, URI.create( "http://ascelion.com:1234" ) );
+		final RestClient rc = newRestClient( clt, URI.create( "http://ascelion.com:1234" ) );
 		final Interface api = rc.getInterface( Interface.class );
 
 		api.get();
@@ -359,7 +360,7 @@ public class RestClientTest
 	@Test
 	public void redirect()
 	{
-		final RestClient rc = new RestClient( this.client, this.target );
+		final RestClient rc = newRestClient( this.client, this.target );
 		final Interface ct = rc.getInterface( Interface.class );
 
 		final String dest = UriBuilder.fromUri( this.target )

@@ -7,6 +7,10 @@ import java.util.concurrent.CompletionStage;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.GenericType;
 
+import static ascelion.rest.bridge.client.RBUtils.genericType;
+import static ascelion.rest.bridge.client.RBUtils.getRequestURI;
+import static java.lang.String.format;
+
 import lombok.Getter;
 
 @Getter
@@ -36,8 +40,21 @@ public class RestMethodInfo extends RestServiceInfo
 
 		this.javaMethod = method;
 		this.httpMethod = RBUtils.getHttpMethod( this.javaMethod );
-		this.returnType = RBUtils.genericType( getServiceType(), this.javaMethod );
+		this.returnType = genericType( getServiceType(), this.javaMethod );
 		this.async = CompletionStage.class.equals( this.javaMethod.getReturnType() );
-		this.methodURI = getServiceURI() + RBUtils.getRequestURI( this.javaMethod.getAnnotation( Path.class ) );
+		this.methodURI = getServiceURI() + getRequestURI( this.javaMethod.getAnnotation( Path.class ) );
+	}
+
+	@Override
+	public String toString()
+	{
+		final String t = getTarget().get().path( this.methodURI ).getUriBuilder().toTemplate();
+
+		if( this.httpMethod != null ) {
+			return format( "%s: %s %s", this.javaMethod.getName(), this.httpMethod, t );
+		}
+		else {
+			return format( "%s(subresource): %s", this.javaMethod.getName(), t );
+		}
 	}
 }

@@ -7,7 +7,6 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import javax.ws.rs.RuntimeType;
@@ -24,8 +23,8 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
 import ascelion.rest.bridge.client.RBUtils;
+import ascelion.utils.etc.Log;
 
-import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.unmodifiableMap;
@@ -43,7 +42,7 @@ import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 final class RestBridgeConfiguration implements Configurable<RestBridgeConfiguration>, Configuration
 {
 
-	static final Logger LOG = Logger.getLogger( "ascelion.rest.bridge.micro.CONFIG" );
+	static final Log LOG = Log.get( "ascelion.rest.bridge.micro.CONFIG" );
 
 	private static Set<Class<?>> SUPPORTED;
 
@@ -93,7 +92,7 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 	public RestBridgeConfiguration register( Class<?> type )
 	{
 		if( this.registrations.containsKey( type ) ) {
-			LOG.warning( format( "Component of type %s has been already registered", type.getName() ) );
+			LOG.warn( "Component of type %s has been already registered", type.getName() );
 
 			return this;
 		}
@@ -144,7 +143,7 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 		final Class<?> type = component.getClass();
 
 		if( this.registrations.containsKey( type ) ) {
-			LOG.warning( format( "Component of type %s has been already registered", type.getName() ) );
+			LOG.warn( "Component of type %s has been already registered", type.getName() );
 
 			return this;
 		}
@@ -296,21 +295,21 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 
 			if( SUPPORTED.contains( c ) ) {
 				if( c.isAssignableFrom( type ) ) {
-					LOG.fine( format( "Setting priority %d for contract %s of %s", e.getValue(), c.getName(), type.getName() ) );
+					LOG.debug( "Setting priority %d for contract %s of %s", e.getValue(), c.getName(), type.getName() );
 
 					map.put( c, e.getValue() );
 				}
 				else {
-					LOG.warning( format( "Component %s is not assignable from %s", type.getName(), type.getName() ) );
+					LOG.warn( "Component %s is not assignable from %s", type.getName(), type.getName() );
 				}
 			}
 			else {
-				LOG.warning( format( "Unsupported contract: %s", c.getName() ) );
+				LOG.warn( "Unsupported contract: %s", c.getName() );
 			}
 		}
 
 		if( map.isEmpty() ) {
-			LOG.warning( format( "Skipping registration of %s", type.getName() ) );
+			LOG.warn( "Skipping registration of %s", type.getName() );
 
 			return reg;
 		}

@@ -47,8 +47,9 @@ final class INVResource implements RestRequestInterceptor
 
 		ib.accept( rc.produces.toArray( new MediaType[0] ) );
 
-		final Response rsp = getResponse( ib, rc );
-		final Throwable ex = rc.getResponseHandler().apply( rsp );
+		final RestMethodInfo mi = rc.getMethodInfo();
+		final Response rsp = getResponse( ib, rc, mi );
+		final Throwable ex = mi.getResponseHandler().apply( rsp );
 
 		if( ex != null ) {
 			if( ex instanceof Error ) {
@@ -58,7 +59,7 @@ final class INVResource implements RestRequestInterceptor
 			throw(Exception) ex;
 		}
 
-		final Class<?> rawType = rc.getReturnType().getRawType();
+		final Class<?> rawType = mi.getReturnType().getRawType();
 
 		if( rawType == Response.class ) {
 			return rsp;
@@ -72,7 +73,7 @@ final class INVResource implements RestRequestInterceptor
 				return null;
 			}
 
-			return rsp.readEntity( rc.getReturnType() );
+			return rsp.readEntity( mi.getReturnType() );
 		}
 		finally {
 			if( rsp != null ) {
@@ -81,7 +82,7 @@ final class INVResource implements RestRequestInterceptor
 		}
 	}
 
-	static private Response getResponse( Invocation.Builder ib, RestRequestContext rc )
+	static private Response getResponse( Invocation.Builder ib, RestRequestContext rc, RestMethodInfo mi )
 	{
 		try {
 			final MediaType ct = rc.getContentType();
@@ -89,7 +90,7 @@ final class INVResource implements RestRequestInterceptor
 			if( rc.entity != null ) {
 				final Entity<?> e = Entity.entity( rc.entity, ct );
 
-				return ib.method( rc.getHttpMethod(), e );
+				return ib.method( mi.getHttpMethod(), e );
 			}
 			else {
 //				if( ct != null ) {
@@ -97,7 +98,7 @@ final class INVResource implements RestRequestInterceptor
 //					b.header( HttpHeaders.CONTENT_TYPE, ct );
 //				}
 
-				return ib.method( rc.getHttpMethod() );
+				return ib.method( mi.getHttpMethod() );
 			}
 		}
 		catch( final ProcessingException e ) {
