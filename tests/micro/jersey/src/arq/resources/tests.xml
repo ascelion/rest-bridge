@@ -10,6 +10,18 @@
 			<package name="org.eclipse.microprofile.rest.client.tck.timeout" />
 		</packages>
 		<classes>
+			<!-- MBRW are not sorted by priority -->
+			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
+			<!-- MBRW are not sorted by priority -->
+			<class name="org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
 			<!-- Jersey doesn't inject HttpHeaders
 			<class name="org.eclipse.microprofile.rest.client.tck.ClientHeadersFactoryTest">
 				<methods>
@@ -23,16 +35,6 @@
 				</methods>
 			</class>
 			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest">
-				<methods>
-					<exclude name=".+" />
-				</methods>
-			</class>
-			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest">
-				<methods>
-					<exclude name=".+" />
-				</methods>
-			</class>
-			<class name="org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest">
 				<methods>
 					<exclude name=".+" />
 				</methods>

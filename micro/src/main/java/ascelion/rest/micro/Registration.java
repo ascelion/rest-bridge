@@ -1,54 +1,42 @@
 
 package ascelion.rest.micro;
 
+import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.HttpHeaders;
 
-import ascelion.rest.bridge.client.RBUtils;
 import ascelion.utils.etc.TypeDescriptor;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableMap;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 
-@Getter( AccessLevel.PACKAGE )
-final class Registration<T>
+final class Registration
 {
 
-	static final Registration<?> NONE = new Registration<>( Void.class, emptyMap(), null );
+	static final Registration NONE = new Registration( null, Void.class, emptyMap() );
 
-	private final Class<T> type;
+	@Getter( AccessLevel.PACKAGE )
+	private final Object instance;
+	private final Class<?> type;
 	private final TypeDescriptor desc;
 	private final Map<Class<?>, Integer> contracts;
-	private T instance;
 
-	Registration( Class<T> type, Map<Class<?>, Integer> contracts, T instance )
+	Registration( Object instance, Class<?> type, Map<Class<?>, Integer> contracts )
 	{
 		this.type = type;
+		this.instance = instance;
 		this.desc = new TypeDescriptor( type );
 		this.contracts = contracts;
-		this.instance = instance;
 	}
 
-	boolean updateInstance( T instance )
+	Map<Class<?>, Integer> getContracts()
 	{
-		if( this.instance != null ) {
-			return false;
-		}
-
-		if( instance == null ) {
-			instance = RBUtils.newInstance( this.type );
-		}
-
-		this.desc.injectAnnotated( Context.class, HttpHeaders.class, instance, ThreadLocalProxy.create( HttpHeaders.class ) );
-
-		this.instance = instance;
-
-		return true;
+		return unmodifiableMap( this.contracts );
 	}
 
 	void add( Map<Class<?>, Integer> contracts )
@@ -59,5 +47,10 @@ final class Registration<T>
 	boolean isFeature()
 	{
 		return Feature.class.isAssignableFrom( this.type );
+	}
+
+	void injectAnnotated( Class<? extends Annotation> annoType, Class<HttpHeaders> propType, Object value )
+	{
+		this.desc.injectAnnotated( annoType, propType, this.instance, ThreadLocalProxy.create( HttpHeaders.class ) );
 	}
 }

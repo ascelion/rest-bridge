@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.stream.Stream;
 
 import javax.ws.rs.client.Client;
@@ -40,7 +39,32 @@ import org.eclipse.microprofile.rest.client.spi.RestClientListener;
 final class RestBridgeBuilder implements RestClientBuilder
 {
 
-	private final RestBridgeConfiguration configuration = new RestBridgeConfiguration( this );
+	static <T> void showConfig( Configuration cfg, String msg, Object... arguments )
+	{
+		LOG.debug( () -> {
+			try( final Formatter fmt = new Formatter() ) {
+				fmt.format( msg, arguments );
+
+				final Set<Class<?>> classes = new TreeSet<>( ( c1, c2 ) -> c1.getName().compareTo( c2.getName() ) );
+
+				cfg.getClasses().stream().forEach( classes::add );
+				cfg.getInstances().stream().map( Object::getClass ).forEach( classes::add );
+
+				classes.forEach( c -> {
+					final String cts = cfg.getContracts( c )
+						.entrySet().stream()
+						.map( e -> format( "%s:%s", e.getKey().getSimpleName(), e.getValue() ) )
+						.collect( joining( ", " ) );
+
+					fmt.format( "\n    %s -> %s", c.getName(), cts );
+				} );
+
+				return fmt.toString();
+			}
+		} );
+	}
+
+	private final RestBridgeConfigRec configuration = new RestBridgeConfigRec();
 	private URL baseUrl;
 	private Long connectTimeout;
 	private Long readTimeout;
@@ -170,37 +194,18 @@ final class RestBridgeBuilder implements RestClientBuilder
 		ServiceLoader.load( RestClientListener.class )
 			.forEach( l -> l.onNewClient( type, this ) );
 
-		final RestBridgeConfiguration cfg = this.configuration.forClient();
+		final RestBridgeConfiguration cfg = this.configuration.forClient( this );
 
 		configureProviders( cfg, type );
 
-		final ClientBuilder bld = ofNullable( (ClientBuilder) cfg.getProperty( ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY ) )
-			.orElse( ClientBuilder.newBuilder() ).withConfig( cfg );
+		final ClientBuilder bld = RBUtils.newInstance( ClientBuilder.class, () -> {
+			return ofNullable( defaultJAXRS( cfg ) )
+				.orElse( ClientBuilder.newBuilder() );
+		} ).withConfig( cfg.forJAXRS() );
 
 		configureTimeouts( bld, type );
 
 		final Client client = bld.build();
-
-		if( LOG.isLoggable( Level.CONFIG ) ) {
-			try( final Formatter fmt = new Formatter() ) {
-				final Set<Class<?>> classes = new TreeSet<>( ( c1, c2 ) -> c1.getName().compareTo( c2.getName() ) );
-
-				client.getConfiguration().getClasses().stream().forEach( classes::add );
-				client.getConfiguration().getInstances().stream().map( Object::getClass ).forEach( classes::add );
-
-				classes.forEach( c -> {
-					final String cts = client.getConfiguration().getContracts( c )
-						.entrySet().stream()
-						.map( e -> format( "%s:%s", e.getKey().getSimpleName(), e.getValue() ) )
-						.collect( joining( ", " ) );
-
-					fmt.format( "%s -> %s\n", c.getName(), cts );
-				} );
-
-				LOG.log( Level.CONFIG, fmt.toString() );
-			}
-		}
-
 		RestClient rc;
 
 		try {
@@ -219,8 +224,11 @@ final class RestBridgeBuilder implements RestClientBuilder
 			rc.addRRIFactory( RBUtils.newInstance( CDIRRIFactory.class ) );
 		}
 
-		rc.setResponseHandler( new MPResponseHandler( this.configuration ) );
+		rc.setResponseHandler( new MPResponseHandler( cfg ) );
 		rc.setAsyncInterceptor( new MPAsyncInterceptor( cfg ) );
+
+		showConfig( client.getConfiguration(), "Created JAX-RS client for %s", type.getName() );
+		showConfig( cfg, "Created MP client for %s", type.getName() );
 
 		try {
 			return rc.getInterface( type );
@@ -229,6 +237,11 @@ final class RestBridgeBuilder implements RestClientBuilder
 			throw new RestClientDefinitionException( format( "%s in method %s.%s", e.getMessage(),
 				e.getMethod().getDeclaringClass().getName(), e.getMethod().getName() ) );
 		}
+	}
+
+	private ClientBuilder defaultJAXRS( final RestBridgeConfiguration cfg )
+	{
+		return (ClientBuilder) cfg.getProperty( ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY );
 	}
 
 	private <T> void configureProviders( Configurable<? extends Configuration> cfg, Class<T> type )

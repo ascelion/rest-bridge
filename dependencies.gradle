@@ -21,7 +21,7 @@ configurations {
 dependencyManagement {
 	imports {
 		mavenBom "org.apache.cxf:cxf-parent:${versions.cxf}"
-		mavenBom 'org.glassfish.jersey:jersey-bom:2.27'
+		mavenBom 'org.glassfish.jersey:jersey-bom:2.28'
 		mavenBom 'org.jboss.resteasy:resteasy-bom:3.6.2.Final'
 		mavenBom 'org.jboss.arquillian:arquillian-bom:1.4.1.Final'
 		mavenBom 'org.jboss.shrinkwrap:shrinkwrap-bom:1.2.6'
