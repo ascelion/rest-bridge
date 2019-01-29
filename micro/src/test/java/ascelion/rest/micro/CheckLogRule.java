@@ -2,6 +2,7 @@
 package ascelion.rest.micro;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
@@ -18,8 +19,18 @@ import org.slf4j.LoggerFactory;
 public class CheckLogRule implements TestRule
 {
 
-	private final Logger logger = (Logger) LoggerFactory.getLogger( Logger.ROOT_LOGGER_NAME );
 	private final ListAppender<ILoggingEvent> appender = new ListAppender<>();
+	private final Logger logger;
+
+	public CheckLogRule()
+	{
+		this( org.slf4j.Logger.ROOT_LOGGER_NAME );
+	}
+
+	public CheckLogRule( String cat )
+	{
+		this.logger = (Logger) LoggerFactory.getLogger( cat );
+	}
 
 	@Override
 	public Statement apply( Statement base, Description description )
@@ -53,18 +64,29 @@ public class CheckLogRule implements TestRule
 	{
 		return getEvents()
 			.stream()
-			.filter( e -> e.getLevel().isGreaterOrEqual( level ) )
 			.filter( e -> e.getLoggerName().equals( name ) )
+			.filter( e -> e.getLevel().isGreaterOrEqual( level ) )
+			.collect( toList() );
+	}
+
+	public List<ILoggingEvent> getEvents( String name, Predicate<ILoggingEvent> cond )
+	{
+		return getEvents()
+			.stream()
+			.filter( e -> e.getLoggerName().equals( name ) )
+			.filter( cond )
 			.collect( toList() );
 	}
 
 	private void setUp()
 	{
 		this.logger.info( "Reseting log system" );
-
-		this.logger.detachAndStopAllAppenders();
-		this.logger.addAppender( this.appender );
 		this.logger.setLevel( Level.ALL );
+
+		this.appender.stop();
+		this.logger.detachAppender( this.appender );
+
+		this.logger.addAppender( this.appender );
 
 		this.appender.clearAllFilters();
 		this.appender.list.clear();

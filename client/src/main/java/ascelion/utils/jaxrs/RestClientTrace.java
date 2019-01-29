@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.Formatter;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientRequestContext;
@@ -22,7 +23,6 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.bridge.client.RestClient;
-import ascelion.utils.etc.Log;
 
 import static ascelion.rest.bridge.client.RestClientProperties.DEFAULT_CONTENT_TYPE;
 import static java.lang.String.format;
@@ -115,10 +115,10 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 	static private final String REQ_PREFIX = ">";
 	static private final String RSP_PREFIX = "<";
 
-	static private final Log L = Log.get( "ascelion.rest.bridge.TRAFFIC" );
+	static private final Logger L = Logger.getLogger( "ascelion.rest.bridge.TRAFFIC" );
 	static private final AtomicLong ID = new AtomicLong();
 
-	private final Log log;
+	private final Logger log;
 	private final Level lev;
 
 	public RestClientTrace()

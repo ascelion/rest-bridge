@@ -126,18 +126,6 @@ public final class Log
 		this.sys.logp( Level.SEVERE, ste.getClassName(), ste.getMethodName(), t, () -> format( fmt, args ) );
 	}
 
-	public boolean isLoggable( Level lev )
-	{
-		return this.sys.isLoggable( lev );
-	}
-
-	public void log( Level lev, String msg )
-	{
-		final StackTraceElement ste = new Throwable().getStackTrace()[1];
-
-		this.sys.logp( Level.INFO, ste.getClassName(), ste.getMethodName(), msg );
-	}
-
 	public String getName()
 	{
 		return this.sys.getName();

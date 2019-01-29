@@ -22,24 +22,18 @@
 					<exclude name=".+" />
 				</methods>
 			</class>
-			<!-- Jersey doesn't inject HttpHeaders
-			<class name="org.eclipse.microprofile.rest.client.tck.ClientHeadersFactoryTest">
-				<methods>
-					<exclude name=".+" />
-				</methods>
-			</class> -->
-<!--
-			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithJsonBProviderTest">
-				<methods>
-					<exclude name=".+" />
-				</methods>
-			</class>
+			<!-- MBRW are not sorted by priority -->
 			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest">
 				<methods>
 					<exclude name=".+" />
 				</methods>
 			</class>
--->
+			<!-- MBRW are not sorted by priority -->
+			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithJsonBProviderTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class>
 		</classes>
 	</test>
 </suite>

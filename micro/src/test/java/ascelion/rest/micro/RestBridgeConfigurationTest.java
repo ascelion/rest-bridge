@@ -11,7 +11,6 @@ import ascelion.rest.bridge.tests.api.SLF4JHandler;
 import ascelion.utils.jaxrs.RestClientTrace;
 
 import static ascelion.rest.micro.RestBridgeConfiguration.LOG;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -35,9 +34,9 @@ public class RestBridgeConfigurationTest
 	static public Object data()
 	{
 		return new Object[] {
-			new Object[] { "rest-bridge", true, (Supplier) () -> new RestBridgeConfiguration( new RestBridgeBuilder() ) },
+			new Object[] { "rest-bridge", LOG.getName(), "already", (Supplier) () -> new RestBridgeConfiguration( new RestBridgeBuilder() ) },
 			// compare with Jersey's configuration
-			new Object[] { "jersey-config", false, (Supplier) () -> JerseyClientBuilder.createClient().getConfiguration() },
+			new Object[] { "jersey-config", "org.glassfish.jersey.internal.Errors", "previous", (Supplier) () -> JerseyClientBuilder.createClient().getConfiguration() },
 		};
 	}
 
@@ -50,35 +49,35 @@ public class RestBridgeConfigurationTest
 	}
 
 	@Rule
-	public final CheckLogRule rule = new CheckLogRule();
+	public CheckLogRule rule;
 
-	private final Configurable<? extends Configuration> cf;
-	private final boolean checkLog;
+	private final Configurable<? extends Configuration> configurable;
+	private final Configuration configuration;
+	private final String cat;
+	private final String lookup;
 
-	public RestBridgeConfigurationTest( String name, boolean checkLog, Supplier<Configurable<? extends Configuration>> sup )
+	public RestBridgeConfigurationTest( String name, String cat, String lookup, Supplier<Configurable<? extends Configuration>> sup )
 	{
-		this.cf = sup.get();
-		this.checkLog = checkLog;
+		this.rule = new CheckLogRule( cat );
+		this.configurable = sup.get();
+		this.configuration = this.configurable.getConfiguration();
+		this.cat = cat;
+		this.lookup = lookup;
 	}
 
 	@Test
 	public void registerTwice()
 	{
-		this.cf.register( RestClientTrace.class );
-		this.cf.register( RestClientTrace.class );
+		this.configurable.register( RestClientTrace.class );
+		this.configurable.register( RestClientTrace.class );
 
-		if( this.checkLog ) {
-			final List<ILoggingEvent> events = this.rule.getEvents( LOG.getName(), Level.WARN );
+		assertThat( this.configuration.isRegistered( RestClientTrace.class ), is( true ) );
+		assertThat( this.configuration.isRegistered( new RestClientTrace() ), is( false ) );
 
-			assertThat( events, hasSize( 1 ) );
+		final List<ILoggingEvent> events = this.rule.getEvents( this.cat,
+			e -> e.getMessage().contains( this.lookup ) );
 
-			final ILoggingEvent event = events.get( 0 );
-
-			assertThat( event.getMessage(), containsString( "already" ) );
-		}
-
-		assertThat( this.cf.getConfiguration().isRegistered( RestClientTrace.class ), is( true ) );
-		assertThat( this.cf.getConfiguration().isRegistered( new RestClientTrace() ), is( false ) );
+		assertThat( events, hasSize( 1 ) );
 	}
 
 	@Test
@@ -87,37 +86,32 @@ public class RestBridgeConfigurationTest
 		final RestClientTrace i1 = new RestClientTrace();
 		final RestClientTrace i2 = new RestClientTrace();
 
-		this.cf.register( i1 );
-		this.cf.register( i2 );
+		this.configurable.register( i1 );
+		this.configurable.register( i2 );
 
-		if( this.checkLog ) {
-			final List<ILoggingEvent> events = this.rule.getEvents( LOG.getName(), Level.WARN );
+		assertThat( this.configuration.isRegistered( RestClientTrace.class ), is( true ) );
+		assertThat( this.configuration.isRegistered( i1 ), is( true ) );
+		assertThat( this.configuration.isRegistered( i2 ), is( false ) );
 
-			assertThat( events, hasSize( 1 ) );
+		final List<ILoggingEvent> events = this.rule.getEvents( this.cat,
+			e -> e.getMessage().contains( this.lookup ) );
 
-			final ILoggingEvent event = events.get( 0 );
-
-			assertThat( event.getMessage(), containsString( "already" ) );
-		}
-
-		assertThat( this.cf.getConfiguration().isRegistered( RestClientTrace.class ), is( true ) );
-		assertThat( this.cf.getConfiguration().isRegistered( i1 ), is( true ) );
-		assertThat( this.cf.getConfiguration().isRegistered( i2 ), is( false ) );
+		assertThat( events, hasSize( 1 ) );
 	}
 
 	@Test
-	public void registerNone()
+	public void registerNotSupportedANY()
 	{
-		this.cf.register( getClass() );
+		this.configurable.register( this );
 
-		assertThat( this.cf.getConfiguration().isRegistered( getClass() ), is( false ) );
+		assertThat( this.configuration.isRegistered( this ), is( false ) );
 	}
 
 	@Test
-	public void registerUnkown()
+	public void registerNotSupportedJAXRS()
 	{
-		this.cf.register( RestClientTrace.class );
+		this.configurable.register( RestClientTrace.class );
 
-		assertThat( this.cf.getConfiguration().isRegistered( getClass() ), is( false ) );
+		assertThat( this.configuration.isRegistered( getClass() ), is( false ) );
 	}
 }
