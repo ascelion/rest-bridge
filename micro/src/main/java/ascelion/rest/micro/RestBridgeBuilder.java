@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.ws.rs.client.Client;
@@ -31,6 +33,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 
+import lombok.Getter;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
 import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
@@ -39,9 +42,9 @@ import org.eclipse.microprofile.rest.client.spi.RestClientListener;
 final class RestBridgeBuilder implements RestClientBuilder
 {
 
-	static <T> void showConfig( Configuration cfg, String msg, Object... arguments )
+	static <T> void showConfig( Consumer<Supplier<String>> log, Configuration cfg, String msg, Object... arguments )
 	{
-		LOG.debug( () -> {
+		log.accept( () -> {
 			try( final Formatter fmt = new Formatter() ) {
 				fmt.format( msg, arguments );
 
@@ -64,17 +67,12 @@ final class RestBridgeBuilder implements RestClientBuilder
 		} );
 	}
 
-	private final RestBridgeConfigRec configuration = new RestBridgeConfigRec();
+	@Getter
+	private final RestBridgeConfiguration configuration = new RestBridgeConfiguration( this );
 	private URL baseUrl;
 	private Long connectTimeout;
 	private Long readTimeout;
 	private ExecutorService executorService;
-
-	@Override
-	public Configuration getConfiguration()
-	{
-		return this.configuration;
-	}
 
 	@Override
 	public RestClientBuilder property( String name, Object value )
@@ -194,14 +192,21 @@ final class RestBridgeBuilder implements RestClientBuilder
 		ServiceLoader.load( RestClientListener.class )
 			.forEach( l -> l.onNewClient( type, this ) );
 
-		final RestBridgeConfiguration cfg = this.configuration.forClient( this );
+		final RestBridgeConfiguration cfg = this.configuration.clone( false );
 
 		configureProviders( cfg, type );
 
-		final ClientBuilder bld = RBUtils.newInstance( ClientBuilder.class, () -> {
-			return ofNullable( defaultJAXRS( cfg ) )
-				.orElse( ClientBuilder.newBuilder() );
-		} ).withConfig( cfg.forJAXRS() );
+		final ClientBuilder bld;
+
+		try {
+			bld = RBUtils.newInstance( ClientBuilder.class, () -> {
+				return ofNullable( defaultJAXRS( cfg ) )
+					.orElse( ClientBuilder.newBuilder() );
+			} ).withConfig( cfg.clone( true ) );
+		}
+		catch( final Exception e ) {
+			throw new RestClientDefinitionException( "Cannot create JAX-RS client", e );
+		}
 
 		configureTimeouts( bld, type );
 
@@ -212,7 +217,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 			rc = newRestClient( client, this.baseUrl.toURI() );
 		}
 		catch( final URISyntaxException e ) {
-			throw new RestClientDefinitionException( e );
+			throw new RestClientDefinitionException( "Cannot create MP client", e );
 		}
 
 		if( this.executorService != null ) {
@@ -227,8 +232,8 @@ final class RestBridgeBuilder implements RestClientBuilder
 		rc.setResponseHandler( new MPResponseHandler( cfg ) );
 		rc.setAsyncInterceptor( new MPAsyncInterceptor( cfg ) );
 
-		showConfig( client.getConfiguration(), "Created JAX-RS client for %s", type.getName() );
-		showConfig( cfg, "Created MP client for %s", type.getName() );
+		showConfig( LOG::debug, cfg, "Created MP client for %s", type.getName() );
+		showConfig( LOG::trace, client.getConfiguration(), "Created JAX-RS client for %s", type.getName() );
 
 		try {
 			return rc.getInterface( type );
@@ -239,12 +244,14 @@ final class RestBridgeBuilder implements RestClientBuilder
 		}
 	}
 
-	private ClientBuilder defaultJAXRS( final RestBridgeConfiguration cfg )
+	private ClientBuilder defaultJAXRS( Configuration cfg )
 	{
-		return (ClientBuilder) cfg.getProperty( ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY );
+		return (ClientBuilder) ofNullable( cfg.getProperty( ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY ) )
+			.map( b -> b instanceof Class ? RBUtils.newInstance( (Class) b ) : b )
+			.orElse( null );
 	}
 
-	private <T> void configureProviders( Configurable<? extends Configuration> cfg, Class<T> type )
+	private <T> void configureProviders( Configurable<?> cfg, Class<T> type )
 	{
 		stream( type.getAnnotationsByType( RegisterProvider.class ) )
 			.forEach( a -> cfg.register( a.value(), RBUtils.getPriority( a.value(), a.priority() ) ) );

@@ -11,12 +11,12 @@
 		</packages>
 		<classes>
 			<!-- RESTEASY004560: Failed to buffer aborted response. Could not find writer for content-type */* type: java.util.HashMap -->
-			<!-- cannot find writer without Content-Type -->
+			<!-- cannot find writer without Content-Type
 			<class name="org.eclipse.microprofile.rest.client.tck.ClientHeadersFactoryTest">
 				<methods>
 					<exclude name=".+" />
 				</methods>
-			</class>
+			</class> -->
 <!--
 			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithJsonBProviderTest">
 				<methods>

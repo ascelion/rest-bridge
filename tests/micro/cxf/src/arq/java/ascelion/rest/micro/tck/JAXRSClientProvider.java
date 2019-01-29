@@ -13,7 +13,7 @@ public class JAXRSClientProvider implements RestClientBuilderListener
 	@Override
 	public void onNewBuilder( RestClientBuilder bld )
 	{
-		bld.property( ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY, new ClientBuilderImpl() );
+		bld.property( ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY, ClientBuilderImpl.class );
 	}
 
 }

@@ -1,6 +1,7 @@
 
 package ascelion.rest.micro;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -71,9 +72,10 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 	private final Map<String, Object> properties = new HashMap<>();
 	private final Map<Class<?>, Registration> registrations = new IdentityHashMap<>();
 	private final Set<Class<?>> enabledFeatures = newSetFromMap( new IdentityHashMap<>() );
+	private final Collection<Runnable> actions = new ArrayList<>();
 
 	@Override
-	public Configuration getConfiguration()
+	public RestBridgeConfiguration getConfiguration()
 	{
 		return this;
 	}
@@ -89,75 +91,63 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 	@Override
 	public RestBridgeConfiguration register( Class<?> type )
 	{
-		return register( newInstance( type ) );
+		this.actions.add( () -> doRegister( type ) );
+
+		return this;
 	}
 
 	@Override
 	public RestBridgeConfiguration register( Class<?> type, int priority )
 	{
-		return register( newInstance( type ), priority );
+		this.actions.add( () -> doRegister( type, priority ) );
+
+		return this;
 	}
 
 	@Override
 	public RestBridgeConfiguration register( Class<?> type, Class<?>... contracts )
 	{
-		return register( newInstance( type ), contracts );
+		this.actions.add( () -> doRegister( type, contracts ) );
+
+		return this;
 	}
 
 	@Override
 	public RestBridgeConfiguration register( Class<?> type, Map<Class<?>, Integer> contracts )
 	{
-		return register( newInstance( type ), contracts );
+		this.actions.add( () -> doRegister( type, contracts ) );
+
+		return this;
 	}
 
 	@Override
 	public RestBridgeConfiguration register( Object component )
 	{
-		final Class<?> type = component.getClass();
+		this.actions.add( () -> doRegister( component ) );
 
-		if( this.registrations.containsKey( type ) ) {
-			LOG.warn( "Component of type %s has been already registered", type.getName() );
-
-			return this;
-		}
-
-		final int priority = component instanceof ResponseExceptionMapper
-			? ( (ResponseExceptionMapper) component ).getPriority()
-			: RBUtils.getPriority( type );
-		final Map<Class<?>, Integer> cm = lookupContracts( type ).stream()
-			.collect( toMap( x -> x, x -> priority ) );
-
-		return register( component, cm );
+		return this;
 	}
 
 	@Override
 	public RestBridgeConfiguration register( Object component, int priority )
 	{
-		final Class<?> type = component.getClass();
-		final Map<Class<?>, Integer> cm = lookupContracts( type ).stream()
-			.collect( toMap( x -> x, x -> priority ) );
+		this.actions.add( () -> doRegister( component, priority ) );
 
-		return register( component, cm );
+		return this;
 	}
 
 	@Override
 	public RestBridgeConfiguration register( Object component, Class<?>... contracts )
 	{
-		final int priority = RBUtils.getPriority( component );
-		final Map<Class<?>, Integer> cm = Stream.of( contracts )
-			.collect( toMap( x -> x, x -> priority ) );
+		this.actions.add( () -> doRegister( component, contracts ) );
 
-		return register( component, cm );
+		return this;
 	}
 
 	@Override
 	public RestBridgeConfiguration register( Object component, Map<Class<?>, Integer> contracts )
 	{
-		final Registration reg = addRegistration( component, contracts );
-
-		if( reg != null && reg.isFeature() ) {
-			handleFeature( (Feature) reg.getInstance() );
-		}
+		this.actions.add( () -> doRegister( component, contracts ) );
 
 		return this;
 	}
@@ -189,46 +179,168 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 	@Override
 	public boolean isEnabled( Feature feature )
 	{
+		applyActions();
+
 		return this.enabledFeatures.contains( feature.getClass() );
 	}
 
 	@Override
 	public boolean isEnabled( Class<? extends Feature> featureClass )
 	{
+		applyActions();
+
 		return this.enabledFeatures.contains( featureClass );
 	}
 
 	@Override
 	public boolean isRegistered( Object component )
 	{
+		applyActions();
+
 		return component.equals( this.registrations.getOrDefault( component.getClass(), Registration.NONE ).getInstance() );
 	}
 
 	@Override
 	public boolean isRegistered( Class<?> type )
 	{
+		applyActions();
+
 		return this.registrations.containsKey( type );
 	}
 
 	@Override
 	public Map<Class<?>, Integer> getContracts( Class<?> type )
 	{
+		applyActions();
+
 		return this.registrations.getOrDefault( type, Registration.NONE ).getContracts();
 	}
 
 	@Override
 	public Set<Class<?>> getClasses()
 	{
+		applyActions();
+
 		return emptySet();
 	}
 
 	@Override
 	public Set<Object> getInstances()
 	{
+		applyActions();
+
 		return unmodifiableSet( this.registrations.values().stream()
 			.map( Registration::getInstance )
 			.map( Objects::requireNonNull )
 			.collect( toSet() ) );
+	}
+
+	void applyActions()
+	{
+		if( this.actions.size() > 0 ) {
+			this.actions.forEach( Runnable::run );
+			this.actions.clear();
+		}
+	}
+
+	void doProperty( String name, Object value )
+	{
+		this.properties.put( name, value );
+	}
+
+	void doRegister( Class<?> type )
+	{
+		doRegister( newInstance( type ) );
+	}
+
+	void doRegister( Class<?> type, int priority )
+	{
+		doRegister( newInstance( type ), priority );
+	}
+
+	void doRegister( Class<?> type, Class<?>... contracts )
+	{
+		doRegister( newInstance( type ), contracts );
+	}
+
+	void doRegister( Class<?> type, Map<Class<?>, Integer> contracts )
+	{
+		doRegister( newInstance( type ), contracts );
+	}
+
+	void doRegister( Object component )
+	{
+		final Class<?> type = component.getClass();
+
+		if( this.registrations.containsKey( type ) ) {
+			LOG.warn( "Component of type %s has been already registered", type.getName() );
+
+			return;
+		}
+
+		final int priority = component instanceof ResponseExceptionMapper
+			? ( (ResponseExceptionMapper) component ).getPriority()
+			: RBUtils.getPriority( type );
+		final Map<Class<?>, Integer> cm = lookupContracts( type ).stream()
+			.collect( toMap( x -> x, x -> priority ) );
+
+		doRegister( component, cm );
+	}
+
+	void doRegister( Object component, int priority )
+	{
+		final Class<?> type = component.getClass();
+		final Map<Class<?>, Integer> cm = lookupContracts( type ).stream()
+			.collect( toMap( x -> x, x -> priority ) );
+
+		doRegister( component, cm );
+	}
+
+	void doRegister( Object component, Class<?>... contracts )
+	{
+		final int priority = RBUtils.getPriority( component );
+		final Map<Class<?>, Integer> cm = Stream.of( contracts )
+			.collect( toMap( x -> x, x -> priority ) );
+
+		doRegister( component, cm );
+	}
+
+	void doRegister( Object component, Map<Class<?>, Integer> contracts )
+	{
+		final Registration reg = addRegistration( component, contracts );
+
+		if( reg != null && reg.isFeature() ) {
+			handleFeature( (Feature) reg.getInstance() );
+		}
+	}
+
+	public RestBridgeConfiguration clone( boolean forJAXRS )
+	{
+		final RestBridgeConfiguration clone = new RestBridgeConfiguration( this.bld );
+
+		applyActions();
+
+		clone.actions.addAll( this.actions );
+		clone.properties.putAll( this.properties );
+		clone.enabledFeatures.addAll( this.enabledFeatures );
+
+		if( forJAXRS ) {
+			this.registrations.forEach( ( type, reg ) -> {
+				final Map<Class<?>, Integer> jaxrsCts = reg.getContracts()
+					.entrySet().stream()
+					.filter( e -> SUPPORTED.getOrDefault( e.getKey(), false ) )
+					.collect( toMap( e -> e.getKey(), e -> e.getValue() ) );
+
+				if( jaxrsCts.size() > 0 ) {
+					clone.registrations.put( type, new Registration( reg.getInstance(), type, jaxrsCts ) );
+				}
+			} );
+		}
+		else {
+			clone.registrations.putAll( this.registrations );
+		}
+
+		return clone;
 	}
 
 	private Collection<Class<?>> lookupContracts( Class<?> type )
@@ -286,33 +398,15 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 
 	private void handleFeature( Feature feat )
 	{
-		if( !isEnabled( feat ) ) {
+		final Class<? extends Feature> ft = feat.getClass();
+
+		if( !this.enabledFeatures.contains( ft ) ) {
 			final FeatureContext fc = new RestBridgeFeatureContext( this.bld );
 
 			if( feat.configure( fc ) ) {
-				this.enabledFeatures.add( feat.getClass() );
+				this.enabledFeatures.add( ft );
 			}
 		}
 	}
 
-	RestBridgeConfiguration forJAXRS()
-	{
-		final RestBridgeConfiguration clone = new RestBridgeConfiguration( this.bld );
-
-		clone.properties.putAll( this.properties );
-		clone.enabledFeatures.addAll( this.enabledFeatures );
-
-		this.registrations.forEach( ( type, reg ) -> {
-			final Map<Class<?>, Integer> c = reg.getContracts()
-				.entrySet().stream()
-				.filter( e -> SUPPORTED.getOrDefault( e.getKey(), false ) )
-				.collect( toMap( e -> e.getKey(), e -> e.getValue() ) );
-
-			if( c.size() > 0 ) {
-				clone.registrations.put( type, new Registration( reg.getInstance(), type, c ) );
-			}
-		} );
-
-		return clone;
-	}
 }
