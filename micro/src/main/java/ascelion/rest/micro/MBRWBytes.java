@@ -5,13 +5,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE;
+import static javax.ws.rs.core.MediaType.WILDCARD;
 
 import org.apache.commons.io.IOUtils;
 
+@Consumes( { APPLICATION_OCTET_STREAM, WILDCARD } )
+@Produces( { APPLICATION_OCTET_STREAM, WILDCARD } )
 final class MBRWBytes extends MBRWBase<byte[]>
 {
 

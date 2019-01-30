@@ -1,117 +1,145 @@
 
 package ascelion.rest.micro;
 
+import java.io.IOException;
+import java.net.URI;
+import java.util.Formatter;
 import java.util.List;
-import java.util.function.Supplier;
 
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.MessageBodyReader;
 
+import ascelion.rest.bridge.client.ConfigurationEx;
+import ascelion.rest.bridge.client.Prioritised;
+import ascelion.rest.bridge.tests.api.API;
 import ascelion.rest.bridge.tests.api.SLF4JHandler;
+import ascelion.utils.etc.Log;
 import ascelion.utils.jaxrs.RestClientTrace;
 
-import static ascelion.rest.micro.RestBridgeConfiguration.LOG;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
+import static org.testng.Assert.assertEquals;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import org.glassfish.jersey.client.JerseyClientBuilder;
-import org.junit.BeforeClass;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import org.eclipse.microprofile.rest.client.RestClientBuilder;
+import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
+import org.eclipse.microprofile.rest.client.tck.interfaces.InterfaceWithProvidersDefined;
+import org.eclipse.microprofile.rest.client.tck.providers.TestMessageBodyReader;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.slf4j.LoggerFactory;
 
-@RunWith( Parameterized.class )
 public class RestBridgeConfigurationTest
 {
 
-	@Parameterized.Parameters( name = "{0}" )
-	static public Object data()
+	static class LocalFilter implements ClientRequestFilter
 	{
-		return new Object[] {
-			new Object[] { "rest-bridge", LOG.getName(), "already", (Supplier) () -> new RestBridgeConfiguration( new RestBridgeBuilder() ) },
-			// compare with Jersey's configuration
-			new Object[] { "jersey-config", "org.glassfish.jersey.internal.Errors", "previous", (Supplier) () -> JerseyClientBuilder.createClient().getConfiguration() },
-		};
+
+		static Configuration cf;
+
+		@Override
+		public void filter( ClientRequestContext rc ) throws IOException
+		{
+			cf = rc.getConfiguration();
+			rc.abortWith( Response.ok().build() );
+		}
 	}
 
-	@BeforeClass
-	static public void setUpClass()
+	static class LocalRXM implements ResponseExceptionMapper<WebApplicationException>
 	{
-		SLF4JHandler.install();
 
-		( (Logger) LoggerFactory.getLogger( LOG.getName() ) ).setLevel( Level.ALL );
+		@Override
+		public WebApplicationException toThrowable( Response response )
+		{
+			return null;
+		}
+	}
+
+	static {
+		SLF4JHandler.install();
+	}
+
+	static private final Log L = Log.get();
+
+	static List<Prioritised<MessageBodyReader>> getReaders( String tx, Configuration cf )
+	{
+		final List<Prioritised<MessageBodyReader>> rds = ConfigurationEx.providers( cf, MessageBodyReader.class );
+		try( final Formatter fmt = new Formatter() ) {
+			fmt.format( "\n%s\n", tx );
+
+			rds.forEach( t -> fmt.format( "    %s\n", t ) );
+
+			L.info( fmt.toString() );
+		}
+
+		return rds;
 	}
 
 	@Rule
-	public CheckLogRule rule;
+	public final WireMockRule rule = new WireMockRule( API.reservePort() );
 
-	private final Configurable<? extends Configuration> configurable;
-	private final Configuration configuration;
-	private final String cat;
-	private final String lookup;
-
-	public RestBridgeConfigurationTest( String name, String cat, String lookup, Supplier<Configurable<? extends Configuration>> sup )
+	@Test
+	public void clientRegistration()
 	{
-		this.rule = new CheckLogRule( cat );
-		this.configurable = sup.get();
-		this.configuration = this.configurable.getConfiguration();
-		this.cat = cat;
-		this.lookup = lookup;
+		final RestClientBuilder rbb = RestClientBuilder.newBuilder();
+
+		rbb.baseUri( URI.create( this.rule.baseUrl() ) );
+
+		rbb.register( RestClientTrace.class, 8000 );
+		rbb.register( new LocalFilter(), Integer.MAX_VALUE );
+
+		final InterfaceWithProvidersDefined clt = rbb.build( InterfaceWithProvidersDefined.class );
+
+		clt.executePost( "" );
+
+		final List<Prioritised<MessageBodyReader>> rd1 = getReaders( "RBB", rbb.getConfiguration() );
+		final List<Prioritised<MessageBodyReader>> rd2 = getReaders( "RD2", LocalFilter.cf );
+
+		L.info( "RD2" );
+		rd2.forEach( t -> L.info( "%s", t ) );
+
+		assertEquals( rd1.size() + 1, rd2.size() );
 	}
 
 	@Test
-	public void registerTwice()
+	public void keepOrderOnClone()
 	{
-		this.configurable.register( RestClientTrace.class );
-		this.configurable.register( RestClientTrace.class );
+		final RestBridgeConfiguration cf1 = new RestBridgeConfiguration();
+		final RestBridgeFeatureContext fcx = new RestBridgeFeatureContext( cf1 );
 
-		assertThat( this.configuration.isRegistered( RestClientTrace.class ), is( true ) );
-		assertThat( this.configuration.isRegistered( new RestClientTrace() ), is( false ) );
+		new DefaultProviders().configure( fcx );
 
-		final List<ILoggingEvent> events = this.rule.getEvents( this.cat,
-			e -> e.getMessage().contains( this.lookup ) );
+		cf1.register( RestClientTrace.class, 8000 );
+		cf1.register( new LocalFilter(), Integer.MAX_VALUE );
+		cf1.register( new LocalRXM() );
+		cf1.register( TestMessageBodyReader.class );
 
-		assertThat( events, hasSize( 1 ) );
-	}
+		assertThat( cf1.getClasses(), hasSize( 0 ) );
+		assertThat( cf1.getInstances(), hasSize( 14 ) );
 
-	@Test
-	public void registerInstanceTwice()
-	{
-		final RestClientTrace i1 = new RestClientTrace();
-		final RestClientTrace i2 = new RestClientTrace();
+		final RestBridgeConfiguration cf2 = cf1.clone( false );
+		final RestBridgeConfiguration cf3 = cf2.clone( true );
 
-		this.configurable.register( i1 );
-		this.configurable.register( i2 );
+		assertThat( cf2.getClasses(), hasSize( 0 ) );
+		assertThat( cf2.getInstances(), hasSize( cf1.getInstances().size() ) );
 
-		assertThat( this.configuration.isRegistered( RestClientTrace.class ), is( true ) );
-		assertThat( this.configuration.isRegistered( i1 ), is( true ) );
-		assertThat( this.configuration.isRegistered( i2 ), is( false ) );
+		assertThat( cf3.getClasses(), hasSize( 0 ) );
+		assertThat( cf3.getInstances(), hasSize( cf1.getInstances().size() - 1 ) );
 
-		final List<ILoggingEvent> events = this.rule.getEvents( this.cat,
-			e -> e.getMessage().contains( this.lookup ) );
+		final List<Prioritised<MessageBodyReader>> rds1 = getReaders( "RDS1", cf1 );
+		final List<Prioritised<MessageBodyReader>> rds2 = getReaders( "RDS2", cf2 );
+		final List<Prioritised<MessageBodyReader>> rds3 = getReaders( "RDS3", cf3 );
 
-		assertThat( events, hasSize( 1 ) );
-	}
+		assertThat( rds2, hasSize( rds1.size() ) );
+		assertThat( rds3, hasSize( rds2.size() ) );
 
-	@Test
-	public void registerNotSupportedANY()
-	{
-		this.configurable.register( this );
-
-		assertThat( this.configuration.isRegistered( this ), is( false ) );
-	}
-
-	@Test
-	public void registerNotSupportedJAXRS()
-	{
-		this.configurable.register( RestClientTrace.class );
-
-		assertThat( this.configuration.isRegistered( getClass() ), is( false ) );
+		for( int k = 0, z = rds1.size(); k < z; k++ ) {
+			assertThat( rds2.get( k ).getInstance(), sameInstance( rds1.get( k ).getInstance() ) );
+			assertThat( rds3.get( k ).getInstance(), sameInstance( rds2.get( k ).getInstance() ) );
+		}
 	}
 }

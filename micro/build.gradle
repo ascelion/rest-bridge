@@ -13,8 +13,7 @@ dependencies {
 
 	compileOnly 'org.eclipse:yasson'
 	compileOnly 'org.glassfish.jersey.core:jersey-common'
-	compileOnly 'org.jboss.resteasy:resteasy-jaxrs'
-	
+
 	implementation project( ':tests:interfaces' )
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'org.apache.commons:commons-io'
@@ -26,4 +25,5 @@ dependencies {
 	testImplementation 'org.mockito:mockito-core'
 	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
 	testImplementation 'org.glassfish.jersey.core:jersey-client'
+	testImplementation 'com.github.tomakehurst:wiremock'
 }

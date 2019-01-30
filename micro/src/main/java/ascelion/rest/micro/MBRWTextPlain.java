@@ -8,6 +8,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -19,9 +21,13 @@ import ascelion.rest.bridge.client.RBUtils;
 import ascelion.utils.etc.SimpleTypeBuilder;
 
 import static java.util.Arrays.asList;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+import static javax.ws.rs.core.MediaType.WILDCARD;
 
 import org.apache.commons.io.IOUtils;
 
+@Consumes( { TEXT_PLAIN, WILDCARD } )
+@Produces( { TEXT_PLAIN, WILDCARD } )
 final class MBRWTextPlain implements MessageBodyReader<Object>, MessageBodyWriter<Object>
 {
 

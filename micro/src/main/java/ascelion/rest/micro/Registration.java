@@ -7,29 +7,29 @@ import java.util.Map;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.HttpHeaders;
 
+import ascelion.rest.bridge.client.Prioritised;
 import ascelion.utils.etc.TypeDescriptor;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 
-import lombok.AccessLevel;
-import lombok.Getter;
+import lombok.ToString;
 
-final class Registration
+@ToString
+final class Registration<T> extends Prioritised<T>
 {
 
-	static final Registration NONE = new Registration( null, Void.class, emptyMap() );
+	static final Registration<?> NONE = new Registration<>( -1, null, Void.class, emptyMap() );
 
-	@Getter( AccessLevel.PACKAGE )
-	private final Object instance;
 	private final Class<?> type;
 	private final TypeDescriptor desc;
 	private final Map<Class<?>, Integer> contracts;
 
-	Registration( Object instance, Class<?> type, Map<Class<?>, Integer> contracts )
+	Registration( int index, T instance, Class<?> type, Map<Class<?>, Integer> contracts )
 	{
+		super( index, instance );
+
 		this.type = type;
-		this.instance = instance;
 		this.desc = new TypeDescriptor( type );
 		this.contracts = contracts;
 	}
@@ -51,6 +51,6 @@ final class Registration
 
 	void injectAnnotated( Class<? extends Annotation> annoType, Class<HttpHeaders> propType, Object value )
 	{
-		this.desc.injectAnnotated( annoType, propType, this.instance, ThreadLocalProxy.create( HttpHeaders.class ) );
+		this.desc.injectAnnotated( annoType, propType, getInstance(), ThreadLocalProxy.create( HttpHeaders.class ) );
 	}
 }
