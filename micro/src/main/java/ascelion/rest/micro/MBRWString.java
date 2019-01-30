@@ -5,15 +5,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import ascelion.rest.bridge.client.RBUtils;
 
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
+import static javax.ws.rs.core.MediaType.WILDCARD;
 
 import org.apache.commons.io.IOUtils;
 
+@Consumes( { TEXT_PLAIN, WILDCARD } )
+@Produces( { TEXT_PLAIN, WILDCARD } )
 final class MBRWString extends MBRWBase<String>
 {
 

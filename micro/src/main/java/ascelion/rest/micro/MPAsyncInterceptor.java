@@ -7,7 +7,8 @@ import java.util.List;
 import javax.ws.rs.core.Configuration;
 
 import ascelion.rest.bridge.client.AsyncInterceptor;
-import ascelion.rest.bridge.client.RBUtils;
+import ascelion.rest.bridge.client.ConfigurationEx;
+import ascelion.rest.bridge.client.Prioritised;
 
 import static java.util.stream.Collectors.toList;
 
@@ -24,8 +25,9 @@ final class MPAsyncInterceptor implements AsyncInterceptor<Collection<AsyncInvoc
 	@Override
 	public Collection<AsyncInvocationInterceptor> prepare()
 	{
-		final List<AsyncInvocationInterceptor> aiis = RBUtils.providers( this.cf, AsyncInvocationInterceptorFactory.class )
+		final List<AsyncInvocationInterceptor> aiis = ConfigurationEx.providers( this.cf, AsyncInvocationInterceptorFactory.class )
 			.stream()
+			.map( Prioritised::getInstance )
 			.map( AsyncInvocationInterceptorFactory::newInterceptor )
 			.collect( toList() );
 

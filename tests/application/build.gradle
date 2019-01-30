@@ -79,13 +79,15 @@ dependencies {
 	arqRuntime 'org.eclipse:yasson'
 
 	// buildship issue?
-	arqRuntime project( ':tests:interfaces' ).sourceSets.main.output
-	arqRuntime project( ':tests:shared' ).sourceSets.main.output
-	arqRuntime project( ':client' ).sourceSets.main.output
-	arqRuntime project( ':micro' ).sourceSets.main.output
+	if( System.env.ECLIPSE_VERSION ) {
+		arqRuntime project( ':tests:interfaces' ).sourceSets.main.output
+		arqRuntime project( ':tests:shared' ).sourceSets.main.output
+		arqRuntime project( ':client' ).sourceSets.main.output
+		arqRuntime project( ':micro' ).sourceSets.main.output
 
-	if( mpLocal ) {
-		arqRuntime project( ':mp-local:api' ).sourceSets.main.output
+		if( mpLocal ) {
+			arqRuntime project( ':mp-local:api' ).sourceSets.main.output
+		}
 	}
 }
 

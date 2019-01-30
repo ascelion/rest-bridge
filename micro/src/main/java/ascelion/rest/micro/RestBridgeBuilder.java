@@ -3,12 +3,11 @@ package ascelion.rest.micro;
 
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.Formatter;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -20,6 +19,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 
+import ascelion.rest.bridge.client.ConfigurationEx;
+import ascelion.rest.bridge.client.Prioritised;
 import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.bridge.client.RestClient;
 import ascelion.rest.bridge.client.RestClientMethodException;
@@ -27,11 +28,11 @@ import ascelion.rest.micro.cdi.CDIRRIFactory;
 
 import static ascelion.rest.bridge.client.RestClient.newRestClient;
 import static ascelion.rest.micro.RestBridgeConfiguration.LOG;
+import static ascelion.rest.micro.RestBridgeConfiguration.SUPPORTED;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.joining;
 
 import lombok.Getter;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
@@ -42,24 +43,70 @@ import org.eclipse.microprofile.rest.client.spi.RestClientListener;
 final class RestBridgeBuilder implements RestClientBuilder
 {
 
+	static ClientBuilder defaultJAXRS( Configuration cfg )
+	{
+		return (ClientBuilder) ofNullable( cfg.getProperty( ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY ) )
+			.map( b -> b instanceof Class ? RBUtils.newInstance( (Class) b ) : b )
+			.orElse( null );
+	}
+
+	static <T> void configureProviders( Configurable<?> cfg, Class<T> type )
+	{
+		stream( type.getAnnotationsByType( RegisterProvider.class ) )
+			.forEach( a -> cfg.register( a.value(), RBUtils.getPriority( a.value(), a.priority() ) ) );
+
+		MP.getConfig( type, String.class, "providers" )
+			.map( s -> stream( s.split( "," ) ) )
+			.orElse( Stream.empty() )
+			.map( RBUtils::safeLoadClass )
+			.filter( Objects::nonNull )
+			.forEach( p -> cfg.register( p, RBUtils.getPriority( p ) ) );
+
+		final String prefix = format( "%s/mp-rest/providers/", type.getName() );
+		final Iterable<String> names = MP.getConfig().map( c -> c.getPropertyNames() ).orElse( emptyList() );
+
+		for( final String name : names ) {
+			if( !name.startsWith( prefix ) ) {
+				continue;
+			}
+
+			final String[] vec = name.substring( prefix.length() ).split( "/" );
+
+			if( vec.length != 2 ) {
+				continue;
+			}
+			if( !vec[1].equals( "priority" ) ) {
+				continue;
+			}
+
+			final Class<?> prov = RBUtils.safeLoadClass( vec[0] );
+
+			if( prov == null ) {
+				continue;
+			}
+
+			final int priority = Integer.valueOf( MP.getConfig( Integer.class, name ).get() );
+
+			cfg.register( prov, priority );
+		}
+	}
+
 	static <T> void showConfig( Consumer<Supplier<String>> log, Configuration cfg, String msg, Object... arguments )
 	{
 		log.accept( () -> {
 			try( final Formatter fmt = new Formatter() ) {
 				fmt.format( msg, arguments );
 
-				final Set<Class<?>> classes = new TreeSet<>( ( c1, c2 ) -> c1.getName().compareTo( c2.getName() ) );
+				SUPPORTED.keySet().forEach( type -> {
+					final Collection<Prioritised<?>> providers = ConfigurationEx.providers( cfg, (Class) type );
 
-				cfg.getClasses().stream().forEach( classes::add );
-				cfg.getInstances().stream().map( Object::getClass ).forEach( classes::add );
+					if( providers.size() > 0 ) {
+						fmt.format( "\n  %s", type.getSimpleName() );
 
-				classes.forEach( c -> {
-					final String cts = cfg.getContracts( c )
-						.entrySet().stream()
-						.map( e -> format( "%s:%s", e.getKey().getSimpleName(), e.getValue() ) )
-						.collect( joining( ", " ) );
-
-					fmt.format( "\n    %s -> %s", c.getName(), cts );
+						providers.forEach( p -> {
+							fmt.format( "\n    %12d: %s", p.getPriority(), p.getInstance().getClass().getName() );
+						} );
+					}
 				} );
 
 				return fmt.toString();
@@ -68,7 +115,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 	}
 
 	@Getter
-	private final RestBridgeConfiguration configuration = new RestBridgeConfiguration( this );
+	private final RestBridgeConfiguration configuration = new RestBridgeConfiguration();
 	private URL baseUrl;
 	private Long connectTimeout;
 	private Long readTimeout;
@@ -208,6 +255,8 @@ final class RestBridgeBuilder implements RestClientBuilder
 			throw new RestClientDefinitionException( "Cannot create JAX-RS client", e );
 		}
 
+		LOG.debug( "Using JAX-RS provider %s", bld.getClass().getName() );
+
 		configureTimeouts( bld, type );
 
 		final Client client = bld.build();
@@ -241,54 +290,6 @@ final class RestBridgeBuilder implements RestClientBuilder
 		catch( final RestClientMethodException e ) {
 			throw new RestClientDefinitionException( format( "%s in method %s.%s", e.getMessage(),
 				e.getMethod().getDeclaringClass().getName(), e.getMethod().getName() ) );
-		}
-	}
-
-	private ClientBuilder defaultJAXRS( Configuration cfg )
-	{
-		return (ClientBuilder) ofNullable( cfg.getProperty( ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY ) )
-			.map( b -> b instanceof Class ? RBUtils.newInstance( (Class) b ) : b )
-			.orElse( null );
-	}
-
-	private <T> void configureProviders( Configurable<?> cfg, Class<T> type )
-	{
-		stream( type.getAnnotationsByType( RegisterProvider.class ) )
-			.forEach( a -> cfg.register( a.value(), RBUtils.getPriority( a.value(), a.priority() ) ) );
-
-		MP.getConfig( type, String.class, "providers" )
-			.map( s -> stream( s.split( "," ) ) )
-			.orElse( Stream.empty() )
-			.map( RBUtils::safeLoadClass )
-			.filter( Objects::nonNull )
-			.forEach( p -> cfg.register( p, RBUtils.getPriority( p ) ) );
-
-		final String prefix = format( "%s/mp-rest/providers/", type.getName() );
-		final Iterable<String> names = MP.getConfig().map( c -> c.getPropertyNames() ).orElse( emptyList() );
-
-		for( final String name : names ) {
-			if( !name.startsWith( prefix ) ) {
-				continue;
-			}
-
-			final String[] vec = name.substring( prefix.length() ).split( "/" );
-
-			if( vec.length != 2 ) {
-				continue;
-			}
-			if( !vec[1].equals( "priority" ) ) {
-				continue;
-			}
-
-			final Class<?> prov = RBUtils.safeLoadClass( vec[0] );
-
-			if( prov == null ) {
-				continue;
-			}
-
-			final int priority = Integer.valueOf( MP.getConfig( Integer.class, name ).get() );
-
-			cfg.register( prov, priority );
 		}
 	}
 

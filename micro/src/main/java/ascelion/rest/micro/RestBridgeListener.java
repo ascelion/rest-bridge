@@ -26,7 +26,7 @@ import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.spi.RestClientListener;
 
-public final class ClientHeadersValidator implements RestClientListener
+public class RestBridgeListener implements RestClientListener
 {
 
 	static Method lookupMethod( Class<?> type, String name )

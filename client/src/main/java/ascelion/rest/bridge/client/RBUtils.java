@@ -20,7 +20,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import javax.annotation.Priority;
 import javax.enterprise.context.spi.CreationalContext;
@@ -44,7 +43,6 @@ import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ClassUtils.hierarchy;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.apache.commons.lang3.reflect.MethodUtils.getOverrideHierarchy;
@@ -89,25 +87,6 @@ public final class RBUtils
 		catch( final PrivilegedActionException e ) {
 			throw wrapException( e.getCause() );
 		}
-	}
-
-	static public <T> Collection<T> providers( Configuration cf, Class<T> type )
-	{
-		final Stream<T> si = cf
-			.getInstances()
-			.stream()
-			.filter( type::isInstance )
-			.map( type::cast );
-		final Stream<T> sc = cf
-			.getClasses()
-			.stream()
-			.filter( type::isAssignableFrom )
-			.map( RBUtils::newInstance )
-			.map( type::cast );
-
-		return Stream.concat( si, sc )
-			.sorted( ( o1, o2 ) -> comparePriority( cf, o1.getClass(), o2.getClass(), type ) )
-			.collect( toList() );
 	}
 
 	static public Charset charset( MediaType mt )
@@ -338,7 +317,7 @@ public final class RBUtils
 			.orElse( null );
 	}
 
-	static private int comparePriority( Configuration cf, Class<?> c1, Class<?> c2, Class<?> type )
+	public static int comparePriorities( Configuration cf, Class<?> type, Class<?> c1, Class<?> c2 )
 	{
 		if( Proxy.isProxyClass( c1 ) ) {
 			c1 = c1.getSuperclass();

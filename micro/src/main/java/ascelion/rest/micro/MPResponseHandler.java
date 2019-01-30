@@ -11,8 +11,11 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Response;
 
-import ascelion.rest.bridge.client.RBUtils;
+import ascelion.rest.bridge.client.ConfigurationEx;
+import ascelion.rest.bridge.client.Prioritised;
 import ascelion.rest.bridge.client.RestClient;
+
+import static java.util.stream.Collectors.toList;
 
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 
@@ -21,11 +24,15 @@ final class MPResponseHandler implements Function<Response, Throwable>
 
 	static private final String CONFIG_KEY_DISABLE_DEFAULT_MAPPER = "microprofile.rest.client.disable.default.mapper";
 
+	@SuppressWarnings( "rawtypes" )
 	private final Collection<ResponseExceptionMapper> providers;
 
 	MPResponseHandler( Configuration cf )
 	{
-		this.providers = RBUtils.providers( cf, ResponseExceptionMapper.class );
+		this.providers = ConfigurationEx.providers( cf, ResponseExceptionMapper.class )
+			.stream().map( Prioritised::getInstance )
+			.collect( toList() );
+		;
 
 		final String dis = MP.getConfig( String.class, CONFIG_KEY_DISABLE_DEFAULT_MAPPER )
 			.orElse( Objects.toString( cf.getProperty( CONFIG_KEY_DISABLE_DEFAULT_MAPPER ), "false" ) );

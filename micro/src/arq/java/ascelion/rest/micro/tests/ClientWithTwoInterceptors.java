@@ -15,7 +15,7 @@ import org.eclipse.microprofile.rest.client.tck.providers.ReturnWithURLRequestFi
 public interface ClientWithTwoInterceptors
 {
 
-	String URI = "http://localhost:3141";
+	String URI = "http://localhost:3141/";
 
 	@GET
 	@Loggable

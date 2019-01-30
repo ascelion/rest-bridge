@@ -3,18 +3,17 @@
 <configuration>
 	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<pattern>
-				%d{HH:mm:ss.SSS} %-5level %-40logger{40} [%thread]
-				%msg%n</pattern>
+			<pattern>%d{HH:mm:ss.SSS} %-5level %-40logger{40} [%thread] %msg%n</pattern>
 		</encoder>
 	</appender>
 
+	<logger name="ascelion" level="INFO"/>
 	<logger name="ascelion.rest.bridge.TRAFFIC" level="OFF" />
 	<logger name="ascelion.rest.bridge.tests.SERVER" level="OFF" />
 	<logger name="ascelion.rest.bridge.micro.CONFIG" level="OFF" />
 
 	<!-- <logger name="org.jboss.weld" level="ALL" /> -->
-	<!-- <logger name="org.glassfish.jersey" level="ALL" /> -->
+	<!-- <logger name="org.glassfish.jersey" level="INFO" /> -->
 
 	<root level="ERROR">
 		<appender-ref ref="CONSOLE" />

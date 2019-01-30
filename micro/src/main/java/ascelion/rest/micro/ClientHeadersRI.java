@@ -107,7 +107,7 @@ final class ClientHeadersRI extends RestRequestInterceptorBase
 	private String[] evalMethod( RestRequestContext rc, String headerName, String methodName, boolean required ) throws IllegalAccessException, InvocationTargetException
 	{
 		final RestMethodInfo mi = rc.getMethodInfo();
-		final Method eval = ClientHeadersValidator.lookupMethod( mi.getServiceType(), methodName );
+		final Method eval = RestBridgeListener.lookupMethod( mi.getServiceType(), methodName );
 		Object result = null;
 
 		if( Modifier.isStatic( eval.getModifiers() ) ) {

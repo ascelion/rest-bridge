@@ -14,13 +14,12 @@ dependencies {
 
 	testImplementation project( ':tests:interfaces' )
 
-	testImplementation 'com.github.tomakehurst:wiremock'
-	testImplementation 'org.apache.commons:commons-io'
-
 	testImplementation 'junit:junit'
 	testImplementation 'org.hamcrest:hamcrest-core'
 	testImplementation 'org.hamcrest:hamcrest-library'
 	testImplementation 'org.mockito:mockito-core'
+
+	testImplementation 'com.github.tomakehurst:wiremock'
 
 	testRuntime 'org.hibernate:hibernate-validator'
 	testRuntime 'org.glassfish:javax.el'

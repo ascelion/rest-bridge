@@ -33,7 +33,7 @@ class BuildPlugin implements Plugin<Project> {
 				}
 
 				classpath {
-					defaultOutputDir file("build/eclipse")
+					defaultOutputDir file("${target.buildDir}/eclipse")
 
 					sourceSets.all { SourceSet set ->
 						plusConfigurations += [configurations.getByName( set.annotationProcessorConfigurationName )]

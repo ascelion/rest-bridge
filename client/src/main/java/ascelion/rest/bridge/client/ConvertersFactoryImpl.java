@@ -3,7 +3,6 @@ package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -131,9 +130,8 @@ final class ConvertersFactoryImpl implements ConvertersFactory
 
 	private <T> ParamConverter<T> findConverter( KEY key )
 	{
-		final Collection<ParamConverterProvider> providers = RBUtils.providers( this.cf, ParamConverterProvider.class );
-		final ParamConverter<?> c = providers.stream()
-			.map( p -> p.getConverter( key.type, key.type, key.annotations ) )
+		final ParamConverter<?> c = ConfigurationEx.providers( this.cf, ParamConverterProvider.class ).stream()
+			.map( p -> p.getInstance().getConverter( key.type, key.type, key.annotations ) )
 			.filter( Objects::nonNull )
 			.findFirst()
 			.orElseGet( () -> (ParamConverter) DEFAULT_PCP.getConverter( key.type, key.type, key.annotations ) );

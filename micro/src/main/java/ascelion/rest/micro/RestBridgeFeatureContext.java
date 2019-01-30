@@ -3,28 +3,28 @@ package ascelion.rest.micro;
 
 import java.util.Map;
 
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.FeatureContext;
 
 import lombok.RequiredArgsConstructor;
-import org.eclipse.microprofile.rest.client.RestClientBuilder;
 
 @RequiredArgsConstructor
 final class RestBridgeFeatureContext implements FeatureContext
 {
 
-	private final RestClientBuilder bld;
+	private final Configurable<?> cfg;
 
 	@Override
 	public Configuration getConfiguration()
 	{
-		return this.bld.getConfiguration();
+		return this.cfg.getConfiguration();
 	}
 
 	@Override
 	public FeatureContext property( String name, Object value )
 	{
-		this.bld.property( name, value );
+		this.cfg.property( name, value );
 
 		return this;
 	}
@@ -32,7 +32,7 @@ final class RestBridgeFeatureContext implements FeatureContext
 	@Override
 	public FeatureContext register( Class<?> componentClass )
 	{
-		this.bld.register( componentClass );
+		this.cfg.register( componentClass );
 
 		return this;
 	}
@@ -40,7 +40,7 @@ final class RestBridgeFeatureContext implements FeatureContext
 	@Override
 	public FeatureContext register( Class<?> componentClass, int priority )
 	{
-		this.bld.register( componentClass, priority );
+		this.cfg.register( componentClass, priority );
 
 		return this;
 	}
@@ -48,7 +48,7 @@ final class RestBridgeFeatureContext implements FeatureContext
 	@Override
 	public FeatureContext register( Class<?> componentClass, Class<?>... contracts )
 	{
-		this.bld.register( componentClass, contracts );
+		this.cfg.register( componentClass, contracts );
 
 		return this;
 	}
@@ -56,7 +56,7 @@ final class RestBridgeFeatureContext implements FeatureContext
 	@Override
 	public FeatureContext register( Class<?> componentClass, Map<Class<?>, Integer> contracts )
 	{
-		this.bld.register( componentClass, contracts );
+		this.cfg.register( componentClass, contracts );
 
 		return this;
 	}
@@ -64,7 +64,7 @@ final class RestBridgeFeatureContext implements FeatureContext
 	@Override
 	public FeatureContext register( Object component )
 	{
-		this.bld.register( component );
+		this.cfg.register( component );
 
 		return this;
 	}
@@ -72,7 +72,7 @@ final class RestBridgeFeatureContext implements FeatureContext
 	@Override
 	public FeatureContext register( Object component, int priority )
 	{
-		this.bld.register( component, priority );
+		this.cfg.register( component, priority );
 
 		return this;
 	}
@@ -80,7 +80,7 @@ final class RestBridgeFeatureContext implements FeatureContext
 	@Override
 	public FeatureContext register( Object component, Class<?>... contracts )
 	{
-		this.bld.register( component, contracts );
+		this.cfg.register( component, contracts );
 
 		return this;
 	}
@@ -88,7 +88,7 @@ final class RestBridgeFeatureContext implements FeatureContext
 	@Override
 	public FeatureContext register( Object component, Map<Class<?>, Integer> contracts )
 	{
-		this.bld.register( component, contracts );
+		this.cfg.register( component, contracts );
 
 		return this;
 	}
