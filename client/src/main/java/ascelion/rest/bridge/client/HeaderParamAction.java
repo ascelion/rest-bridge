@@ -23,6 +23,6 @@ extends AnnotationAction<HeaderParam>
 	@Override
 	<T> void visitElement( RestRequest<?> req, T v )
 	{
-		req.header( this.annotation.value(), this.param.converter.apply( v ) );
+		req.rc.header( this.annotation.value(), this.param.converter.apply( v ) );
 	}
 }

@@ -18,6 +18,7 @@ final class RestClientData
 	final Class<?> type;
 	final Configuration conf;
 	final ConvertersFactory cvsf;
+	final Function<RestRequestContext, RestRequestContext> reqi;
 	final Function<Response, Throwable> rsph;
 	final Executor exec;
 	final AsyncInterceptor<Object> aint;
@@ -28,6 +29,7 @@ final class RestClientData
 		this.type = type;
 		this.conf = rcd.conf;
 		this.cvsf = rcd.cvsf;
+		this.reqi = rcd.reqi;
 		this.rsph = rcd.rsph;
 		this.exec = rcd.exec;
 		this.aint = rcd.aint;

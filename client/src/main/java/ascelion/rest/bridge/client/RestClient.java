@@ -15,7 +15,9 @@ import javax.ws.rs.core.UriBuilder;
 
 import static ascelion.rest.bridge.client.RestClientProperties.ASYNC_INTERCEPTOR;
 import static ascelion.rest.bridge.client.RestClientProperties.NO_ASYNC_INTERCEPTOR;
+import static ascelion.rest.bridge.client.RestClientProperties.NO_REQUEST_INTERCEPTOR;
 import static ascelion.rest.bridge.client.RestClientProperties.NO_RESPONSE_HANDLER;
+import static ascelion.rest.bridge.client.RestClientProperties.REQUEST_INTERCEPTOR;
 import static ascelion.rest.bridge.client.RestClientProperties.RESPONSE_HANDLER;
 
 import lombok.Setter;
@@ -45,6 +47,8 @@ public final class RestClient
 	private URI target;
 	private final ConvertersFactory cvsf;
 	@Setter
+	private Function<RestRequestContext, RestRequestContext> requestInterceptor = NO_REQUEST_INTERCEPTOR;
+	@Setter
 	private Function<Response, Throwable> responseHandler = NO_RESPONSE_HANDLER;
 	@Setter
 	private AsyncInterceptor<?> asyncInterceptor = NO_ASYNC_INTERCEPTOR;
@@ -69,21 +73,27 @@ public final class RestClient
 
 		this.cvsf = new ConvertersFactory( client );
 
-		final Object rh = client.getConfiguration().getProperty( RESPONSE_HANDLER );
-		final Object ai = client.getConfiguration().getProperty( ASYNC_INTERCEPTOR );
+		final Object reqi = client.getConfiguration().getProperty( REQUEST_INTERCEPTOR );
+		final Object rsph = client.getConfiguration().getProperty( RESPONSE_HANDLER );
+		final Object aint = client.getConfiguration().getProperty( ASYNC_INTERCEPTOR );
 
-		if( rh != null ) {
-			this.responseHandler = (Function<Response, Throwable>) rh;
+		if( reqi != null ) {
+			this.requestInterceptor = (Function<RestRequestContext, RestRequestContext>) reqi;
 		}
-		if( ai != null ) {
-			this.asyncInterceptor = (AsyncInterceptor<?>) ai;
+		if( rsph != null ) {
+			this.responseHandler = (Function<Response, Throwable>) rsph;
+		}
+		if( aint != null ) {
+			this.asyncInterceptor = (AsyncInterceptor<?>) aint;
 		}
 	}
 
 	public <X> X getInterface( Class<X> type )
 	{
 		final Supplier<WebTarget> sup = () -> RBUtils.addPathFromAnnotation( type, this.client.target( this.target ) );
-		final RestClientData rcd = new RestClientData( type, this.client.getConfiguration(), this.cvsf, this.responseHandler, this.executor, (AsyncInterceptor<Object>) this.asyncInterceptor, sup );
+		final RestClientData rcd = new RestClientData(	type, this.client.getConfiguration(), this.cvsf,
+														this.requestInterceptor, this.responseHandler, this.executor,
+														(AsyncInterceptor<Object>) this.asyncInterceptor, sup );
 		final RestClientIH ih = new RestClientIH( rcd );
 
 		return ih.newProxy();

@@ -53,7 +53,7 @@ extends Action
 
 		if( vf != null ) {
 			final ExecutableValidator val = vf.getValidator().forExecutables();
-			final Set<ConstraintViolation<Object>> vio = val.validateParameters( req.proxy, this.method, req.arguments );
+			final Set<ConstraintViolation<Object>> vio = val.validateParameters( req.proxy, this.method, req.rc.getArguments().toArray() );
 
 			if( vio.size() > 0 ) {
 				throw new ConstraintViolationException( vio );

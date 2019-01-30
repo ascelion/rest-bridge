@@ -1,3 +1,4 @@
+
 sourceSets {
 	arq {
 		java {
@@ -16,7 +17,6 @@ dependencies
 	arqImplementation 'javax.json.bind:javax.json.bind-api'
 	arqImplementation 'javax.interceptor:javax.interceptor-api'
 
-	arqImplementation project( ':micro' )
 	arqImplementation project( ':tests:application' )
 	arqImplementation project( ':tests:interfaces' )
 	arqImplementation project( ':tests:shared' )
@@ -51,6 +51,8 @@ check.dependsOn tasks.register( 'arq', Test ) {
 		html.enabled = false
 		junitXml.enabled = false
 	}
+
+	debug = booleanProperty( 'arq.debug' )
 
 	useTestNG() {
 		useDefaultListeners = true

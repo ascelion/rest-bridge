@@ -5,6 +5,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.security.PrivilegedAction;
@@ -17,19 +18,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.ws.rs.*;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 
+import static ascelion.rest.bridge.client.RBUtils.addPathFromAnnotation;
+import static ascelion.rest.bridge.client.RBUtils.findAnnotation;
+import static ascelion.rest.bridge.client.RBUtils.getHttpMethod;
+import static ascelion.rest.bridge.client.RBUtils.pathElements;
+import static io.leangen.geantyref.GenericTypeReflector.getExactParameterTypes;
+import static io.leangen.geantyref.GenericTypeReflector.getExactReturnType;
 import static java.lang.String.format;
 import static java.security.AccessController.doPrivileged;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.reflect.FieldUtils.getAllFieldsList;
 import static org.apache.commons.lang3.reflect.FieldUtils.readField;
 
-import io.leangen.geantyref.GenericTypeReflector;
 import lombok.SneakyThrows;
 
 final class RestMethod
@@ -58,6 +66,8 @@ final class RestMethod
 
 	private final RestClientData rcd;
 	private final Method javaMethod;
+	private final GenericType<?> returnType;
+	private boolean async;
 	private final String httpMethod;
 	private final List<Action> actions = new ArrayList<>( 8 );
 	private final Map<String, Boolean> pathElements = new LinkedHashMap<>();
@@ -66,14 +76,30 @@ final class RestMethod
 	{
 		this.rcd = rcd;
 		this.javaMethod = method;
-		this.httpMethod = RBUtils.getHttpMethod( method );
+		this.httpMethod = getHttpMethod( method );
+
+		final Type rt = getExactReturnType( this.javaMethod, rcd.type );
+		GenericType<?> gt = new GenericType<>( rt );
+
+		if( gt.getRawType() == CompletionStage.class ) {
+			this.async = true;
+
+			gt = new GenericType<>( ( (ParameterizedType) gt.getType() ).getActualTypeArguments()[0] );
+		}
+		else {
+			this.async = false;
+
+			gt = new GenericType<>( rt );
+		}
+
+		this.returnType = gt;
 
 		final String paths = Stream.of( method.getAnnotation( Path.class ), rcd.type.getAnnotation( Path.class ) )
 			.filter( Objects::nonNull )
 			.map( Path::value )
 			.collect( joining() );
 
-		RBUtils.pathElements( paths ).forEach( p -> this.pathElements.put( p, false ) );
+		pathElements( paths ).forEach( p -> this.pathElements.put( p, false ) );
 
 		final Parameter[] params = method.getParameters();
 
@@ -83,7 +109,7 @@ final class RestMethod
 			final int index = q;
 			final Annotation[] annotations = params[index].getAnnotations();
 			final Function<Object, String> cvt = (Function) rcd.cvsf.getConverter( params[index].getType(), annotations );
-			final ActionParam p = new ActionParam( index, params[index].getType(), annotations, req -> req.arguments[index], cvt );
+			final ActionParam p = new ActionParam( index, params[index].getType(), annotations, req -> req.rc.getArgumentAt( index ), cvt );
 
 			if( collectActions( annotations, p ) ) {
 				this.actions.stream()
@@ -92,16 +118,16 @@ final class RestMethod
 						throw new RestClientMethodException( "An entity is already present at parameter " + a.param.index, this.javaMethod );
 					} );
 
-				final Type entityType = GenericTypeReflector.getExactParameterTypes( this.javaMethod, this.rcd.type )[index];
+				final Type entityType = getExactParameterTypes( this.javaMethod, this.rcd.type )[index];
 				final EntityAction entityAction = new EntityAction( p, entityType );
 
 				this.actions.add( entityAction );
 			}
 		}
 
-		RBUtils.findAnnotation( Produces.class, method, rcd.type )
+		findAnnotation( Produces.class, method, rcd.type )
 			.ifPresent( a -> this.actions.add( new ProducesAction( a, this.actions.size() ) ) );
-		RBUtils.findAnnotation( Consumes.class, method, rcd.type )
+		findAnnotation( Consumes.class, method, rcd.type )
 			.ifPresent( a -> this.actions.add( new ConsumesAction( a, this.actions.size() ) ) );
 
 		this.pathElements.entrySet().stream()
@@ -191,6 +217,20 @@ final class RestMethod
 		return true;
 	}
 
+	Callable<?> request( Object proxy, Object... arguments ) throws URISyntaxException
+	{
+		final WebTarget actualTarget = addPathFromAnnotation( this.javaMethod, this.rcd.tsup.get() );
+		final RestRequestContextImpl rc = new RestRequestContextImpl( actualTarget, this.rcd.type, this.javaMethod, proxy, arguments );
+		final RestRequest<?> req = new RestRequest<>( this.rcd, proxy, this.returnType, this.async, this.httpMethod, rc );
+		Callable<?> res = null;
+
+		for( final Action a : this.actions ) {
+			res = a.execute( req );
+		}
+
+		return res;
+	}
+
 	@SneakyThrows
 	private Object readFieldValue( RestRequest<?> req, ActionParam param, Field field )
 	{
@@ -200,18 +240,5 @@ final class RestMethod
 		catch( final PrivilegedActionException e ) {
 			throw e.getCause();
 		}
-	}
-
-	Callable<?> request( Object proxy, Object... arguments ) throws URISyntaxException
-	{
-		final WebTarget actualTarget = RBUtils.addPathFromAnnotation( this.javaMethod, this.rcd.tsup.get() );
-		final RestRequest<?> req = new RestRequest<>( this.rcd, proxy, this.javaMethod, this.httpMethod, actualTarget, arguments );
-		Callable<?> res = null;
-
-		for( final Action a : this.actions ) {
-			res = a.execute( req );
-		}
-
-		return res;
 	}
 }

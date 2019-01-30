@@ -1,6 +1,6 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="CxfMPRestClientTCK1.2">
+<suite name="ResteasyMPRestClientTCK1.2">
 	<test name="AllTests">
 		<packages>
 			<package name="ascelion.rest.micro.tests" />
@@ -9,8 +9,14 @@
 			<package name="org.eclipse.microprofile.rest.client.tck.cditests" />
 			<package name="org.eclipse.microprofile.rest.client.tck.timeout" />
 		</packages>
-<!--
 		<classes>
+			<!-- RESTEASY003880: Unable to find contextual data of type: javax.ws.rs.core.HttpHeaders
+			<class name="org.eclipse.microprofile.rest.client.tck.ClientHeadersFactoryTest">
+				<methods>
+					<exclude name=".+" />
+				</methods>
+			</class> -->
+<!--
 			<class name="org.eclipse.microprofile.rest.client.tck.InvokeWithJsonBProviderTest">
 				<methods>
 					<exclude name=".+" />
@@ -31,7 +37,7 @@
 					<exclude name=".+" />
 				</methods>
 			</class>
-		</classes>
 -->
+		</classes>
 	</test>
 </suite>

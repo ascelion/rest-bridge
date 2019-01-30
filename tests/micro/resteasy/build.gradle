@@ -2,5 +2,6 @@ apply from: rootProject.file('eclipse-tck.gradle')
 
 dependencies
 {
+	arqRuntime project( ':micro' )
 	arqRuntime 'org.jboss.resteasy:resteasy-client'
 }

@@ -1,78 +1,44 @@
 
 package ascelion.rest.bridge.client;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import static java.util.Optional.ofNullable;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
-
-import io.leangen.geantyref.GenericTypeReflector;
-import lombok.Getter;
 
 final class RestRequest<T> implements Callable<T>
 {
 
 	private final RestClientData rcd;
 	final Object proxy;
-	private final Method javaMethod;
-	final Object[] arguments;
 	private final String httpMethod;
-	@Getter
-	private WebTarget target;
+	final RestRequestContextImpl rc;
 
 	private final GenericType<T> returnType;
+	private boolean async;
 
-	private final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
-	private final Collection<Cookie> cookies = new ArrayList<>();
 	private String[] accepts;
 	private String contentType;
 	private Object entity;
-	private boolean async;
 
-	RestRequest( RestClientData rcd, Object proxy, Method javaMethod, String httpMethod, WebTarget target, Object... arguments )
+	RestRequest( RestClientData rcd, Object proxy, GenericType<T> returnType, boolean async, String httpMethod, RestRequestContextImpl rc )
 	{
 		this.rcd = rcd;
+		this.rc = rc;
 		this.proxy = proxy;
-		this.javaMethod = javaMethod;
 		this.httpMethod = httpMethod;
-
-		final Type rt = GenericTypeReflector.getExactReturnType( this.javaMethod, rcd.type );
-		GenericType<?> gt = new GenericType<>( rt );
-
-		if( gt.getRawType() == CompletionStage.class ) {
-			this.async = true;
-
-			gt = new GenericType<>( ( (ParameterizedType) gt.getType() ).getActualTypeArguments()[0] );
-		}
-		else {
-			this.async = false;
-
-			gt = new GenericType<>( rt );
-		}
-
-		this.returnType = (GenericType<T>) gt;
-		this.target = target;
-		this.arguments = arguments == null ? new Object[0] : arguments;
+		this.returnType = returnType;
 	}
 
 	void consumes( String[] value )
@@ -84,7 +50,7 @@ final class RestRequest<T> implements Callable<T>
 
 	void cookie( Cookie c )
 	{
-		this.cookies.add( c );
+		this.rc.getCookies().add( c );
 	}
 
 	void entity( Object entity )
@@ -117,29 +83,9 @@ final class RestRequest<T> implements Callable<T>
 		form.param( name, value );
 	}
 
-	void header( String name, String value )
-	{
-		this.headers.add( name, value );
-	}
-
-	void matrix( String name, String value )
-	{
-		this.target = this.target.matrixParam( name, value );
-	}
-
-	void path( String name, String value )
-	{
-		this.target = this.target.resolveTemplate( name, value, true );
-	}
-
 	void produces( String[] value )
 	{
 		this.accepts = value;
-	}
-
-	void query( String name, String value )
-	{
-		this.target = this.target.queryParam( name, value );
 	}
 
 	@Override
@@ -170,19 +116,20 @@ final class RestRequest<T> implements Callable<T>
 
 	private T invoke() throws Exception
 	{
-		final Invocation.Builder b = this.target.request();
+		RestClient.invokedMethod( this.rc.getJavaMethod() );
 
-		b.headers( this.headers );
+		this.rcd.reqi.apply( this.rc );
+
+		final Invocation.Builder b = this.rc.getTarget().request();
+
+		this.rc.getHeaders().forEach( b::header );
+		this.rc.getCookies().forEach( b::cookie );
 
 		if( this.accepts != null ) {
 			b.accept( this.accepts );
 		}
 
-		this.cookies.forEach( b::cookie );
-
 		final Response rsp;
-
-		RestClient.invokedMethod( this.javaMethod );
 
 		try {
 			if( this.entity != null ) {

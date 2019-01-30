@@ -31,7 +31,7 @@ import org.eclipse.yasson.YassonProperties;
 public class JsonBProvider implements MessageBodyReader<Object>, MessageBodyWriter<Object>
 {
 
-	static private class AnyAccessStrategy implements PropertyVisibilityStrategy
+	static public class AnyAccessStrategy implements PropertyVisibilityStrategy
 	{
 
 		@Override
@@ -48,19 +48,24 @@ public class JsonBProvider implements MessageBodyReader<Object>, MessageBodyWrit
 
 	}
 
-	static private Jsonb jsonb( MediaType mt )
+	static public JsonbConfig defaultConfig( MediaType mt )
+	{
+		final JsonbConfig cf = new JsonbConfig();
+
+		cf.setProperty( YassonProperties.ZERO_TIME_PARSE_DEFAULTING, true );
+		cf.setProperty( YassonProperties.FAIL_ON_UNKNOWN_PROPERTIES, false );
+
+		cf.withPropertyVisibilityStrategy( new AnyAccessStrategy() );
+		cf.withEncoding( RBUtils.charset( mt ).name() );
+
+		return cf;
+	}
+
+	static private Jsonb jsonb( JsonbConfig cf, MediaType mt )
 	{
 		try {
-			final JsonbConfig cf = new JsonbConfig();
-
-			cf.setProperty( YassonProperties.ZERO_TIME_PARSE_DEFAULTING, true );
-			cf.setProperty( YassonProperties.FAIL_ON_UNKNOWN_PROPERTIES, false );
-
-			cf.withPropertyVisibilityStrategy( new AnyAccessStrategy() );
-			cf.withEncoding( RBUtils.charset( mt ).name() );
-
 			return JsonbBuilder.newBuilder()
-				.withConfig( cf )
+				.withConfig( cf.withEncoding( RBUtils.charset( mt ).name() ) )
 				.build();
 		}
 		catch( final JsonbException e ) {
@@ -68,11 +73,19 @@ public class JsonBProvider implements MessageBodyReader<Object>, MessageBodyWrit
 		}
 	}
 
+	private final JsonbConfig config;
 	private final boolean enabled;
+
+	public JsonBProvider( JsonbConfig config )
+	{
+		this.config = config;
+		this.enabled = jsonb( this.config, null ) != null;
+	}
 
 	public JsonBProvider()
 	{
-		this.enabled = jsonb( null ) != null;
+		this.config = defaultConfig( null );
+		this.enabled = jsonb( this.config, null ) != null;
 	}
 
 	@Override
@@ -84,7 +97,7 @@ public class JsonBProvider implements MessageBodyReader<Object>, MessageBodyWrit
 	@Override
 	public void writeTo( Object t, Class<?> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, Object> headers, OutputStream os ) throws IOException, WebApplicationException
 	{
-		jsonb( mt ).toJson( t, os );
+		jsonb( this.config, mt ).toJson( t, os );
 	}
 
 	@Override
@@ -96,7 +109,7 @@ public class JsonBProvider implements MessageBodyReader<Object>, MessageBodyWrit
 	@Override
 	public Object readFrom( Class<Object> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, String> headers, InputStream is ) throws IOException, WebApplicationException
 	{
-		return jsonb( mt ).fromJson( is, type );
+		return jsonb( this.config, mt ).fromJson( is, type );
 	}
 
 }

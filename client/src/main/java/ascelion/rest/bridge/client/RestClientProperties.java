@@ -9,6 +9,7 @@ public final class RestClientProperties
 {
 
 	static public final AsyncInterceptor<Object> NO_ASYNC_INTERCEPTOR = () -> null;
+	static public final Function<RestRequestContext, RestRequestContext> NO_REQUEST_INTERCEPTOR = rc -> rc;
 	static public final Function<Response, Throwable> NO_RESPONSE_HANDLER = rsp -> null;
 
 	/**
@@ -18,4 +19,5 @@ public final class RestClientProperties
 
 	static public final String RESPONSE_HANDLER = "ascelion.rest.bridge.responseHandler";
 	static public final String ASYNC_INTERCEPTOR = "ascelion.rest.bridge.asyncInterceptor";
+	static public final String REQUEST_INTERCEPTOR = "ascelion.rest.bridge.requestInterceptor";
 }

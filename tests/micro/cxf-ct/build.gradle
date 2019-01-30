@@ -2,6 +2,7 @@ apply from: rootProject.file('eclipse-tck.gradle')
 
 dependencies
 {
-	arqRuntime project( ':micro' )
+	arqRuntime 'org.apache.cxf:cxf-rt-rs-mp-client'
 	arqRuntime 'org.apache.cxf:cxf-rt-rs-client'
+	arqRuntime 'org.eclipse:yasson'
 }

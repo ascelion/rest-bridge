@@ -7,10 +7,11 @@ include 'tests:application'
 include 'tests:interfaces'
 include 'tests:shared'
 include 'tests:micro:cxf'
+include 'tests:micro:cxf-ct'
 include 'tests:micro:jersey'
 include 'tests:micro:resteasy'
 
-def mpLocal = new File( rootProject.projectDir, 'mp-local/eclipse' )
+def mpLocal = new File( rootProject.projectDir, 'mp-local/eclipse/pom.xml' )
 
 if( mpLocal.exists() ) {
 	include 'mp-local:api'
