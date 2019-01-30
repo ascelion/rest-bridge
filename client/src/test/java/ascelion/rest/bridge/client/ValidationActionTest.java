@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 import javax.validation.ConstraintViolationException;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 
 import ascelion.rest.bridge.tests.api.BeanData;
 import ascelion.rest.bridge.tests.api.Validated;
@@ -162,8 +163,9 @@ public class ValidationActionTest
 	private void runTest( String methodName, Object... arguments )
 	{
 		final Method method = findMethod( methodName );
-		final RestClientData rbt = new RestClientData( Object.class, null, null, null, null, null, null );
-		final RestRequest<?> req = new RestRequest<>( rbt, this.client, Object.class.getMethod( "hashCode" ), "GET", this.target, arguments );
+		final RestClientData rbt = new RestClientData( Object.class, null, null, null, null, null, null, null );
+		final RestRequestContextImpl rc = new RestRequestContextImpl( this.target, Object.class, Object.class.getMethod( "hashCode" ), null, arguments );
+		final RestRequest<?> req = new RestRequest<>( rbt, this.client, new GenericType<>( Object.class ), false, "GET", rc );
 		final ValidationAction action = new ValidationAction( method );
 
 		action.execute( req );

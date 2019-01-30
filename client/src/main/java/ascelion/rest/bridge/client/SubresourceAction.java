@@ -21,7 +21,7 @@ extends Action
 	@Override
 	Callable<?> execute( RestRequest<?> req )
 	{
-		final RestClientIH inv = new RestClientIH( new RestClientData( this.resourceType, this.rcd, () -> req.getTarget() ) );
+		final RestClientIH inv = new RestClientIH( new RestClientData( this.resourceType, this.rcd, () -> req.rc.getTarget() ) );
 
 		return () -> inv.newProxy();
 	}

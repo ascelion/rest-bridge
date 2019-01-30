@@ -22,7 +22,7 @@ pipeline {
 		}
 		stage('Checks') {
 			steps {
-				sh "./gradlew check --continue || true"
+				sh "./gradlew -DignoreFailures check --continue || true"
 				junit allowEmptyResults: true, testResults: "**/TEST-*.xml"
 				step([$class: 'Publisher', reportFilenamePattern: '**/testng-results.xml'])
 			}

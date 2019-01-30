@@ -1,6 +1,6 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="CxfMPRestClientTCK1.2">
+<suite name="CxfCtMPRestClientTCK1.2">
 	<test name="AllTests">
 		<packages>
 			<package name="ascelion.rest.micro.tests" />

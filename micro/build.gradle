@@ -9,11 +9,14 @@ dependencies {
 	externalApi 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 	externalApi 'org.eclipse.microprofile.config:microprofile-config-api'
 
-	implementation 'org.eclipse:yasson'
+	compileOnly 'org.eclipse:yasson'
+
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'org.apache.commons:commons-io'
-}
 
-test {
-	enabled = false
+	testImplementation 'junit:junit'
+	testImplementation 'org.hamcrest:hamcrest-core'
+	testImplementation 'org.hamcrest:hamcrest-library'
+	testImplementation 'org.mockito:mockito-core'
+	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
 }

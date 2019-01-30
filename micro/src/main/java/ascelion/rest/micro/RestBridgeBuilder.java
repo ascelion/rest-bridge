@@ -14,9 +14,9 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Configuration;
 
+import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.bridge.client.RestClient;
 import ascelion.rest.bridge.client.RestClientMethodException;
-import ascelion.rest.bridge.client.RBUtils;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -193,6 +193,7 @@ final class RestBridgeBuilder implements RestClientBuilder
 			rc.setExecutor( this.executorService );
 		}
 
+		rc.setRequestInterceptor( new MPRequestInterceptor() );
 		rc.setResponseHandler( new MPResponseHandler( this.configuration ) );
 		rc.setAsyncInterceptor( new MPAsyncInterceptor( cfg ) );
 

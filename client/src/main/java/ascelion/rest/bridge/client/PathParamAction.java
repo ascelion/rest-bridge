@@ -17,7 +17,7 @@ extends AnnotationAction<PathParam>
 	{
 		final String val = this.param.converter.apply( this.param.currentValue( req ) );
 
-		req.path( this.annotation.value(), val );
+		req.rc.path( this.annotation.value(), val );
 
 		return req;
 	}

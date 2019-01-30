@@ -1,6 +1,9 @@
 
 package ascelion.rest.micro.tests;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 
 import javax.inject.Inject;
@@ -13,10 +16,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.reflect.FieldUtils.writeDeclaredField;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.eclipse.microprofile.rest.client.tck.WiremockArquillianTest;
@@ -82,15 +85,18 @@ public class JsonBProviderTest extends WiremockArquillianTest
 		final MyJsonBObject o1 = new MyJsonBObject();
 
 		o1.setQty( 10 );
-		FieldUtils.writeDeclaredField( o1, "name", "name", true );
-		FieldUtils.writeDeclaredField( o1, "date", new Date(), true );
 
-		final JsonbConfig c = new JsonbConfig();
+		final Instant now = LocalDate.now().atStartOfDay( ZoneId.of( "UTC" ) ).toInstant();
 
-		c.withNullValues( true );
-		c.withFormatting( true );
+		writeDeclaredField( o1, "date", Date.from( now ), true );
+		writeDeclaredField( o1, "name", "name", true );
 
-		final String s = JsonbBuilder.create( c ).toJson( o1 );
+		final JsonbConfig cf = new JsonbConfig();
+
+		cf.withNullValues( true );
+		cf.withFormatting( true );
+
+		final String s = JsonbBuilder.create( cf ).toJson( o1 );
 
 		stubFor( get( urlEqualTo( "/myObject" ) )
 			.willReturn( aResponse()

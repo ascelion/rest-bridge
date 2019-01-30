@@ -23,6 +23,6 @@ extends AnnotationAction<MatrixParam>
 	@Override
 	<T> void visitElement( RestRequest<?> req, T v )
 	{
-		req.matrix( this.annotation.value(), this.param.converter.apply( v ) );
+		req.rc.matrix( this.annotation.value(), this.param.converter.apply( v ) );
 	}
 }

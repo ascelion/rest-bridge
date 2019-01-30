@@ -1,6 +1,9 @@
 
 package ascelion.rest.bridge.client;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -17,6 +20,18 @@ final class RestClientIH
 {
 
 	static private final Collection<Method> O_METHODS = asList( Object.class.getMethods() );
+	static private final Constructor<MethodHandles.Lookup> LOOKUP;
+
+	static {
+		try {
+			LOOKUP = MethodHandles.Lookup.class.getDeclaredConstructor( Class.class, int.class );
+
+			LOOKUP.setAccessible( true );
+		}
+		catch( NoSuchMethodException | SecurityException e ) {
+			throw new ExceptionInInitializerError( e );
+		}
+	}
 
 	private final RestClientData rcd;
 	private final Map<Method, RestMethod> methods = new HashMap<>();
@@ -67,13 +82,16 @@ final class RestClientIH
 				continue;
 			}
 
-			addMethod( m );
+			if( !m.isDefault() ) {
+				addMethod( m );
+			}
 		}
 	}
 
 	private void addMethod( Method m )
 	{
-		this.methods.put( m, new RestMethod( this.rcd, m ) );
+		final RestMethod x = new RestMethod( this.rcd, m );
+		this.methods.put( m, x );
 	}
 
 	private Object invoke( Object proxy, Method method, Object[] arguments ) throws Throwable
@@ -84,11 +102,19 @@ final class RestClientIH
 
 		final RestMethod met = this.methods.get( method );
 
-		if( met == null ) {
-			throw new RestClientMethodException( "Could not handle method ", method );
+		if( met != null ) {
+			return met.request( proxy, arguments ).call();
+		}
+		else if( method.isDefault() ) {
+			final Class<?> cls = method.getDeclaringClass();
+			final MethodHandle han = LOOKUP.newInstance( cls, -1 )
+				.unreflectSpecial( method, cls )
+				.bindTo( proxy );
+
+			return han.invokeWithArguments( arguments );
 		}
 
-		return met.request( proxy, arguments ).call();
+		throw new RestClientMethodException( "Could not handle method ", method );
 	}
 
 }

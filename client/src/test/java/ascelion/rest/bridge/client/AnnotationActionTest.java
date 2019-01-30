@@ -23,6 +23,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import static ascelion.rest.bridge.client.RestClientProperties.NO_ASYNC_INTERCEPTOR;
+import static ascelion.rest.bridge.client.RestClientProperties.NO_REQUEST_INTERCEPTOR;
 import static ascelion.rest.bridge.client.RestClientProperties.NO_RESPONSE_HANDLER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
@@ -64,7 +65,9 @@ public class AnnotationActionTest
 	public void setUp()
 	{
 		final ConvertersFactory cvsf = new ConvertersFactory( this.mc.client );
-		final RestClientData rbt = new RestClientData( Interface.class, this.mc.configuration, cvsf, NO_RESPONSE_HANDLER, null, NO_ASYNC_INTERCEPTOR, () -> this.mc.methodTarget );
+		final RestClientData rbt = new RestClientData(	Interface.class, this.mc.configuration,
+														cvsf, NO_REQUEST_INTERCEPTOR, NO_RESPONSE_HANDLER, null,
+														NO_ASYNC_INTERCEPTOR, () -> this.mc.methodTarget );
 
 		this.met = new RestMethod( rbt, Interface.class.getMethod( "get" ) );
 		this.actions = (List<Action>) readDeclaredField( this.met, "actions", true );
@@ -106,15 +109,14 @@ public class AnnotationActionTest
 	{
 		createAction( CookieParam.class, CookieParamAction::new );
 
-		final Object req = callMock();
-
-		final Collection<Cookie> cookies = (Collection<Cookie>) readDeclaredField( req, "cookies", true );
+		final RestRequest<?> req = callMock();
+		final Collection<Cookie> cookies = req.rc.getCookies();
 
 		assertThat( cookies, hasSize( 1 ) );
 
-		final Cookie cookie = cookies.iterator().next();
-
-		verify( this.mc.bld, times( 1 ) ).cookie( same( cookie ) );
+		cookies.forEach( c -> {
+			verify( this.mc.bld, times( 1 ) ).cookie( same( c ) );
+		} );
 	}
 
 	@Test
@@ -150,11 +152,14 @@ public class AnnotationActionTest
 	{
 		createAction( HeaderParam.class, HeaderParamAction::new );
 
-		final Object req = callMock();
-		final MultivaluedMap<String, Object> headers = (MultivaluedMap<String, Object>) readDeclaredField( req, "headers", true );
+		final RestRequest<?> req = callMock();
+		final MultivaluedMap<String, String> headers = req.rc.getHeaders();
 
 		assertThat( headers, hasEntry( ANNOTATION_VALUE, asList( PARAM_VALUE ) ) );
-		verify( this.mc.bld, times( 1 ) ).headers( same( headers ) );
+
+		headers.forEach( ( k, v ) -> {
+			verify( this.mc.bld, times( 1 ) ).header( eq( k ), eq( v ) );
+		} );
 	}
 
 	@Test
@@ -205,13 +210,13 @@ public class AnnotationActionTest
 	}
 
 	@SneakyThrows
-	private Object callMock()
+	private <T extends Callable<?>> T callMock()
 	{
-		final Callable<?> req = this.met.request( mock( Interface.class ) );
+		final Callable<T> req = (Callable<T>) this.met.request( mock( Interface.class ) );
 
 		req.call();
 
-		return req;
+		return (T) req;
 	}
 
 	@SneakyThrows

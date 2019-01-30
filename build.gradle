@@ -62,7 +62,7 @@ subprojects { sub ->
 			html.enabled = true
 		}
 
-		systemProperty "force", UUID.randomUUID()
+//		systemProperty "force", UUID.randomUUID()
 	}
 
 	plugins.withType( MavenPublishPlugin ) {

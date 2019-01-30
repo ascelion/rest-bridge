@@ -23,6 +23,6 @@ extends AnnotationAction<QueryParam>
 	@Override
 	<T> void visitElement( RestRequest<?> req, T v )
 	{
-		req.query( this.annotation.value(), this.param.converter.apply( v ) );
+		req.rc.query( this.annotation.value(), this.param.converter.apply( v ) );
 	}
 }
