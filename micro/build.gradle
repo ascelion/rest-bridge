@@ -8,6 +8,7 @@ dependencies {
 	externalApi 'javax.json:javax.json-api'
 	externalApi 'javax.enterprise:cdi-api'
 	externalApi 'javax.annotation:javax.annotation-api'
+	externalApi 'javax.validation:validation-api'
 	externalApi 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api'
 	externalApi 'org.eclipse.microprofile.config:microprofile-config-api'
 
@@ -25,5 +26,10 @@ dependencies {
 	testImplementation 'org.mockito:mockito-core'
 	testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck'
 	testImplementation 'org.glassfish.jersey.core:jersey-client'
+
+	testRuntime 'org.glassfish.jersey.core:jersey-client'
+	testRuntime 'org.glassfish.jersey.inject:jersey-hk2'
+
 	testImplementation 'com.github.tomakehurst:wiremock'
+	testRuntime 'commons-logging:commons-logging'
 }

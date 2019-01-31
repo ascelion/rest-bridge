@@ -3,7 +3,7 @@ apply plugin: 'io.spring.dependency-management'
 def versions = [
 	slf4j: '1.7.25',
 	asm: '7.0',
-	cxf: '3.3.1-SNAPSHOT',
+	cxf: '3.3.0',
 	micro: [
 		rest: '1.2.0',
 		config: '1.2',

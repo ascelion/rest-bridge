@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.ClientRequestContext;
@@ -12,6 +13,7 @@ import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.Response;
 
 import static java.util.Collections.singletonMap;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -31,12 +33,13 @@ public class GetAnyTest extends WiremockArquillianTest
 {
 
 	@Path( "" )
-	@RegisterRestClient( baseUri = "http://localhost" )
+	@RegisterRestClient( baseUri = "http://localhost/" )
 	public interface GetAny
 	{
 
 		@GET
 		@Path( "map" )
+		@Consumes( APPLICATION_JSON )
 		Map<String, String> getMap();
 
 		@GET

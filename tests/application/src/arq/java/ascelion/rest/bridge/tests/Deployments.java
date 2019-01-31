@@ -42,7 +42,9 @@ public abstract class Deployments
 	}
 
 	@Rule
-	public final Timeout timeout = System.getenv().containsKey( "ECLIPSE_VERSION" ) ? null : new Timeout( 15, TimeUnit.SECONDS );
+	public final Timeout timeout = System.getenv().containsKey( "ECLIPSE_VERSION" )
+		? null
+		: new Timeout( 15, TimeUnit.SECONDS );
 
 	@ArquillianResource
 	protected URI target;
