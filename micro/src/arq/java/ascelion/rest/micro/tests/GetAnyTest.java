@@ -1,23 +1,25 @@
 
 package ascelion.rest.micro.tests;
 
-import java.io.IOException;
 import java.util.Map;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.ClientRequestContext;
-import javax.ws.rs.client.ClientRequestFilter;
-import javax.ws.rs.core.Response;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static java.util.Collections.singletonMap;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.eclipse.microprofile.rest.client.tck.WiremockArquillianTest;
@@ -33,7 +35,7 @@ public class GetAnyTest extends WiremockArquillianTest
 {
 
 	@Path( "" )
-	@RegisterRestClient( baseUri = "http://localhost/" )
+	@RegisterRestClient
 	public interface GetAny
 	{
 
@@ -47,28 +49,16 @@ public class GetAnyTest extends WiremockArquillianTest
 		String getString();
 	}
 
-	static public class AbortResponse implements ClientRequestFilter
-	{
-
-		static Object body;
-
-		@Override
-		public void filter( ClientRequestContext ctx ) throws IOException
-		{
-			assertThat( body, notNullValue() );
-
-			ctx.abortWith( Response.ok( body ).build() );
-		}
-	}
-
 	@Inject
 	@RestClient
 	private GetAny client;
 
+	private final ObjectMapper om = new ObjectMapper();
+
 	@Deployment
 	public static WebArchive createDeployment()
 	{
-		final StringAsset mpConfig = new StringAsset( GetAny.class.getName() + "/mp-rest/providers=" + AbortResponse.class.getName() );
+		final StringAsset mpConfig = new StringAsset( "*/mp-rest/url=" + getStringURL() );
 
 		final JavaArchive jar = ShrinkWrap.create( JavaArchive.class, "GetMap.jar" )
 			.addClasses( GetAnyTest.class, WiremockArquillianTest.class )
@@ -83,17 +73,23 @@ public class GetAnyTest extends WiremockArquillianTest
 	@Test
 	public void getString()
 	{
-		AbortResponse.body = "HIHIHIHI";
+		final String body = "HIHIHIHI";
 
-		final String body = this.client.getString();
+		stubFor( get( urlEqualTo( "/string" ) )
+			.willReturn( aResponse()
+				.withBody( body ) ) );
 
-		assertThat( body, equalTo( AbortResponse.body ) );
+		assertThat( this.client.getString(), equalTo( body ) );
 	}
 
 	@Test
-	public void getMap()
+	public void getMap() throws JsonProcessingException
 	{
-		AbortResponse.body = singletonMap( "key", "value" );
+		final Map<String, String> body = singletonMap( "key", "value" );
+
+		stubFor( get( urlEqualTo( "/map" ) )
+			.willReturn( aResponse()
+				.withBody( this.om.writeValueAsString( body ) ) ) );
 
 		final Map<String, String> map = this.client.getMap();
 

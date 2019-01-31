@@ -39,7 +39,7 @@ public /*final*/ class RestRequestContext
 		};
 	};
 
-	static public RestRequestContext getCurrent()
+	static public RestRequestContext getCurrentRequestContext()
 	{
 		return TL.get();
 	}
@@ -99,6 +99,11 @@ public /*final*/ class RestRequestContext
 	public <T> ParamConverter<T> getConverter( Class<T> type, Annotation[] annotations )
 	{
 		return this.methodInfo.getConvertersFactory().getConverter( type, annotations );
+	}
+
+	public Configuration getConfiguration()
+	{
+		return this.methodInfo.getConfiguration();
 	}
 
 	public MediaType getContentType()

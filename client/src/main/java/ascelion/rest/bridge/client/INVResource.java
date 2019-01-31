@@ -73,8 +73,18 @@ final class INVResource implements RestRequestInterceptor
 			if( rsp.getStatus() == NO_CONTENT.getStatusCode() ) {
 				return null;
 			}
+			if( rsp.hasEntity() ) {
+				final Object ent = rsp.getEntity();
 
-			return rsp.readEntity( mi.getReturnType() );
+				if( mi.getReturnType().getRawType().isInstance( ent ) ) {
+					return ent;
+				}
+
+				return rsp.readEntity( mi.getReturnType() );
+			}
+			else {
+				return null;
+			}
 		}
 		finally {
 			if( rsp != null ) {

@@ -31,7 +31,7 @@ abstract class MBRWBase<T> implements MessageBodyReader<T>, MessageBodyWriter<T>
 	@Override
 	public T readFrom( Class<T> type, Type gt, Annotation[] annotations, MediaType mt, MultivaluedMap<String, String> headers, InputStream is ) throws IOException
 	{
-		return readFrom( type, mt, headers, is );
+		return is != null ? readFrom( type, mt, headers, is ) : null;
 	}
 
 	@Override

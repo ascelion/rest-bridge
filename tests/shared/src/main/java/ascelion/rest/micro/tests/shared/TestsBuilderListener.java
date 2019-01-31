@@ -12,6 +12,7 @@ public class TestsBuilderListener implements RestClientBuilderListener
 	@Override
 	public void onNewBuilder( RestClientBuilder b )
 	{
+		b.register( EmptyReaderInterceptor.class );
 		b.register( new ContentTypeResponseFilter(), Integer.MAX_VALUE );
 		b.register( new RestClientTrace(), Integer.MAX_VALUE - 1 );
 		b.register( new WildcardBodyRW(), Integer.MAX_VALUE );

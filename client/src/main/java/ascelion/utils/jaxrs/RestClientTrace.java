@@ -137,7 +137,14 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 		final Formatter fmt = new Formatter();
 
 		printLine( fmt, INI_PREFIX, "==================================" );
-		printLine( fmt, INI_PREFIX, "%s", RestRequestContext.getJavaMethod() );
+
+		try {
+			printLine( fmt, INI_PREFIX, "%s", RestRequestContext.getJavaMethod() );
+		}
+		catch( final IllegalStateException e ) {
+			;
+		}
+
 		printLine( fmt, REQ_PREFIX, "%s %s", reqx.getMethod(), reqx.getUri() );
 		printHeaders( fmt, REQ_PREFIX, reqx.getStringHeaders() );
 
@@ -187,7 +194,12 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 
 		if( reqok == null || !reqok ) {
 			printLine( fmt, INI_PREFIX, "??????????????????????????????????" );
-			printLine( fmt, INI_PREFIX, "%s", RestRequestContext.getJavaMethod() );
+			try {
+				printLine( fmt, INI_PREFIX, "%s", RestRequestContext.getJavaMethod() );
+			}
+			catch( final IllegalStateException e ) {
+				;
+			}
 			printLine( fmt, REQ_PREFIX, "%s %s", reqx.getMethod(), reqx.getUri() );
 			printHeaders( fmt, REQ_PREFIX, reqx.getStringHeaders() );
 		}
