@@ -12,8 +12,9 @@
 	<logger name="ascelion.rest.bridge.tests.SERVER" level="OFF" />
 	<logger name="ascelion.rest.bridge.micro.CONFIG" level="OFF" />
 
-	<!-- <logger name="org.jboss.weld" level="ALL" /> -->
+	<!-- <logger name="org.jboss.weld" level="INFO" /> -->
 	<!-- <logger name="org.glassfish.jersey" level="INFO" /> -->
+	<!-- <logger name="org.apache.cxf" level="INFO" /> -->
 
 	<root level="ERROR">
 		<appender-ref ref="CONSOLE" />

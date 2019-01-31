@@ -5,21 +5,21 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor( access = AccessLevel.PRIVATE )
-final class INTSetMethod extends RestRequestInterceptorBase
+final class INTThreadLocal extends RestRequestInterceptorBase
 {
 
-	static final RestRequestInterceptor INSTANCE = new INTSetMethod();
+	static final RestRequestInterceptor INSTANCE = new INTThreadLocal();
 
 	@Override
 	protected void before( RestRequestContext rc )
 	{
-		RestClient.invokedMethod( rc.getMethodInfo().getJavaMethod() );
+		RestRequestContext.TL.set( rc );
 	}
 
 	@Override
 	protected void after( RestRequestContext rc, Object result, Exception exception )
 	{
-		RestClient.invokedMethod( null );
+		RestRequestContext.TL.remove();
 	}
 
 	@Override

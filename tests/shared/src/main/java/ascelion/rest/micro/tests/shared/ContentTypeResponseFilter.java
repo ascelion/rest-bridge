@@ -10,7 +10,7 @@ import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.core.Response;
 
 import ascelion.rest.bridge.client.RBUtils;
-import ascelion.rest.bridge.client.RestClient;
+import ascelion.rest.bridge.client.RestRequestContext;
 
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -26,10 +26,10 @@ final class ContentTypeResponseFilter implements ClientResponseFilter
 			return;
 		}
 
-		final Method m = RestClient.invokedMethod();
+		final Method jm = RestRequestContext.getJavaMethod();
 
-		if( m != null && rsp.getMediaType() == null && rsp.getStatus() != Response.Status.NO_CONTENT.getStatusCode() ) {
-			final String type = RBUtils.genericType( m.getDeclaringClass(), m )
+		if( jm != null && rsp.getMediaType() == null && rsp.getStatus() != Response.Status.NO_CONTENT.getStatusCode() ) {
+			final String type = RBUtils.genericType( jm.getDeclaringClass(), jm )
 				.getRawType()
 				.getSimpleName()
 				.toLowerCase();

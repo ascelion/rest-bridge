@@ -1,7 +1,6 @@
 
 package ascelion.rest.bridge.client;
 
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,23 +44,6 @@ public final class RestClient implements RestClientInfo, RestClientInternals
 		}
 
 		return RestClient.newRestClient( client, target );
-	}
-
-	static private final ThreadLocal<Method> METHOD = new ThreadLocal<>();
-
-	static public Method invokedMethod()
-	{
-		return METHOD.get();
-	}
-
-	static void invokedMethod( Method method )
-	{
-		if( method != null ) {
-			METHOD.set( method );
-		}
-		else {
-			METHOD.remove();
-		}
 	}
 
 	private final Client client;
