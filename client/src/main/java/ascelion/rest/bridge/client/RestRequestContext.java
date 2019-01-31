@@ -41,9 +41,10 @@ public /*final*/ class RestRequestContext
 	private final Collection<Cookie> cookies = new ArrayList<>();
 	final Collection<MediaType> produces = new ArrayList<>();
 	private final Collection<MediaType> consumes = new ArrayList<>();
-	Object entity;
+	private Object entity;
 	@Getter
 	private final RestMethodInfo methodInfo;
+	private boolean hasBody;
 
 	RestRequestContext( RestMethodInfo rmi, Object service, Object[] arguments )
 	{
@@ -144,6 +145,8 @@ public /*final*/ class RestRequestContext
 		}
 
 		form.param( name, value );
+
+		this.hasBody = true;
 	}
 
 	void entity( Object entity )
@@ -154,6 +157,18 @@ public /*final*/ class RestRequestContext
 		}
 
 		this.entity = entity;
+
+		this.hasBody = true;
+	}
+
+	Object entity()
+	{
+		return this.entity;
+	}
+
+	boolean hasBody()
+	{
+		return this.hasBody;
 	}
 
 	private MediaType defaultContentType()

@@ -33,7 +33,7 @@ public final class RestClient implements RestClientInfo, RestClientInternals
 
 	static public RestClient newRestClient( Client client, URI target )
 	{
-		return new ascelion.rest.bridge.client.RestClient( client, target );
+		return new RestClient( client, target );
 	}
 
 	static public RestClient newRestClient( Client client, URI target, String base )
