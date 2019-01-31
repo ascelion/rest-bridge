@@ -2,6 +2,7 @@
 package ascelion.rest.bridge.client;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -27,6 +28,26 @@ import lombok.Setter;
 
 public /*final*/ class RestRequestContext
 {
+
+	static final ThreadLocal<RestRequestContext> TL = new ThreadLocal<RestRequestContext>()
+	{
+
+		@Override
+		protected RestRequestContext initialValue()
+		{
+			throw new IllegalStateException( "No RestRequestContext bound to the current thread" );
+		};
+	};
+
+	static public RestRequestContext getCurrent()
+	{
+		return TL.get();
+	}
+
+	static public Method getJavaMethod()
+	{
+		return TL.get().getMethodInfo().getJavaMethod();
+	}
 
 	@Getter
 	@Setter

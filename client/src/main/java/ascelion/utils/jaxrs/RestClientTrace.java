@@ -22,7 +22,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 import ascelion.rest.bridge.client.RBUtils;
-import ascelion.rest.bridge.client.RestClient;
+import ascelion.rest.bridge.client.RestRequestContext;
 
 import static ascelion.rest.bridge.client.RestClientProperties.DEFAULT_CONTENT_TYPE;
 import static java.lang.String.format;
@@ -137,9 +137,7 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 		final Formatter fmt = new Formatter();
 
 		printLine( fmt, INI_PREFIX, "==================================" );
-		if( RestClient.invokedMethod() != null ) {
-			printLine( fmt, INI_PREFIX, "%s", RestClient.invokedMethod() );
-		}
+		printLine( fmt, INI_PREFIX, "%s", RestRequestContext.getJavaMethod() );
 		printLine( fmt, REQ_PREFIX, "%s %s", reqx.getMethod(), reqx.getUri() );
 		printHeaders( fmt, REQ_PREFIX, reqx.getStringHeaders() );
 
@@ -189,9 +187,7 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 
 		if( reqok == null || !reqok ) {
 			printLine( fmt, INI_PREFIX, "??????????????????????????????????" );
-			if( RestClient.invokedMethod() != null ) {
-				printLine( fmt, INI_PREFIX, "%s", RestClient.invokedMethod() );
-			}
+			printLine( fmt, INI_PREFIX, "%s", RestRequestContext.getJavaMethod() );
 			printLine( fmt, REQ_PREFIX, "%s %s", reqx.getMethod(), reqx.getUri() );
 			printHeaders( fmt, REQ_PREFIX, reqx.getStringHeaders() );
 		}

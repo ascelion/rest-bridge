@@ -13,7 +13,7 @@ import javax.ws.rs.core.Response;
 
 import ascelion.rest.bridge.client.ConfigurationEx;
 import ascelion.rest.bridge.client.Prioritised;
-import ascelion.rest.bridge.client.RestClient;
+import ascelion.rest.bridge.client.RestRequestContext;
 
 import static java.util.stream.Collectors.toList;
 
@@ -64,9 +64,7 @@ final class MPResponseHandler implements Function<Response, Throwable>
 			return true;
 		}
 
-		final Method m = RestClient.invokedMethod();
-
-		return Stream.of( m.getExceptionTypes() )
+		return Stream.of( RestRequestContext.getJavaMethod().getExceptionTypes() )
 			.anyMatch( t -> t.isInstance( ex ) );
 	}
 

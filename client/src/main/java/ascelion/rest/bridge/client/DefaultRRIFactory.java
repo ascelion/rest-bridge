@@ -91,7 +91,7 @@ final class DefaultRRIFactory implements RestRequestInterceptor.Factory
 				throw new RestClientMethodException( format( "Missing @PathParam for {%s}", missing ), this.method );
 			}
 
-			this.chain.add( INTSetMethod.INSTANCE );
+			this.chain.add( INTThreadLocal.INSTANCE );
 
 			if( rmi.isAsync() ) {
 				this.chain.add( new INTAsync() );

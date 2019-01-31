@@ -7,9 +7,12 @@ include 'tests:application'
 include 'tests:interfaces'
 include 'tests:shared'
 include 'tests:micro:cxf'
-include 'tests:micro:cxf-ct'
 include 'tests:micro:jersey'
 include 'tests:micro:resteasy'
+
+if( System.env.ECLIPSE_VERSION ) {
+	include 'tests:micro:cxf-ct'
+}
 
 def mpLocal = new File( rootProject.projectDir, 'mp-local/eclipse/pom.xml' )
 
