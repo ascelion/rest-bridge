@@ -12,6 +12,8 @@ import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import ascelion.rest.bridge.client.ConfigurationEx;
 import ascelion.rest.bridge.client.Prioritised;
@@ -20,16 +22,22 @@ import ascelion.rest.bridge.tests.api.SLF4JHandler;
 import ascelion.utils.etc.Log;
 import ascelion.utils.jaxrs.RestClientTrace;
 
+import static org.apache.commons.lang3.reflect.FieldUtils.readField;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 import static org.testng.Assert.assertEquals;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import lombok.SneakyThrows;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 import org.eclipse.microprofile.rest.client.tck.interfaces.InterfaceWithProvidersDefined;
 import org.eclipse.microprofile.rest.client.tck.providers.TestMessageBodyReader;
+import org.eclipse.microprofile.rest.client.tck.providers.TestReaderInterceptor;
+import org.eclipse.microprofile.rest.client.tck.providers.TestWriterInterceptor;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -109,9 +117,8 @@ public class RestBridgeConfigurationTest
 	public void keepOrderOnClone()
 	{
 		final RestBridgeConfiguration cf1 = new RestBridgeConfiguration();
-		final RestBridgeFeatureContext fcx = new RestBridgeFeatureContext( cf1 );
 
-		new DefaultProviders().configure( fcx );
+		new DefaultProviders().configure( new RestBridgeFeatureContext( cf1 ) );
 
 		cf1.register( RestClientTrace.class, 8000 );
 		cf1.register( new LocalFilter(), Integer.MAX_VALUE );
@@ -119,10 +126,13 @@ public class RestBridgeConfigurationTest
 		cf1.register( TestMessageBodyReader.class );
 
 		assertThat( cf1.getClasses(), hasSize( 0 ) );
-		assertThat( cf1.getInstances(), hasSize( 14 ) );
+		assertThat( cf1.getInstances(), hasSize( 15 ) );
 
 		final RestBridgeConfiguration cf2 = cf1.clone( false );
 		final RestBridgeConfiguration cf3 = cf2.clone( true );
+
+		assertThat( cf2.isRegistered( MBRWInterceptor.class ), is( true ) );
+		assertThat( cf3.isRegistered( MBRWInterceptor.class ), is( true ) );
 
 		assertThat( cf2.getClasses(), hasSize( 0 ) );
 		assertThat( cf2.getInstances(), hasSize( cf1.getInstances().size() ) );
@@ -141,5 +151,38 @@ public class RestBridgeConfigurationTest
 			assertThat( rds2.get( k ).getInstance(), sameInstance( rds1.get( k ).getInstance() ) );
 			assertThat( rds3.get( k ).getInstance(), sameInstance( rds2.get( k ).getInstance() ) );
 		}
+	}
+
+	@Test
+	public void lastIsMBRW()
+	{
+		final RestBridgeConfiguration rbc = new RestBridgeConfiguration();
+
+		rbc.register( TestReaderInterceptor.class, Integer.MAX_VALUE );
+		rbc.register( TestWriterInterceptor.class, Integer.MAX_VALUE );
+
+		checkMBRW( rbc );
+		checkMBRW( rbc.clone( false ) );
+		checkMBRW( rbc.clone( true ) );
+	}
+
+	@SneakyThrows
+	private void checkMBRW( RestBridgeConfiguration rbc )
+	{
+		final List<Prioritised<ReaderInterceptor>> readers = rbc.providers( ReaderInterceptor.class );
+
+		assertThat( readers, hasSize( 2 ) );
+		assertThat( readers.get( 0 ).getInstance(), instanceOf( TestReaderInterceptor.class ) );
+		assertThat( readers.get( 1 ).getInstance(), instanceOf( MBRWInterceptor.class ) );
+
+		final List<Prioritised<WriterInterceptor>> writers = rbc.providers( WriterInterceptor.class );
+
+		assertThat( writers, hasSize( 2 ) );
+		assertThat( writers.get( 0 ).getInstance(), instanceOf( TestWriterInterceptor.class ) );
+		assertThat( writers.get( 1 ).getInstance(), instanceOf( MBRWInterceptor.class ) );
+
+		final Object thatRBC = readField( writers.get( 1 ).getInstance(), "rbc", true );
+
+		assertThat( thatRBC, sameInstance( rbc ) );
 	}
 }

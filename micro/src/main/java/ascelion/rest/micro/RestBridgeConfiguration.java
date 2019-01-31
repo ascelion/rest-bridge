@@ -40,7 +40,6 @@ import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.ClassUtils.getAllInterfaces;
@@ -71,11 +70,30 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 		SUPPORTED = unmodifiableMap( map );
 	}
 
+	static private final Map<Class<?>, Integer> MBRW_CTS = unmodifiableMap( new HashMap<Class<?>, Integer>()
+	{
+
+		{
+			put( ReaderInterceptor.class, Integer.MAX_VALUE );
+			put( WriterInterceptor.class, Integer.MAX_VALUE );
+		}
+	} );
+
 	private final Map<String, Object> properties = new HashMap<>();
 	private final Map<Class<?>, Registration<?>> registrations = new LinkedHashMap<>();
 	private final Set<Class<?>> enabledFeatures = newSetFromMap( new LinkedHashMap<>() );
 	private final Collection<Runnable> changes = new ArrayList<>();
 	private final Map<Class<?>, List<Prioritised<?>>> providers = new IdentityHashMap<>();
+
+	RestBridgeConfiguration()
+	{
+		final MBRWInterceptor mbrw = new MBRWInterceptor( this );
+		final Registration<MBRWInterceptor> reg = new Registration<>( Integer.MAX_VALUE, mbrw, MBRWInterceptor.class, MBRW_CTS );
+
+		this.registrations.put( MBRWInterceptor.class, reg );
+
+		updateProviders();
+	}
 
 	@Override
 	public RestBridgeConfiguration getConfiguration()
@@ -244,9 +262,7 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 	{
 		applyChanges();
 
-		final List result = this.providers.getOrDefault( type, emptyList() ).stream()
-			.map( p -> new Prioritised( p.getPriority() >> 32, p.getInstance() ) )
-			.collect( toList() );
+		final List result = this.providers.getOrDefault( type, emptyList() );
 
 		return unmodifiableList( result );
 	}
@@ -261,20 +277,25 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 		clone.properties.putAll( this.properties );
 		clone.enabledFeatures.addAll( this.enabledFeatures );
 
-		this.registrations.forEach( ( type, reg ) -> {
-			final Map<Class<?>, Integer> cts = reg.getContracts()
-				.entrySet().stream()
-				.filter( e -> {
-					final boolean s = SUPPORTED.getOrDefault( e.getKey(), false );
+		this.registrations.entrySet().stream()
+			.filter( e -> !e.getKey().equals( MBRWInterceptor.class ) )
+			.forEach( ent -> {
+				final Class<?> type = ent.getKey();
+				final Registration<?> reg = ent.getValue();
 
-					return !forJAXRS || s;
-				} )
-				.collect( toMap( e -> e.getKey(), e -> e.getValue() ) );
+				final Map<Class<?>, Integer> cts = reg.getContracts()
+					.entrySet().stream()
+					.filter( e -> {
+						final boolean s = SUPPORTED.getOrDefault( e.getKey(), false );
 
-			if( cts.size() > 0 ) {
-				clone.registrations.put( type, new Registration<>( clone.registrations.size(), reg.getInstance(), type, cts ) );
-			}
-		} );
+						return !forJAXRS || s;
+					} )
+					.collect( toMap( e -> e.getKey(), e -> e.getValue() ) );
+
+				if( cts.size() > 0 ) {
+					clone.registrations.put( type, new Registration<>( (int) reg.getPriority(), reg.getInstance(), type, cts ) );
+				}
+			} );
 
 		clone.updateProviders();
 
@@ -453,7 +474,7 @@ final class RestBridgeConfiguration implements Configurable<RestBridgeConfigurat
 		this.registrations.forEach( ( type, reg ) -> {
 			reg.getContracts().forEach( ( t, p ) -> {
 				this.providers.computeIfAbsent( t, k -> new ArrayList<>() )
-					.add( new Prioritised<>( (long) p << 32 | reg.getPriority(), reg.getInstance() ) );
+					.add( new Prioritised<>( ( (long) p << 32 ) | ( reg.getPriority() & 0xFFFFFFFFL ), reg.getInstance() ) );
 			} );
 		} );
 
