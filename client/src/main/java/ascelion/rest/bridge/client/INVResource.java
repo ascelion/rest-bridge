@@ -10,6 +10,7 @@ import javax.ws.rs.core.Response;
 import ascelion.utils.chain.InterceptorChainContext;
 
 import static java.util.stream.Collectors.joining;
+import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 
 import lombok.AccessLevel;
@@ -85,18 +86,18 @@ final class INVResource implements RestRequestInterceptor
 	static private Response getResponse( Invocation.Builder ib, RestRequestContext rc, RestMethodInfo mi )
 	{
 		try {
-			final MediaType ct = rc.getContentType();
+			final MediaType mt = rc.getContentType();
+			final Object ent = rc.entity();
 
-			if( rc.entity != null ) {
-				final Entity<?> e = Entity.entity( rc.entity, ct );
+			if( ent != null ) {
+				final Entity<?> e = Entity.entity( ent, mt );
 
 				return ib.method( mi.getHttpMethod(), e );
 			}
 			else {
-//				if( ct != null ) {
-//					// Micro TCK uses a GET with a Content-Type, so let's keep it happy!
-//					b.header( HttpHeaders.CONTENT_TYPE, ct );
-//				}
+				if( rc.hasBody() && mt != null ) {
+					ib.header( CONTENT_TYPE, mt );
+				}
 
 				return ib.method( mi.getHttpMethod() );
 			}
