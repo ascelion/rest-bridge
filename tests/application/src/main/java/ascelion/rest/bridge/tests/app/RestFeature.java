@@ -10,8 +10,8 @@ import javax.ws.rs.ext.Provider;
 
 import ascelion.rest.micro.tests.shared.LocalDateConverterProvider;
 
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.glassfish.jersey.CommonProperties;
-import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.logging.LoggingFeature.Verbosity;
 import org.glassfish.jersey.server.ServerProperties;
@@ -38,7 +38,7 @@ public class RestFeature implements Feature
 
 		context.register( LocalDateConverterProvider.class );
 
-		context.register( JacksonFeature.class );
+		context.register( JacksonJaxbJsonProvider.class );
 		context.register( JacksonResolver.class );
 
 		context.register( GenericExceptionMapper.class );

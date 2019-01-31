@@ -15,5 +15,6 @@ dependencies {
 	implementation 'org.jboss.arquillian.container:arquillian-container-test-api'
 	implementation 'org.jboss.arquillian.container:arquillian-container-test-spi'
 	implementation 'com.github.tomakehurst:wiremock'
+	implementation 'commons-logging:commons-logging'
 	implementation 'com.beust:jcommander'
 }
