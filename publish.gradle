@@ -1,3 +1,8 @@
+def gext       = gradle.ext
+def signKey    = "${rootProject.name}.sign.keyId"
+def bintrayURL = "${rootProject.name}.bintray.url"
+def bintrayUSR = "${rootProject.name}.bintray.username"
+def bintrayPWD = "${rootProject.name}.bintray.password"
 
 task sourcesJar(type: Jar) {
 	from sourceSets.main.allJava
@@ -18,22 +23,19 @@ publishing {
 			artifact javadocJar
 
 			afterEvaluate {
-				artifactId = "rest-bridge-${project.name}"
-			}
-		}
-	}
-
-	if( gradle.hasProperty( 'mavenDeployURL' ) ) {
-		repositories {
-			maven {
-				url = "${gradle.ext.mavenDeployURL}-${version.endsWith('-SNAPSHOT') ? 'snapshots' : 'releases'}"
-
-				credentials {
-					username = "${gradle.ext.mavenDeployUsername}"
-					password = gradle.decryptPassword( "${gradle.ext.mavenDeployPassword}" )
-				}
+				artifactId = "${rootProject.name}-${project.name}"
 			}
 		}
 	}
 }
 
+if( gradle.hasProperty( signKey ) ) {
+	apply plugin: 'signing'
+
+	ext['signing.gnupg.keyName'] = gext[signKey]
+
+	signing {
+		useGpgCmd()
+		sign publishing.publications.maven
+	}
+}
