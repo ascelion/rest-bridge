@@ -1,8 +1,11 @@
-def gext       = gradle.ext
+def isRelease  = !version.endsWith( '-SNAPSHOT' )
+
 def signKey    = "${rootProject.name}.sign.keyId"
-def bintrayURL = "${rootProject.name}.bintray.url"
+def signSecret = "${rootProject.name}.sign.keySecret"
 def bintrayUSR = "${rootProject.name}.bintray.username"
 def bintrayPWD = "${rootProject.name}.bintray.password"
+
+def gext       = gradle.ext
 
 task sourcesJar(type: Jar) {
 	from sourceSets.main.allJava
@@ -37,5 +40,33 @@ if( gradle.hasProperty( signKey ) ) {
 	signing {
 		useGpgCmd()
 		sign publishing.publications.maven
+	}
+}
+
+if( gradle.hasProperty( bintrayUSR ) && booleanProperty( 'doUpload' ) ) {
+	version = isRelease ? version : rootProject.snapshotVersion
+
+	apply plugin: 'com.jfrog.bintray'
+
+	bintray {
+		user = gext[bintrayUSR]
+		key = gradle.decryptPassword( gext[bintrayPWD] )
+
+		publications = [ 'maven' ]
+
+		pkg {
+			repo = 'repo'
+			userOrg = 'ascelion'
+			name = rootProject.name
+			licenses = [ 'LGPL-3.0' ]
+			vcsUrl = 'https://github.com/pa314159/rest-bridge'
+			version {
+				name = project.version
+
+				gpg {
+					sign = true
+				}
+			}
+		}
 	}
 }

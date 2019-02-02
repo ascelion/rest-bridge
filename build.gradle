@@ -1,15 +1,23 @@
 buildscript {
 	repositories {
-		mavenCentral()
+		jcenter()
 	}
 	dependencies {
 		classpath 'pl.allegro.tech.build:axion-release-plugin:1.10.0'
 		classpath 'io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE'
+		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+'
 	}
 }
 
 apply plugin: 'pl.allegro.tech.build.axion-release'
 apply plugin: 'eclipse'
+
+ext {
+	snapshotVersion = "0.${new Date().format('yyyyMMdd')}"
+}
+
+group = 'com.ascelion.rest-bridge'
+version = scmVersion.version
 
 allprojects {
 	repositories {
@@ -38,8 +46,8 @@ subprojects { sub ->
 	apply plugin: ascelion.rest.bridge.BuildPlugin
 	apply from: rootProject.file( 'dependencies.gradle' )
 
-	group = 'ascelion.rest-bridge'
-	version = scmVersion.version
+	group = rootProject.group
+	version = rootProject.scmVersion.version
 
 	sourceCompatibility = JavaVersion.VERSION_1_8
 	targetCompatibility = JavaVersion.VERSION_1_8
