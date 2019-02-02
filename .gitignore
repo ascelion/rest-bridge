@@ -1,0 +1,8 @@
+.*
+!.gitignore
+/buildSrc/
+/cdi/
+/client/
+/micro/
+/tests/
+/mp-local/
