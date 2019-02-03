@@ -3,21 +3,44 @@ buildscript {
 		jcenter()
 	}
 	dependencies {
-		classpath 'pl.allegro.tech.build:axion-release-plugin:1.10.0'
+//		classpath 'pl.allegro.tech.build:axion-release-plugin:1.10.0'
 		classpath 'io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE'
 		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+'
 	}
 }
 
-apply plugin: 'pl.allegro.tech.build.axion-release'
+//apply plugin: 'pl.allegro.tech.build.axion-release'
 apply plugin: 'eclipse'
 
 ext {
 	snapshotVersion = "0.${new Date().format('yyyyMMdd')}"
 }
 
+//scmVersion {
+//	useHighestVersion = true
+//}
+
 group = 'com.ascelion.rest-bridge'
-version = scmVersion.version
+//version = scmVersion.version
+version = '1.2.0.1-SNAPSHOT'
+
+task currentVersion {
+	doLast {
+		println version
+	}
+}
+
+tasks.create( name: 'test-report', type: TestReport ) { rep ->
+	destinationDir = file("$buildDir/reports/allTests")
+
+	subprojects { sub ->
+		sub.tasks.withType( Test ) { tst ->
+			reports.html.enabled = false
+
+			rep.reportOn tst
+		}
+	}
+}
 
 allprojects {
 	repositories {
@@ -47,7 +70,7 @@ subprojects { sub ->
 	apply from: rootProject.file( 'dependencies.gradle' )
 
 	group = rootProject.group
-	version = rootProject.scmVersion.version
+	version = rootProject.version
 
 	sourceCompatibility = JavaVersion.VERSION_1_8
 	targetCompatibility = JavaVersion.VERSION_1_8
