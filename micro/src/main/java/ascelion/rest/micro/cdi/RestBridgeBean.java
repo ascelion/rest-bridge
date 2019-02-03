@@ -13,12 +13,12 @@ import java.util.stream.Stream;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.Default;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
 
+import ascelion.cdi1x.literals.DefaultLiteral;
 import ascelion.rest.bridge.client.RBUtils;
 import ascelion.rest.micro.MP;
 
@@ -39,7 +39,7 @@ class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 	{
 
 		{
-			add( new Default.Literal() );
+			add( new DefaultLiteral() );
 			add( new RestClient.RestClientLiteral() );
 		}
 	} );

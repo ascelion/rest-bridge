@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.AfterDeploymentValidation;
@@ -17,6 +16,7 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.WithAnnotations;
 
+import ascelion.cdi1x.literals.ApplicationScopedLiteral;
 import ascelion.utils.etc.Log;
 
 import static java.lang.String.format;
@@ -49,8 +49,11 @@ public class RestBridgeExtension implements Extension
 
 	void afterTypeDiscovery( @Observes AfterTypeDiscovery event, BeanManager bm )
 	{
-		event.addAnnotatedType( CDIRRIFactory.class, CDIRRIFactory.class.getName() )
-			.add( new ApplicationScoped.Literal() );
+		final AnnotatedTypeImpl<CDIRRIFactory> at = new AnnotatedTypeImpl<>( bm.createAnnotatedType( CDIRRIFactory.class ) );
+
+		at.addAnnotation( new ApplicationScopedLiteral() );
+
+		event.addAnnotatedType( at, CDIRRIFactory.class.getName() );
 	}
 
 	void afterBeanDescovery( @Observes AfterBeanDiscovery event, BeanManager bm )

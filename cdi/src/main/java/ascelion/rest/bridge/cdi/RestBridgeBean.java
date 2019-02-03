@@ -9,14 +9,14 @@ import java.util.Set;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Default;
 import javax.enterprise.inject.UnsatisfiedResolutionException;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
 
+import ascelion.cdi1x.literals.AnyLiteral;
+import ascelion.cdi1x.literals.DefaultLiteral;
 import ascelion.rest.bridge.client.RestClient;
 
 import static java.lang.String.format;
@@ -33,8 +33,8 @@ final class RestBridgeBean<T> implements Bean<T>, PassivationCapable
 	{
 
 		{
-			add( new Any.Literal() );
-			add( new Default.Literal() );
+			add( new AnyLiteral() );
+			add( new DefaultLiteral() );
 		}
 	} );
 
