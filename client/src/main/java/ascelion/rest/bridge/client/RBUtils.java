@@ -7,14 +7,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.security.PrivilegedActionException;
-import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -30,8 +26,6 @@ import javax.enterprise.inject.spi.CDI;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.Priorities;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
@@ -39,11 +33,8 @@ import static ascelion.utils.etc.Secured.runPrivileged;
 import static ascelion.utils.etc.Secured.runPrivilegedWithException;
 import static io.leangen.geantyref.GenericTypeReflector.getExactReturnType;
 import static java.lang.Thread.currentThread;
-import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toCollection;
-import static org.apache.commons.lang3.ClassUtils.hierarchy;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.apache.commons.lang3.reflect.MethodUtils.getOverrideHierarchy;
 
@@ -103,7 +94,7 @@ public final class RBUtils
 	{
 		final Class<?> cls = t instanceof Class ? (Class<?>) t : t.getClass();
 
-		return Optional.ofNullable( cls.getAnnotation( Priority.class ) )
+		return ofNullable( cls.getAnnotation( Priority.class ) )
 			.map( Priority::value )
 			.orElse( Priorities.USER );
 	}
@@ -206,19 +197,6 @@ public final class RBUtils
 			: null;
 	}
 
-	static WebTarget addPathFromAnnotation( AnnotatedElement ae, WebTarget target )
-	{
-		final Path p = ae.getAnnotation( Path.class );
-
-		if( p == null ) {
-			return target;
-		}
-
-		final String v = p.value().trim();
-
-		return v.isEmpty() || v.equals( "/" ) ? target : target.path( p.value() );
-	}
-
 	static public <A extends Annotation> Optional<A> findAnnotation( Class<A> type, Class<?> base )
 	{
 		if( base == null || base == Object.class ) {
@@ -251,45 +229,6 @@ public final class RBUtils
 		return findAnnotation( type, base );
 	}
 
-	static public <A extends Annotation> Set<A> findAnnotations( Class<A> type, Method method, Class<?> base )
-	{
-		final Map<AnnotatedElement, Collection<A>> result = new LinkedHashMap<>();
-
-		findAnnotations( type, method, base, result );
-
-		return result.values().stream().flatMap( Collection::stream ).collect( toCollection( LinkedHashSet::new ) );
-	}
-
-	static private <A extends Annotation> void findAnnotations( Class<A> type, Method method, Class<?> base, Map<AnnotatedElement, Collection<A>> result )
-	{
-		getOverrideHierarchy( method, Interfaces.INCLUDE ).stream()
-			.forEach( m -> {
-				result.put( m, asList( m.getAnnotationsByType( type ) ) );
-
-				stream( m.getAnnotations() )
-					.map( Annotation::annotationType )
-					.filter( t -> t != type )
-					.forEach( t -> findAnnotations( type, t, result ) );
-			} );
-
-		findAnnotations( type, base, result );
-	}
-
-	static private <A extends Annotation> void findAnnotations( Class<A> type, Class<?> base, Map<AnnotatedElement, Collection<A>> result )
-	{
-		hierarchy( base, Interfaces.INCLUDE )
-			.forEach( c -> {
-				if( c != Object.class && !result.containsKey( c ) ) {
-					result.put( c, asList( c.getAnnotationsByType( type ) ) );
-
-					stream( c.getAnnotations() )
-						.map( Annotation::annotationType )
-						.filter( t -> t != type )
-						.forEach( t -> findAnnotations( type, t, result ) );
-				}
-			} );
-	}
-
 	static Set<String> pathParameters( String path )
 	{
 		final Set<String> elements = new LinkedHashSet<>();
@@ -315,21 +254,6 @@ public final class RBUtils
 			.filter( Objects::nonNull )
 			.findFirst()
 			.orElse( null );
-	}
-
-	public static int comparePriorities( Configuration cf, Class<?> type, Class<?> c1, Class<?> c2 )
-	{
-		if( Proxy.isProxyClass( c1 ) ) {
-			c1 = c1.getSuperclass();
-		}
-		if( Proxy.isProxyClass( c2 ) ) {
-			c2 = c2.getSuperclass();
-		}
-
-		final int p1 = cf.getContracts( c1 ).getOrDefault( type, Priorities.USER );
-		final int p2 = cf.getContracts( c2 ).getOrDefault( type, Priorities.USER );
-
-		return Integer.compare( p1, p2 );
 	}
 
 	private static String httpMethodOf( Method method )
