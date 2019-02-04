@@ -1,4 +1,6 @@
-def isRelease  = !version.endsWith( '-SNAPSHOT' )
+def doPublish  = booleanProperty( 'doPublish' )
+def isSnapshot = version.endsWith( '-SNAPSHOT' )
+def isRelease  = !isSnapshot
 
 def signKey    = "${rootProject.name}.sign.keyId"
 def signSecret = "${rootProject.name}.sign.keySecret"
@@ -28,6 +30,20 @@ publishing {
 			artifactId = "${rootProject.name}-${project.name}"
 		}
 	}
+	
+	if( doPublish && gradle.hasProperty( bintrayUSR ) ) {
+		repositories {
+			maven {
+				name = 'jfrog'
+				url = "https://oss.jfrog.org/artifactory/oss-${isSnapshot ? 'snapshot' : 'release'}-local"
+
+				credentials {
+					username = gext[bintrayUSR]
+					password = gradle.decryptPassword( gext[bintrayPWD] )
+				}
+			}
+		}
+	}
 }
 
 if( gradle.hasProperty( signKey ) ) {
@@ -41,9 +57,7 @@ if( gradle.hasProperty( signKey ) ) {
 	}
 }
 
-if( gradle.hasProperty( bintrayUSR ) && booleanProperty( 'doUpload' ) ) {
-	version = isRelease ? version : rootProject.snapshotVersion
-
+if( isRelease && doPublish && gradle.hasProperty( bintrayUSR ) ) {
 	apply plugin: 'com.jfrog.bintray'
 
 	bintray {
