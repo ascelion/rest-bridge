@@ -1,0 +1,14 @@
+apply plugin: 'maven-publish'
+
+dependencyManagement {
+	imports {
+		mavenBom 'org.springframework.boot:spring-boot-dependencies:1.5.18.RELEASE'
+	}
+}
+
+dependencies {
+	api project( ':client' )
+	api 'javax.ws.rs:javax.ws.rs-api'
+
+	compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
+}
