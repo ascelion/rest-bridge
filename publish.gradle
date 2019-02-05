@@ -1,3 +1,16 @@
+apply plugin: 'org.owasp.dependencycheck'
+
+check.dependsOn dependencyCheckAnalyze
+
+dependencyCheck {
+	suppressionFile = rootProject.file( 'false-positives.xml' )
+	scanConfigurations = [ 'runtimeClasspath' ]
+
+	analyzers {
+		assemblyEnabled = false
+	}
+}
+
 def doPublish  = booleanProperty( 'doPublish' )
 def isSnapshot = version.endsWith( '-SNAPSHOT' )
 def isRelease  = !isSnapshot

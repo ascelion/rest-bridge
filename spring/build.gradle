@@ -2,7 +2,7 @@ apply plugin: 'maven-publish'
 
 dependencyManagement {
 	imports {
-		mavenBom 'org.springframework.boot:spring-boot-dependencies:1.5.18.RELEASE'
+		mavenBom 'org.springframework.boot:spring-boot-dependencies:1.5.19.RELEASE'
 	}
 }
 

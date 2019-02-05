@@ -4,8 +4,9 @@ buildscript {
 	}
 	dependencies {
 //		classpath 'pl.allegro.tech.build:axion-release-plugin:1.10.0'
-		classpath 'io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE'
+		classpath 'io.spring.gradle:dependency-management-plugin:1.0.+'
 		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+'
+		classpath 'org.owasp:dependency-check-gradle:4.+'
 	}
 }
 
