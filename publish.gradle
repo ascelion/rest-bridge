@@ -25,9 +25,7 @@ publishing {
 			artifact sourcesJar
 			artifact javadocJar
 
-			afterEvaluate {
-				artifactId = "${rootProject.name}-${project.name}"
-			}
+			artifactId = "${rootProject.name}-${project.name}"
 		}
 	}
 }

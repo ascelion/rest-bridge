@@ -19,7 +19,7 @@ eclipse {
 		name = 'rest-bridge-build'
 	}
 	classpath {
-		defaultOutputDir file("build/eclipse")
+		defaultOutputDir file("${buildDir}/eclipse")
 
 		file {
 			whenMerged { clp ->
