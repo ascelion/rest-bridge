@@ -57,7 +57,7 @@ dependencyManagement {
 			entry 'microprofile-rest-client-api'
 			entry 'microprofile-rest-client-tck'
 		}
-		dependency "org.apache.cxf:cxf-rt-rs-mp-client:versions.cxf"
+		dependency "org.apache.cxf:cxf-rt-rs-mp-client:$versions.cxf"
 
 		dependency "org.eclipse.microprofile.config:microprofile-config-api:$versions.micro.config"
 		dependency "org.apache.geronimo.config:geronimo-config-impl:$versions.micro.config"
