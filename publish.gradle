@@ -41,6 +41,17 @@ publishing {
 			artifact javadocJar
 
 			artifactId = "${rootProject.name}-${project.name}"
+			
+			pom {
+				name = artifactId
+				url = 'https://ascelion.github.io/rest-bridge'
+				description = 'Rest Bridge - a JAX-RS based Microprofile Rest Client'
+				scm {
+					url = 'https://github.com/ascelion/rest-bridge'
+					connection = 'https://github.com/ascelion/rest-bridge.git'
+					developerConnection = 'git@github.com:ascelion/rest-bridge.git'
+				}
+			}
 		}
 	}
 	
@@ -84,7 +95,7 @@ if( isRelease && doPublish && gradle.hasProperty( bintrayUSR ) ) {
 			userOrg = 'ascelion'
 			name = rootProject.name
 			licenses = [ 'LGPL-3.0' ]
-			vcsUrl = 'https://github.com/pa314159/rest-bridge'
+			vcsUrl = 'https://github.com/ascelion/rest-bridge'
 			version {
 				name = project.version
 

@@ -5,6 +5,9 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ResolvedArtifact
+import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.tasks.SourceSet
 import org.gradle.plugins.ide.eclipse.GenerateEclipseProject
 import org.gradle.plugins.ide.eclipse.model.ClasspathEntry
@@ -23,7 +26,7 @@ class BuildPlugin implements Plugin<Project> {
 			set.output.resourcesDir = set.output.classesDirs.singleFile
 		}
 
-		ClosureBackedAction.execute(target) {
+		ClosureBackedAction.execute( target ) {
 			eclipse {
 				project {
 					name = "${rootProject.name}${target.path.replace(':', '-')}"
@@ -56,6 +59,18 @@ class BuildPlugin implements Plugin<Project> {
 		target.tasks.withType( GenerateEclipseProject ) { Task task ->
 			target.sourceSets.all { SourceSet set ->
 				task.finalizedBy set.processResourcesTaskName
+			}
+		}
+
+		target.plugins.withType( MavenPublishPlugin ) {
+			ClosureBackedAction.execute( target ) {
+				publishing.publications.withType( MavenPublication ) {
+					pom {
+						withXml {
+							configureDependencyManagement( target.configurations.getByName( 'runtimeClasspath' ), it.asNode() )
+						}
+					}
+				}
 			}
 		}
 	}
@@ -103,7 +118,9 @@ class BuildPlugin implements Plugin<Project> {
 			String path = target.relativePath( src )
 
 			entries
-					.findAll { it.kind == 'src' && it.path == path }
+					.findAll {
+						it.kind == 'src' && it.path == path
+					}
 					.each { it.output = dest }
 		}
 	}
@@ -115,13 +132,17 @@ class BuildPlugin implements Plugin<Project> {
 			String path = target.relativePath( src )
 
 			entries
-					.findAll { it.kind == 'src' && it.path == path }
+					.findAll {
+						it.kind == 'src' && it.path == path
+					}
 					.each { it.output = dest }
 		}
 	}
 
 	private void configureScope( List<ClasspathEntry> entries, Configuration cfg ) {
-		entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each {
+		entries.findAll {
+			it.kind == 'src' || it.kind == 'lib'
+		}.each {
 			if( it.entryAttributes.containsKey('gradle_used_by_scope')) {
 				def scope = it.entryAttributes['gradle_used_by_scope']
 
@@ -132,6 +153,34 @@ class BuildPlugin implements Plugin<Project> {
 			entries.findAll { it.kind == 'lib' }.each {
 				if( cfg.resolvedConfiguration.files.contains( new File( it.path ) ) ) {
 					it.entryAttributes['test'] = false
+				}
+			}
+		}
+	}
+
+	private void configureDependencyManagement( Configuration cf, Node xml ) {
+		xml.dependencies.'*'.each { dep ->
+			def gid = dep.groupId.text()
+			def aid = dep.artifactId.text()
+			def cls = dep.classifier.text()
+			def ver = dep.version.text()
+
+			if( ver.empty ) {
+				for( ResolvedArtifact art : cf.resolvedConfiguration.resolvedArtifacts ) {
+					if( cls.empty != (art.classifier == null) ) {
+						continue
+					}
+					if( art.classifier != null && art.classifier != cls ) {
+						continue
+					}
+
+					def mid = art.moduleVersion.id
+
+					if( mid.group != gid || mid.module.name != aid ) {
+						continue
+					}
+
+					dep.appendNode( 'version', mid.version )
 				}
 			}
 		}

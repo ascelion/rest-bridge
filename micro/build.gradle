@@ -15,11 +15,11 @@ dependencies {
 	compileOnly 'org.eclipse:yasson'
 	compileOnly 'org.glassfish.jersey.core:jersey-common'
 
-	implementation project( ':tests:interfaces' )
 	implementation 'org.apache.commons:commons-lang3'
-	implementation 'org.apache.commons:commons-io'
+	implementation 'commons-io:commons-io'
 	implementation 'com.google.guava:guava'
 
+	testImplementation project( ':tests:interfaces' )
 	testImplementation 'junit:junit'
 	testImplementation 'org.hamcrest:hamcrest-core'
 	testImplementation 'org.hamcrest:hamcrest-library'

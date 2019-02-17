@@ -7,7 +7,7 @@ dependencies {
 	externalApi 'javax.enterprise:cdi-api'
 
 	implementation 'org.apache.commons:commons-lang3'
-	implementation 'org.apache.commons:commons-io'
+	implementation 'commons-io:commons-io'
 	implementation 'io.leangen.geantyref:geantyref'
 	implementation 'org.javassist:javassist'
 	implementation 'com.google.guava:guava'

@@ -10,7 +10,7 @@ dependencies {
 	implementation 'com.fasterxml.jackson.core:jackson-annotations'
 
 	implementation 'org.apache.commons:commons-lang3'
-	implementation 'org.apache.commons:commons-io'
+	implementation 'commons-io:commons-io'
 	implementation 'org.jboss.arquillian.test:arquillian-test-api'
 	implementation 'org.jboss.arquillian.container:arquillian-container-test-api'
 	implementation 'org.jboss.arquillian.container:arquillian-container-test-spi'
