@@ -62,11 +62,10 @@ final class INVResource implements RestRequestInterceptor
 
 		final Class<?> rawType = mi.getReturnType().getRawType();
 
-		if( rawType == Response.class ) {
-			return rsp;
-		}
-
 		try {
+			if( rawType == Response.class ) {
+				return rsp;
+			}
 			if( rawType == void.class || rawType == Void.class ) {
 				return null;
 			}
@@ -87,7 +86,7 @@ final class INVResource implements RestRequestInterceptor
 			}
 		}
 		finally {
-			if( rsp != null ) {
+			if( !AutoCloseable.class.isAssignableFrom( rawType ) ) {
 				rsp.close();
 			}
 		}
