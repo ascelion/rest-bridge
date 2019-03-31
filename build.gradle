@@ -99,3 +99,7 @@ subprojects { sub ->
 		sub.apply from: rootProject.file( 'publish.gradle' )
 	}
 }
+
+wrapper {
+	distributionType = 'all'
+}
