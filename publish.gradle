@@ -54,7 +54,7 @@ publishing {
 			}
 		}
 	}
-	
+
 	if( doPublish && gradle.hasProperty( bintrayUSR ) ) {
 		repositories {
 			maven {

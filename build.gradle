@@ -94,6 +94,10 @@ subprojects { sub ->
 		debug = booleanProperty( 'arq.debug' )
 //		systemProperty "force", UUID.randomUUID()
 	}
+	
+	tasks.withType( Jar ) {
+		duplicatesStrategy = 'exclude'
+	}
 
 	plugins.withType( MavenPublishPlugin ) {
 		sub.apply from: rootProject.file( 'publish.gradle' )
