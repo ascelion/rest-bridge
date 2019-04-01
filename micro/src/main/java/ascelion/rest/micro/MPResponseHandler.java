@@ -1,7 +1,6 @@
 
 package ascelion.rest.micro;
 
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Function;

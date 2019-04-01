@@ -1,9 +1,11 @@
 
 package ascelion.utils.jaxrs;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Formatter;
 import java.util.concurrent.atomic.AtomicLong;
@@ -29,7 +31,6 @@ import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static org.apache.commons.io.IOUtils.readLines;
-import static org.apache.commons.io.IOUtils.toByteArray;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import lombok.EqualsAndHashCode;
@@ -73,7 +74,6 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 	static private final String REQ_ST_PROP = "ascelion.rest.bridge.trace.request.stream";
 	static private final String REQ_OK_PROP = "ascelion.rest.bridge.trace.request.ok";
 
-	@RequiredArgsConstructor
 	static class OLogStream extends OutputStream
 	{
 
@@ -81,19 +81,46 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 		final OutputStream out;
 		final MediaType mt;
 		final Formatter fmt;
+		int count;
+		boolean more;
+
+		OLogStream( OutputStream out, MediaType mt, Formatter fmt, int count )
+		{
+			this.out = out;
+			this.mt = mt;
+			this.fmt = fmt;
+			this.count = count;
+		}
 
 		@Override
 		public void write( int b ) throws IOException
 		{
 			this.out.write( b );
-			this.buf.write( b );
+
+			if( this.count-- > 0 ) {
+				this.buf.write( b );
+			}
+			else {
+				this.more = true;
+			}
 		}
 
 		@Override
 		public void write( byte[] b, int off, int len ) throws IOException
 		{
 			this.out.write( b, off, len );
-			this.buf.write( b, off, len );
+
+			if( this.count > 0 ) {
+				final int min = Math.min( this.count, len );
+
+				this.buf.write( b, off, min );
+
+				this.count -= min;
+				this.more = len > min;
+			}
+			else {
+				this.more = true;
+			}
 		}
 
 		@Override
@@ -120,10 +147,11 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 
 	private final Logger log;
 	private final Level lev;
+	private final int entsz;
 
 	public RestClientTrace()
 	{
-		this( L, Level.FINEST );
+		this( L, Level.FINEST, 8192 );
 	}
 
 	@Override
@@ -152,7 +180,7 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 			final MediaType mt = mediaType( reqx.getHeaderString( CONTENT_TYPE ), reqx.getConfiguration() );
 
 			if( RBUtils.isTextContent( mt ) ) {
-				final OutputStream st = new OLogStream( reqx.getEntityStream(), mt, fmt );
+				final OutputStream st = new OLogStream( reqx.getEntityStream(), mt, fmt, this.entsz );
 
 				reqx.setEntityStream( st );
 				reqx.setProperty( REQ_ST_PROP, st );
@@ -175,7 +203,7 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 			final OLogStream out = (OLogStream) wcx.getProperty( REQ_ST_PROP );
 
 			if( out != null ) {
-				printBody( out.fmt, REQ_PREFIX, out.buf.toByteArray(), out.mt );
+				printBody( out.fmt, REQ_PREFIX, out.buf.toByteArray(), out.more, out.mt );
 
 				doLog( out.fmt );
 			}
@@ -213,11 +241,22 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 
 			if( RBUtils.isTextContent( mt ) ) {
 				try {
-					final byte[] body = toByteArray( rspx.getEntityStream() );
+					InputStream is = rspx.getEntityStream();
 
-					rspx.setEntityStream( new ByteArrayInputStream( body ) );
+					if( !is.markSupported() ) {
+						is = new BufferedInputStream( is );
+					}
 
-					printBody( fmt, RSP_PREFIX, body, mt );
+					is.mark( this.entsz + 1 );
+
+					final byte[] body = new byte[this.entsz + 1];
+					final int max = is.read( body );
+
+					printBody( fmt, RSP_PREFIX, body, max > this.entsz, mt );
+
+					is.reset();
+
+					rspx.setEntityStream( is );
 				}
 				catch( final Exception e ) {
 					printLine( fmt, RSP_PREFIX, "!!! cannot read body: %s", e.getMessage() );
@@ -249,11 +288,15 @@ public final class RestClientTrace implements ClientRequestFilter, ClientRespons
 		;
 	}
 
-	private void printBody( Formatter fmt, String prefix, byte[] body, MediaType mt )
+	private void printBody( Formatter fmt, String prefix, byte[] body, boolean more, MediaType mt )
 	{
 		try {
 			readLines( new ByteArrayInputStream( body ), RBUtils.charset( mt ) )
 				.forEach( line -> printLine( fmt, prefix, "%s", line ) );
+
+			if( more ) {
+				printLine( fmt, prefix, "... more..." );
+			}
 		}
 		catch( final IOException e ) {
 			printLine( fmt, prefix, "cannot print body: %s", e );
