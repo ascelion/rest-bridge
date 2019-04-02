@@ -1,5 +1,11 @@
 # [Rest Bridge](https://github.com/ascelion/rest-bridge), a JAX-RS based proxy client
 
+## Update 2019/04/02
+
+- excluded duplicates from jar libs
+- limit the logging of requests/response body
+- dont close the JAX-RS Response when the return type is AutoClosable
+
 ## Update 2019/02/05
 
 - added Spring Boot support

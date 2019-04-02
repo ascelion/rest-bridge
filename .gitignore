@@ -1,8 +1,10 @@
 .*
 !.gitignore
+/build/
 /buildSrc/
 /cdi/
 /client/
 /micro/
 /tests/
+/spring/
 /mp-local/
