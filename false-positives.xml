@@ -2,4 +2,9 @@
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.1.xsd"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.1.xsd">
+
+	<suppress>
+		<cve>CVE-2015-1820</cve>
+		<cve>CVE-2015-3448</cve>
+	</suppress>
 </suppressions>
